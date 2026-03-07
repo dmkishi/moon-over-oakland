@@ -1,7 +1,14 @@
 {
   "name": "moon-over-oakland",
   "version": "1.0.0",
-  "description": "Automatically post moon phase updates for Oakland to Social Media sites",
+  "description": "Automatically post moon phase updates for Oakland, CA to social media sites",
+  "author": "DM Kishi <dm.kishi@gmail.com>",
+  "keywords": [
+    "moon",
+    "oakland",
+    "bluesky"
+  ],
+  "license": "MIT",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
@@ -10,13 +17,6 @@
     "dev": "tsx src/index.ts",
     "typecheck": "tsc --noEmit"
   },
-  "keywords": [
-    "moon",
-    "bluesky",
-    "oakland"
-  ],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
     "@atproto/api": "^0.13.0",
     "dotenv": "^16.4.0",
