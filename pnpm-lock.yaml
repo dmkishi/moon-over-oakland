@@ -24,6 +24,9 @@ importers:
         specifier: ^3.25.76
         version: 3.25.76
     devDependencies:
+      '@dmkishi/markdownlint-cli2.yaml':
+        specifier: ^0.0.3
+        version: 0.0.3
       '@types/node':
         specifier: ^22.19.15
         version: 22.19.15
@@ -65,6 +68,10 @@ packages:
 
   '@atproto/xrpc@0.6.12':
     resolution: {integrity: sha512-Ut3iISNLujlmY9Gu8sNU+SPDJDvqlVzWddU8qUr0Yae5oD4SguaUFjjhireMGhQ3M5E0KljQgDbTmnBo1kIZ3w==}
+
+  '@dmkishi/markdownlint-cli2.yaml@0.0.3':
+    resolution: {integrity: sha512-bTR3JrspskfhacWKc5i+rC15nyoiFXqs6PFjgCArATketRdJ6xUatFHSdVafi6Ws3lHjVcXEMAKTFoVs+nmlXQ==}
+    hasBin: true
 
   '@esbuild/aix-ppc64@0.27.3':
     resolution: {integrity: sha512-9fJMTNFTWZMh5qwrBItuziu834eOCUcEqymSH7pY+zoMVEZg3gcPuBNxH1EvfVYe9h0x/Ptw8KBzv7qxb7l8dg==}
@@ -352,6 +359,8 @@ snapshots:
     dependencies:
       '@atproto/lexicon': 0.4.14
       zod: 3.25.76
+
+  '@dmkishi/markdownlint-cli2.yaml@0.0.3': {}
 
   '@esbuild/aix-ppc64@0.27.3':
     optional: true

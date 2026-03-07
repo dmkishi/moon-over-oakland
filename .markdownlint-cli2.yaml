@@ -1,0 +1,26 @@
+# This config file installed via "@dmkishi/markdownlint-cli2.yaml".
+# See <https://www.npmjs.com/package/@dmkishi/markdownlint-cli2.yaml>
+#
+# Upon updating the package, it is necessary to re-run the install command to
+# update this config file.
+# `npx @dmkishi/markdownlint-cli2.yaml --force
+
+gitignore: true
+globs: ["**/*.md"]
+config:
+  heading-style:
+    style: setext_with_atx
+  no-duplicate-heading:
+    siblings_only: true
+  line-length: false
+  blanks-around-headings: false
+  no-inline-html: false
+
+  # Agree but prefer no blanks beneath headings.
+  blanks-around-fences: false
+  blanks-around-lists: false
+  blanks-around-tables: false
+
+  # Emits false negatives when last cell is empty without a trailing pipe.
+  table-pipe-style: false
+  table-column-count: false
