@@ -1,36 +1,32 @@
-# Moon Over Oakland
-
+Moon Over Oakland
+================================================================================
 Automatically post moon phase updates for Oakland, CA to Bluesky using GitHub Actions.
 
-## Features
-
+Features
+--------------------------------------------------------------------------------
 - 🌑🌓🌕🌗 Posts on new moon, first quarter, full moon, and third quarter
 - 📍 Location-aware moon calculations (rise/set times, altitude, distance)
 - 📝 Customizable Liquid templates with phase-specific snippets
 - 🤖 Automated daily checks via GitHub Actions
 - 🔒 Secure credential management via GitHub Secrets
 
-## Setup
-
+Setup
+--------------------------------------------------------------------------------
 ### 1. Clone and install
-
-```bash
+```sh
 git clone https://github.com/your-username/moon-over-oakland.git
 cd moon-over-oakland
 pnpm install
 ```
 
 ### 2. Configure credentials
-
 Copy the example environment file:
-
-```bash
+```sh
 cp .env.example .env
 ```
 
 Edit `.env` with your Bluesky credentials:
-
-```bash
+```sh
 BLUESKY_HANDLE=your-handle.bsky.social
 BLUESKY_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
 TIMEZONE=America/Los_Angeles
@@ -44,8 +40,7 @@ To create a Bluesky app password:
 3. Copy it to your `.env` file
 
 ### 3. Test locally
-
-```bash
+```sh
 # Dry run (no actual posting)
 DRY_RUN=true pnpm dev
 
@@ -54,17 +49,15 @@ pnpm build
 pnpm start
 ```
 
-## GitHub Actions Setup
-
+GitHub Actions Setup
+--------------------------------------------------------------------------------
 ### 1. Add repository secrets
-
 Go to your repo → Settings → Secrets and variables → Actions → Secrets:
 
 - `BLUESKY_HANDLE`: Your Bluesky handle (e.g., `yourname.bsky.social`)
 - `BLUESKY_APP_PASSWORD`: Your app password
 
 ### 2. Add repository variables (optional)
-
 Go to Settings → Secrets and variables → Actions → Variables:
 
 - `TIMEZONE`: IANA timezone (default: `America/Los_Angeles`)
@@ -72,19 +65,16 @@ Go to Settings → Secrets and variables → Actions → Variables:
 - `LONGITUDE`: Location longitude (default: `-122.2712`)
 
 ### 3. Enable the workflow
-
 The workflow runs daily at 8 PM UTC (noon PST). You can also trigger it manually from the Actions tab.
 
-## Customizing Templates
-
+Customizing Templates
+--------------------------------------------------------------------------------
 Templates use [LiquidJS](https://liquidjs.com/) syntax.
 
 ### Main template
-
 Edit `src/templates/post.liquid` for the overall post structure.
 
 ### Phase-specific snippets
-
 Edit files in `src/templates/snippets/`:
 - `new.liquid` — New moon content
 - `first-quarter.liquid` — First quarter content
@@ -92,22 +82,21 @@ Edit files in `src/templates/snippets/`:
 - `third-quarter.liquid` — Third quarter content
 
 ### Available variables
+| Variable        | Example                  | Description           |
+|-----------------|--------------------------|-----------------------|
+| `phase`         | `full`                   | Moon phase name       |
+| `illumination`  | `99.5`                   | Percent illuminated   |
+| `age`           | `14.5`                   | Days into lunar cycle |
+| `distance`      | `384400`                 | Distance in km        |
+| `moonrise`      | `7:30 PM`                | Local moonrise time   |
+| `moonset`       | `6:15 AM`                | Local moonset time    |
+| `altitude`      | `45.2`                   | Degrees above horizon |
+| `azimuth`       | `180`                    | Compass direction     |
+| `date`          | `Friday, March 6, 2026`  | Formatted date        |
 
-| Variable | Example | Description |
-|----------|---------|-------------|
-| `phase` | `full` | Moon phase name |
-| `illumination` | `99.5` | Percent illuminated |
-| `age` | `14.5` | Days into lunar cycle |
-| `distance` | `384400` | Distance in km |
-| `moonrise` | `7:30 PM` | Local moonrise time |
-| `moonset` | `6:15 AM` | Local moonset time |
-| `altitude` | `45.2` | Degrees above horizon |
-| `azimuth` | `180` | Compass direction |
-| `date` | `Friday, March 6, 2026` | Formatted date |
-
-## Development
-
-```bash
+Development
+--------------------------------------------------------------------------------
+```sh
 # Type check
 pnpm typecheck
 
@@ -118,6 +107,6 @@ pnpm dev
 pnpm build
 ```
 
-## License
-
+License
+--------------------------------------------------------------------------------
 [MIT](LICENSE)
