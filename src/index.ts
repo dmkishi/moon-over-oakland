@@ -1,4 +1,5 @@
 import { config } from './config.js';
+import { location } from './constants.js';
 import { calculateMoonData, type MoonPhase } from './moon.js';
 import { renderTemplate } from './template.js';
 import { createBlueskyClient } from './social/bluesky.js';
@@ -16,21 +17,21 @@ async function main(): Promise<void> {
   const now = new Date();
   const moonData = calculateMoonData(
     now,
-    config.location.timezone,
-    config.location.latitude,
-    config.location.longitude
+    location.timezone,
+    location.latitude,
+    location.longitude
   );
 
-  console.log(`📅 Date: ${now.toLocaleDateString('en-US', { timeZone: config.location.timezone })}`);
+  console.log(`📅 Date: ${now.toLocaleDateString('en-US', { timeZone: location.timezone })}`);
   console.log(`🌙 Phase: ${moonData.phase}`);
   console.log(`💡 Illumination: ${moonData.illumination}%`);
   console.log(`📆 Age: ${moonData.age} days`);
   console.log(`📏 Distance: ${moonData.distance.toLocaleString()} km`);
   if (moonData.moonrise) {
-    console.log(`🌅 Moonrise: ${moonData.moonrise.toLocaleTimeString('en-US', { timeZone: config.location.timezone })}`);
+    console.log(`🌅 Moonrise: ${moonData.moonrise.toLocaleTimeString('en-US', { timeZone: location.timezone })}`);
   }
   if (moonData.moonset) {
-    console.log(`🌇 Moonset: ${moonData.moonset.toLocaleTimeString('en-US', { timeZone: config.location.timezone })}`);
+    console.log(`🌇 Moonset: ${moonData.moonset.toLocaleTimeString('en-US', { timeZone: location.timezone })}`);
   }
   console.log();
 
@@ -44,7 +45,7 @@ async function main(): Promise<void> {
   console.log(`✅ Phase "${moonData.phase}" is a posting phase!\n`);
 
   // Render the template
-  const content = await renderTemplate(moonData, config.location.timezone);
+  const content = await renderTemplate(moonData, location.timezone);
 
   console.log('📝 Post content:');
   console.log('─'.repeat(40));

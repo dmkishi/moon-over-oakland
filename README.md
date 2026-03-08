@@ -19,7 +19,7 @@ cd moon-over-oakland
 pnpm install
 ```
 
-### 2. Configure `.env`
+### 2. Configure social media credentials in `.env`
 Copy the example environment file:
 ```sh
 cp .env.example .env
@@ -29,9 +29,6 @@ Edit `.env` with your Bluesky credentials:
 ```sh
 BLUESKY_HANDLE=your-handle.bsky.social
 BLUESKY_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
-TIMEZONE=America/Los_Angeles
-LATITUDE=37.8044
-LONGITUDE=-122.2712
 ```
 
 To create a Bluesky app password:
@@ -61,14 +58,7 @@ Go to your repo → Settings → Secrets and variables → Actions → Secrets:
 - `BLUESKY_HANDLE`: Your Bluesky handle (e.g., `your-handle.bsky.social`)
 - `BLUESKY_APP_PASSWORD`: Your app password
 
-### 2. Add repository variables (optional)
-Go to Settings → Secrets and variables → Actions → Variables:
-
-- `TIMEZONE`: IANA timezone (default: `America/Los_Angeles`)
-- `LATITUDE`: Location latitude (default: `37.8044`)
-- `LONGITUDE`: Location longitude (default: `-122.2712`)
-
-### 3. Enable the workflow
+### 2. Enable the workflow
 The workflow runs daily at 8 PM UTC (noon PST). You can also trigger it manually from the Actions tab.
 
 Customizing Templates
