@@ -4,22 +4,22 @@ Automatically post moon phase updates for Oakland, CA to Bluesky using GitHub Ac
 
 Features
 --------------------------------------------------------------------------------
-- 🌑🌓🌕🌗 Posts on new moon, first quarter, full moon, and third quarter
-- 📍 Location-aware moon calculations (rise/set times, altitude, distance)
-- 📝 Customizable Liquid templates with phase-specific snippets
-- 🤖 Automated daily checks via GitHub Actions
-- 🔒 Secure credential management via GitHub Secrets
+- Posts on new moon, first quarter, full moon, and third quarter.
+- Moon calculations (rise/set times, altitude, distance) are Oakland-based.
+- Customizable Liquid templates with moon phase-specific snippets.
+- Automated daily checks via GitHub Actions.
+- Secure credential management via GitHub Secrets.
 
 Setup
 --------------------------------------------------------------------------------
 ### 1. Clone and install
 ```sh
-git clone https://github.com/your-username/moon-over-oakland.git
+git clone https://github.com/dmkishi/moon-over-oakland.git
 cd moon-over-oakland
 pnpm install
 ```
 
-### 2. Configure credentials
+### 2. Configure `.env`
 Copy the example environment file:
 ```sh
 cp .env.example .env
@@ -47,6 +47,10 @@ DRY_RUN=true pnpm dev
 # Build and run
 pnpm build
 pnpm start
+
+pnpm typecheck  # Type check
+pnpm dev        # Run in dev mode
+pnpm build      # Build for production
 ```
 
 GitHub Actions Setup
@@ -54,7 +58,7 @@ GitHub Actions Setup
 ### 1. Add repository secrets
 Go to your repo → Settings → Secrets and variables → Actions → Secrets:
 
-- `BLUESKY_HANDLE`: Your Bluesky handle (e.g., `yourname.bsky.social`)
+- `BLUESKY_HANDLE`: Your Bluesky handle (e.g., `your-handle.bsky.social`)
 - `BLUESKY_APP_PASSWORD`: Your app password
 
 ### 2. Add repository variables (optional)
@@ -93,19 +97,6 @@ Edit files in `src/templates/snippets/`:
 | `altitude`      | `45.2`                   | Degrees above horizon |
 | `azimuth`       | `180`                    | Compass direction     |
 | `date`          | `Friday, March 6, 2026`  | Formatted date        |
-
-Development
---------------------------------------------------------------------------------
-```sh
-# Type check
-pnpm typecheck
-
-# Run in dev mode
-pnpm dev
-
-# Build for production
-pnpm build
-```
 
 License
 --------------------------------------------------------------------------------
