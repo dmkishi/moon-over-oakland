@@ -48,16 +48,11 @@ To create a Bluesky app password:
 
 ### 3. Test locally
 ```sh
-# Dry run (no actual posting)
-DRY_RUN=true pnpm dev
-
-# Build and run
-pnpm build
-pnpm start
-
-pnpm typecheck  # Type check
-pnpm dev        # Run in dev mode
-pnpm build      # Build for production
+pnpm typecheck             # Check type
+pnpm build                 # Build for production
+pnpm tryPost               # Posts only if moon phase
+pnpm tryPost:dryRun:dev    # Does not post (run non-build version)
+pnpm tryPost:dryRun:build  # Does not post (run build version)
 ```
 
 GitHub Actions Setup

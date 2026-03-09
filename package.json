@@ -12,10 +12,11 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "tsx src/index.ts",
-    "typecheck": "tsc --noEmit"
+    "tryPost": "node dist/index.js",
+    "tryPost:dryRun:dev": "DRY_RUN=true tsx src/index.ts",
+    "tryPost:dryRun:build": "DRY_RUN=true node dist/index.js"
   },
   "dependencies": {
     "@atproto/api": "^0.13.35",
