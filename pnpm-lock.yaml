@@ -17,6 +17,9 @@ importers:
       liquidjs:
         specifier: ^10.24.0
         version: 10.24.0
+      picocolors:
+        specifier: ^1.1.1
+        version: 1.1.1
       suncalc:
         specifier: ^1.9.0
         version: 1.9.0
@@ -270,6 +273,9 @@ packages:
   multiformats@9.9.0:
     resolution: {integrity: sha512-HoMUjhH9T8DDBNT+6xzkrd9ga/XiBI4xLr58LJACwK6G3HTOPeMz4nB4KJs33L2BelrIJa7P0VuNaVF3hMYfjg==}
 
+  picocolors@1.1.1:
+    resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
+
   resolve-pkg-maps@1.0.0:
     resolution: {integrity: sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw==}
 
@@ -495,6 +501,8 @@ snapshots:
       commander: 10.0.1
 
   multiformats@9.9.0: {}
+
+  picocolors@1.1.1: {}
 
   resolve-pkg-maps@1.0.0: {}
 
