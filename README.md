@@ -88,6 +88,10 @@ Edit files in `src/templates/snippets/`:
 | `azimuth`       | `180`                    | Compass direction     |
 | `date`          | `Friday, March 6, 2026`  | Formatted date        |
 
+See Also
+--------------------------------------------------------------------------------
+- [Solar San Francisco](https://bsky.app/profile/sanfran.solar.v.cx) on Bluesky.
+
 License
 --------------------------------------------------------------------------------
 [MIT](LICENSE)
