@@ -1,5 +1,26 @@
-{% render 'snippets/' | append: phase %}
+{% doc %}
+  Render Post
+{% enddoc %}
+
+{% case phase %}
+  {% when new %}
+    🌑 New Moon rising over Oakland tonight.
+
+    The moon is {{ illumination }}% illuminated, {{ age }} days into its cycle.
+  {% when first-quarter %}
+    🌓 First Quarter Moon over Oakland.
+
+    Half-illuminated at {{ illumination }}%, the moon is waxing toward fullness.
+  {% when full %}
+    🌕 Full Moon illuminating Oakland tonight!
+
+    The moon shines at {{ illumination }}% brightness, {{ distance | divided_by: 1000 | round }}k km away.
+  {% when third-quarter %}
+    🌗 Third Quarter Moon over Oakland.
+
+    Half-illuminated at {{ illumination }}%, the moon is waning toward darkness.
+{% endcase %}
 
 {{ date }}
-{% if moonrise %}🌅 Moonrise: {{ moonrise }}{% endif %}
-{% if moonset %}🌇 Moonset: {{ moonset }}{% endif %}
+{% if moonrise %}Moonrise: {{ moonrise }}{% endif %}
+{% if moonset %}Moonset: {{ moonset }}{% endif %}

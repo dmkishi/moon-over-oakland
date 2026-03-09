@@ -68,18 +68,6 @@ The workflow runs daily at 8 PM UTC (noon PST). You can also trigger it manually
 
 Customizing Templates
 --------------------------------------------------------------------------------
-Templates use [LiquidJS](https://liquidjs.com/) syntax.
-
-### Main template
-Edit `src/templates/post.liquid` for the overall post structure.
-
-### Phase-specific snippets
-Edit files in `src/templates/snippets/`:
-- `new.liquid` — New moon content
-- `first-quarter.liquid` — First quarter content
-- `full.liquid` — Full moon content
-- `third-quarter.liquid` — Third quarter content
-
 ### Available variables
 | Variable        | Example                  | Description           |
 |-----------------|--------------------------|-----------------------|
