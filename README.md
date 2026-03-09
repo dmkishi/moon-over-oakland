@@ -20,7 +20,7 @@ pnpm install
 ```
 
 ### 2. Configure social media credentials in `.env`
-Copy the example environment file:
+Make new copy of `.env`:
 ```sh
 cp .env.example .env
 ```
@@ -31,6 +31,16 @@ BLUESKY_HANDLE=your-handle.bsky.social
 BLUESKY_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
 ```
 
+#### New Account on Bluesky
+To create a new Bluesky account, **a unique email address is required**. The
+easiest solution is to use a pre-existing Gmail account with an email alias,
+AKA plus ("+") sign addressing. All these go to the same inbox:
+
+- `your.username@gmail.com`
+- `your.username+bksy@gmail.com`
+- `your.username+moon-over-oakland.bksy.social@gmail.com`
+
+#### App Password on Bluesky
 To create a Bluesky app password:
 1. Go to Settings → Privacy and Security → App Passwords
 2. Create a new app password
