@@ -1,9 +1,5 @@
-🌙 Moon Over Oakland
-
 {% render 'snippets/' | append: phase %}
 
 {{ date }}
 {% if moonrise %}🌅 Moonrise: {{ moonrise }}{% endif %}
 {% if moonset %}🌇 Moonset: {{ moonset }}{% endif %}
-
-#MoonOverOakland #{{ phase | replace: "-", "" | capitalize }}
