@@ -23,6 +23,7 @@ export interface MoonData {
 }
 
 const LUNAR_CYCLE_DAYS = 29.530589;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 /**
  * Convert phase value (0-1) to named phase
@@ -65,7 +66,6 @@ export function calculateMoonData(
   const times = SunCalc.getMoonTimes(localNoon, latitude, longitude);
   const age = Math.round(illumination.phase * LUNAR_CYCLE_DAYS * 100) / 100;
 
-  const msPerDay = 24 * 60 * 60 * 1000;
   const daysUntilNew = (1 - illumination.phase) * LUNAR_CYCLE_DAYS;
   const daysUntilFull = illumination.phase < 0.5
     ? (0.5 - illumination.phase) * LUNAR_CYCLE_DAYS
@@ -78,7 +78,7 @@ export function calculateMoonData(
     distance: Math.round(position.distance),
     moonrise: times.rise ?? null,
     moonset: times.set ?? null,
-    nextNewMoon: new Date(localNoon.getTime() + daysUntilNew * msPerDay),
-    nextFullMoon: new Date(localNoon.getTime() + daysUntilFull * msPerDay),
+    nextNewMoon: new Date(localNoon.getTime() + daysUntilNew * MS_PER_DAY),
+    nextFullMoon: new Date(localNoon.getTime() + daysUntilFull * MS_PER_DAY),
   };
 }
