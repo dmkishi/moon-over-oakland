@@ -12,13 +12,13 @@ export type MoonPhase =
 
 export interface MoonData {
   phase: MoonPhase;
-  illumination: number;    // 0-100
-  age: number;             // 0-29.5 days into lunar cycle
-  distance: number;        // km from Earth
-  moonrise: Date | null;   // null if moon doesn't rise that day
-  moonset: Date | null;    // null if moon doesn't set that day
-  altitude: number;        // degrees above horizon
-  azimuth: number;         // compass degrees (0 = north, 90 = east)
+  illumination: number;   // 0-100
+  age: number;            // 0-29.5 days into lunar cycle
+  distance: number;       // km from Earth
+  moonrise: Date | null;  // null if moon doesn't rise that day
+  moonset: Date | null;   // null if moon doesn't set that day
+  altitude: number;       // degrees above horizon
+  azimuth: number;        // compass degrees (0 = north, 90 = east)
 }
 
 const LUNAR_CYCLE_DAYS = 29.53059;
@@ -33,7 +33,6 @@ function phaseValueToName(phase: number): MoonPhase {
   // 0.50 = full moon
   // 0.75 = third quarter
   // 1.00 = new moon (cycle complete)
-
   if (phase < 0.025 || phase >= 0.975) return 'new';
   if (phase < 0.225) return 'waxing-crescent';
   if (phase < 0.275) return 'first-quarter';
@@ -44,9 +43,6 @@ function phaseValueToName(phase: number): MoonPhase {
   return 'waning-crescent';
 }
 
-/**
- * Convert radians to degrees
- */
 function radToDeg(rad: number): number {
   return rad * (180 / Math.PI);
 }
@@ -87,16 +83,9 @@ export function calculateMoonData(
   // Use noon local time for consistent phase calculation
   const referenceTime = getLocalMidnight(date, timezone);
 
-  // Get illumination data (doesn't need location)
   const illumination = SunCalc.getMoonIllumination(referenceTime);
-
-  // Get position data (needs location)
   const position = SunCalc.getMoonPosition(referenceTime, latitude, longitude);
-
-  // Get rise/set times (needs location)
   const times = SunCalc.getMoonTimes(referenceTime, latitude, longitude);
-
-  // Calculate age from phase (phase is 0-1 through the cycle)
   const age = Math.round(illumination.phase * LUNAR_CYCLE_DAYS * 100) / 100;
 
   return {
