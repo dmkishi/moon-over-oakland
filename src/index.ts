@@ -41,20 +41,20 @@ async function main(): Promise<void> {
   console.log();
 
   if (!PHASES_TO_POST.includes(moonData.phase)) {
-    console.log(pc.red('Skipping post.'), `Phase "${moonData.phase}" is not a posting phase.`);
+    console.log(pc.red('Nothing to post.'), `Phase "${moonData.phase}" is not a posting phase.`);
     console.log();
     return;
   }
 
   const content = await renderTemplate(moonData, location.timezone);
-  console.log('Post content:');
+  console.log('Content of post:');
   console.log('-'.repeat(80));
   console.log(content);
   console.log('-'.repeat(80));
   console.log();
 
   if (isDryRun) {
-    console.log(pc.yellow('Dry run mode: skipping actual post.'));
+    console.log(pc.yellow('Dry run: skipping actual post.'));
     return;
   }
 
