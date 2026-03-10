@@ -3,12 +3,20 @@
   @param {number} illumination - Percent illuminated
   @param {number} age - Days into lunar cycle
   @param {number} distance - Distance in km
-  @param {string} date - Formatted date string
-  @param {string} moonrise - Local moonrise time
-  @param {string} moonset - Local moonset time
-  @param {string} nextNewMoon - Date of next new moon
-  @param {string} nextFullMoon - Date of next full moon
+  @param {Date} date - Current date
+  @param {Date} moonrise - Local moonrise time
+  @param {Date} moonset - Local moonset time
+  @param {Date} nextNewMoon - Date of next new moon
+  @param {Date} nextFullMoon - Date of next full moon
 {% enddoc %}
+
+{% liquid
+  # E.g. "Thursday, January 1, 2026"
+  assign date_format = "%A, %B %-d, %Y"
+
+  # E.g. "1:30 PM"
+  assign time_format = "%-l:%M %p"
+%}
 
 {% case phase %}
   {% when new %}
@@ -21,6 +29,6 @@
     🌗 Third Quarter
 {% endcase %}
 
-{{ date }}
-{% if moonrise %}Moonrise: {{ moonrise }}{% endif %}
-{% if moonset %}Moonset: {{ moonset }}{% endif %}
+{{ date | date: date_format }}
+{% if moonrise %}Moonrise: {{ moonrise | date: time_format }}{% endif %}
+{% if moonset %}Moonset: {{ moonset | date: time_format }}{% endif %}
