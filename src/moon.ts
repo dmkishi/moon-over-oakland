@@ -17,8 +17,8 @@ export interface MoonData {
   distance: number;       // km from Earth
   moonrise: Date | null;  // null if moon doesn't rise that day
   moonset: Date | null;   // null if moon doesn't set that day
-  altitude: number;       // degrees above horizon
-  azimuth: number;        // compass degrees (0 = north, 90 = east)
+  nextNewMoon: Date;
+  nextFullMoon: Date;
 }
 
 const LUNAR_CYCLE_DAYS = 29.530589;
@@ -41,22 +41,6 @@ function phaseValueToName(phase: number): MoonPhase {
   if (phase < 0.725) return 'waning-gibbous';
   if (phase < 0.775) return 'third-quarter';
   return 'waning-crescent';
-}
-
-function radToDeg(rad: number): number {
-  return rad * (180 / Math.PI);
-}
-
-/**
- * Normalize azimuth to compass degrees (0-360, 0 = north)
- */
-function normalizeAzimuth(azimuthRad: number): number {
-  // suncalc returns azimuth in radians, measured from south, clockwise
-  // Convert to compass degrees (0 = north, 90 = east)
-  let degrees = radToDeg(azimuthRad) + 180;
-  if (degrees >= 360) degrees -= 360;
-  if (degrees < 0) degrees += 360;
-  return Math.round(degrees * 10) / 10;
 }
 
 /**
@@ -95,7 +79,5 @@ export function calculateMoonData(
     distance: Math.round(position.distance),
     moonrise: times.rise ?? null,
     moonset: times.set ?? null,
-    altitude: Math.round(radToDeg(position.altitude) * 10) / 10,
-    azimuth: normalizeAzimuth(position.azimuth),
   };
 }

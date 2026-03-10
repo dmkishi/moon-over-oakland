@@ -5,7 +5,7 @@ Automatically post moon phase updates for Oakland, CA to Bluesky using GitHub Ac
 Features
 --------------------------------------------------------------------------------
 - Posts on new moon, first quarter, full moon, and third quarter.
-- Moon calculations (rise/set times, altitude, distance) are Oakland-based.
+- Moon calculations (esp. rise/set times) are Oakland-based.
 - Customizable Liquid templates with moon phase-specific snippets.
 - Automated daily checks via GitHub Actions.
 - Secure credential management via GitHub Secrets.
@@ -77,8 +77,6 @@ Customizing Templates
 | `distance`      | `384400`                 | Distance in km        |
 | `moonrise`      | `7:30 PM`                | Local moonrise time   |
 | `moonset`       | `6:15 AM`                | Local moonset time    |
-| `altitude`      | `45.2`                   | Degrees above horizon |
-| `azimuth`       | `180`                    | Compass direction     |
 | `date`          | `Friday, March 6, 2026`  | Formatted date        |
 
 See Also
