@@ -66,19 +66,6 @@ Go to your repo → Settings → Secrets and variables → Actions → Secrets:
 ### 2. Enable the workflow
 The workflow runs daily at 8 PM UTC (noon PST). You can also trigger it manually from the Actions tab.
 
-Customizing Templates
---------------------------------------------------------------------------------
-### Available variables
-| Variable        | Example                  | Description           |
-|-----------------|--------------------------|-----------------------|
-| `phase`         | `full`                   | Moon phase name       |
-| `illumination`  | `99.5`                   | Percent illuminated   |
-| `age`           | `14.5`                   | Days into lunar cycle |
-| `distance`      | `384400`                 | Distance in km        |
-| `moonrise`      | `7:30 PM`                | Local moonrise time   |
-| `moonset`       | `6:15 AM`                | Local moonset time    |
-| `date`          | `Friday, March 6, 2026`  | Formatted date        |
-
 See Also
 --------------------------------------------------------------------------------
 - [Solar San Francisco](https://bsky.app/profile/sanfran.solar.v.cx) on Bluesky.

@@ -1,5 +1,13 @@
 {% doc %}
-  Render Post
+  @param {string} phase - Moon phase name: new, first-quarter, full, third-quarter
+  @param {number} illumination - Percent illuminated
+  @param {number} age - Days into lunar cycle
+  @param {number} distance - Distance in km
+  @param {string} date - Formatted date string
+  @param {string} moonrise - Local moonrise time
+  @param {string} moonset - Local moonset time
+  @param {string} nextNewMoon - Date of next new moon
+  @param {string} nextFullMoon - Date of next full moon
 {% enddoc %}
 
 {% case phase %}
