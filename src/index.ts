@@ -19,7 +19,7 @@ async function main(): Promise<void> {
     now,
     location.timezone,
     location.latitude,
-    location.longitude
+    location.longitude,
   );
 
   const localeOptions = ['en-US', { timeZone: 'America/Los_Angeles' }] as const;
