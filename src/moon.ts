@@ -21,7 +21,7 @@ export interface MoonData {
   azimuth: number;        // compass degrees (0 = north, 90 = east)
 }
 
-const LUNAR_CYCLE_DAYS = 29.53059;
+const LUNAR_CYCLE_DAYS = 29.530589;
 
 /**
  * Convert phase value (0-1) to named phase
