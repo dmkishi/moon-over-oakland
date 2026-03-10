@@ -12,10 +12,10 @@
 
 {% liquid
   # E.g. "Thursday, January 1, 2026"
-  assign date_format = "%A, %B %-d, %Y"
+  assign DATE_FORMAT = "%A, %B %-d, %Y"
 
   # E.g. "1:30 PM"
-  assign time_format = "%-l:%M %p"
+  assign TIME_FORMAT = "%-l:%M %p"
 %}
 
 {% case phase %}
@@ -29,6 +29,6 @@
     🌗 Third Quarter
 {% endcase %}
 
-{{ date | date: date_format }}
-{% if moonrise %}Moonrise: {{ moonrise | date: time_format }}{% endif %}
-{% if moonset %}Moonset: {{ moonset | date: time_format }}{% endif %}
+{{ date | date: DATE_FORMAT }}
+{% if moonrise %}Moonrise: {{ moonrise | date: TIME_FORMAT }}{% endif %}
+{% if moonset %}Moonset: {{ moonset | date: TIME_FORMAT }}{% endif %}
