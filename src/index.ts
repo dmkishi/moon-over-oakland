@@ -27,17 +27,19 @@ async function main(): Promise<void> {
   );
 
   const localeOptions = ['en-US', { timeZone: 'America/Los_Angeles' }] as const;
-  console.log(`Date:         ${now.toLocaleDateString(...localeOptions)}`);
-  console.log(`Phase:        ${moonData.phase}`);
-  console.log(`Illumination: ${moonData.illumination}%`);
-  console.log(`Age:          ${moonData.age} days`);
-  console.log(`Distance:     ${moonData.distance.toLocaleString()} km`);
+  console.log(`Date:           ${now.toLocaleDateString(...localeOptions)}`);
+  console.log(`Phase:          ${moonData.phase}`);
+  console.log(`Illumination:   ${moonData.illumination}%`);
+  console.log(`Age:            ${moonData.age} days`);
+  console.log(`Distance:       ${moonData.distance.toLocaleString()} km`);
   if (moonData.moonrise) {
-    console.log(`Moonrise:     ${moonData.moonrise.toLocaleTimeString(...localeOptions)}`);
+    console.log(`Moonrise:       ${moonData.moonrise.toLocaleTimeString(...localeOptions)}`);
   }
   if (moonData.moonset) {
-    console.log(`Moonset:      ${moonData.moonset.toLocaleTimeString(...localeOptions)}`);
+    console.log(`Moonset:        ${moonData.moonset.toLocaleTimeString(...localeOptions)}`);
   }
+  console.log(`Next New Moon:  ${moonData.nextNewMoon.toLocaleDateString(...localeOptions)}`);
+  console.log(`Next Full Moon: ${moonData.nextFullMoon.toLocaleDateString(...localeOptions)}`);
   console.log();
 
   if (!PHASES_TO_POST.includes(moonData.phase)) {

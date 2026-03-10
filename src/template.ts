@@ -18,6 +18,8 @@ export interface TemplateContext {
   distance: number;
   moonrise: string | null;
   moonset: string | null;
+  nextNewMoon: string;
+  nextFullMoon: string;
   date: string;
 }
 
@@ -52,6 +54,8 @@ export async function renderTemplate(
     distance: moonData.distance,
     moonrise: formatTime(moonData.moonrise, timezone),
     moonset: formatTime(moonData.moonset, timezone),
+    nextNewMoon: formatDate(moonData.nextNewMoon, timezone),
+    nextFullMoon: formatDate(moonData.nextFullMoon, timezone),
     date: formatDate(new Date(), timezone),
   };
 
