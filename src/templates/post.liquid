@@ -19,13 +19,13 @@
 %}
 
 {% case phase %}
-  {% when new %}
+  {% when 'new' %}
     🌑 New Moon
-  {% when first-quarter %}
+  {% when 'first-quarter' %}
     🌓 First Quarter
-  {% when full %}
+  {% when 'full' %}
     🌕 Full Moon
-  {% when third-quarter %}
+  {% when 'third-quarter' %}
     🌗 Third Quarter
 {% endcase %}
 
