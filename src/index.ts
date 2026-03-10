@@ -30,12 +30,8 @@ async function main(): Promise<void> {
   console.log(`Illumination:   ${moonData.illumination}%`);
   console.log(`Age:            ${moonData.age} days`);
   console.log(`Distance:       ${moonData.distance.toLocaleString()} km`);
-  if (moonData.moonrise) {
-    console.log(`Moonrise:       ${moonData.moonrise.toLocaleTimeString(...localeOptions)}`);
-  }
-  if (moonData.moonset) {
-    console.log(`Moonset:        ${moonData.moonset.toLocaleTimeString(...localeOptions)}`);
-  }
+  console.log(`Moonrise:       ${moonData.moonrise.toLocaleString(...localeOptions)}`);
+  console.log(`Moonset:        ${moonData.moonset.toLocaleString(...localeOptions)}`);
   console.log(`Next New Moon:  ${moonData.nextNewMoon.toLocaleDateString(...localeOptions)}`);
   console.log(`Next Full Moon: ${moonData.nextFullMoon.toLocaleDateString(...localeOptions)}`);
   console.log();

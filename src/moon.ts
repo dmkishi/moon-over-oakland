@@ -16,8 +16,8 @@ export interface MoonData {
   illumination: number;   // 0-100
   age: number;            // 0-29.5 days into lunar cycle
   distance: number;       // km from Earth
-  moonrise: Date | null;  // null if moon doesn't rise that day
-  moonset: Date | null;   // null if moon doesn't set that day
+  moonrise: Date;
+  moonset: Date;
   nextNewMoon: Date;
   nextFullMoon: Date;
 }
@@ -63,9 +63,8 @@ export function calculateMoonData(
 
   const illumination = SunCalc.getMoonIllumination(localNoon);
   const position = SunCalc.getMoonPosition(localNoon, latitude, longitude);
-  const times = SunCalc.getMoonTimes(localNoon, latitude, longitude);
+  const { rise, set } = SunCalc.getMoonTimes(localNoon, latitude, longitude);
   const age = Math.round(illumination.phase * LUNAR_CYCLE_DAYS * 100) / 100;
-
   const daysUntilNew = (1 - illumination.phase) * LUNAR_CYCLE_DAYS;
   const daysUntilFull = illumination.phase < 0.5
     ? (0.5 - illumination.phase) * LUNAR_CYCLE_DAYS
@@ -76,8 +75,8 @@ export function calculateMoonData(
     illumination: Math.round(illumination.fraction * 100 * 10) / 10,
     age,
     distance: Math.round(position.distance),
-    moonrise: times.rise ?? null,
-    moonset: times.set ?? null,
+    moonrise: rise,
+    moonset: set,
     nextNewMoon: new Date(localNoon.getTime() + daysUntilNew * MS_PER_DAY),
     nextFullMoon: new Date(localNoon.getTime() + daysUntilFull * MS_PER_DAY),
   };
