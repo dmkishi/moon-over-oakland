@@ -14,10 +14,6 @@ const PHASES_TO_POST: MoonPhase[] = [
 
 async function main(): Promise<void> {
   const isDryRun = process.env.DRY_RUN === 'true';
-
-  console.log('Moon Over Oakland');
-  console.log('=================');
-
   const now = new Date();
   const moonData = calculateMoonData(
     now,
@@ -27,6 +23,8 @@ async function main(): Promise<void> {
   );
 
   const localeOptions = ['en-US', { timeZone: 'America/Los_Angeles' }] as const;
+  console.log('Moon Over Oakland');
+  console.log('=================');
   console.log(`Date:           ${now.toLocaleDateString(...localeOptions)}`);
   console.log(`Phase:          ${moonData.phase}`);
   console.log(`Illumination:   ${moonData.illumination}%`);
