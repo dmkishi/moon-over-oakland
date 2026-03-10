@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon';
 import SunCalc from 'suncalc';
 
 export type MoonPhase =
@@ -44,18 +45,6 @@ function phaseValueToName(phase: number): MoonPhase {
 }
 
 /**
- * Get the local midnight Date for a given timezone
- */
-function getLocalMidnight(date: Date, timezone: string): Date {
-  const dateStr = date.toLocaleDateString('en-CA', { timeZone: timezone });
-  const [year, month, day] = dateStr.split('-').map(Number);
-
-  // Create a date at midnight UTC, then adjust
-  const midnight = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
-  return midnight;
-}
-
-/**
  * Calculate moon data for a given date and location
  */
 export function calculateMoonData(
@@ -64,12 +53,16 @@ export function calculateMoonData(
   latitude: number,
   longitude: number
 ): MoonData {
-  // Use noon local time for consistent phase calculation
-  const referenceTime = getLocalMidnight(date, timezone);
+  // Use noon local-time for consistent phase calculation
+  const localNoon: Date = DateTime
+    .fromJSDate(date)
+    .setZone(timezone)
+    .set({ hour: 12, minute: 0, second: 0, millisecond: 0 })
+    .toJSDate();
 
-  const illumination = SunCalc.getMoonIllumination(referenceTime);
-  const position = SunCalc.getMoonPosition(referenceTime, latitude, longitude);
-  const times = SunCalc.getMoonTimes(referenceTime, latitude, longitude);
+  const illumination = SunCalc.getMoonIllumination(localNoon);
+  const position = SunCalc.getMoonPosition(localNoon, latitude, longitude);
+  const times = SunCalc.getMoonTimes(localNoon, latitude, longitude);
   const age = Math.round(illumination.phase * LUNAR_CYCLE_DAYS * 100) / 100;
 
   const msPerDay = 24 * 60 * 60 * 1000;
@@ -85,7 +78,7 @@ export function calculateMoonData(
     distance: Math.round(position.distance),
     moonrise: times.rise ?? null,
     moonset: times.set ?? null,
-    nextNewMoon: new Date(referenceTime.getTime() + daysUntilNew * msPerDay),
-    nextFullMoon: new Date(referenceTime.getTime() + daysUntilFull * msPerDay),
+    nextNewMoon: new Date(localNoon.getTime() + daysUntilNew * msPerDay),
+    nextFullMoon: new Date(localNoon.getTime() + daysUntilFull * msPerDay),
   };
 }
