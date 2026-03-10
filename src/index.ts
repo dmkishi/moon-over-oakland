@@ -22,18 +22,33 @@ async function main(): Promise<void> {
     location.longitude,
   );
 
-  const localeOptions = ['en-US', { timeZone: 'America/Los_Angeles' }] as const;
+  const localeDateTimeOptions = ['en-US', {
+    timeZone: location.timezone,
+    weekday: 'short',
+    month: 'numeric',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }] as const;
+  const localeDateOptions = ['en-US', {
+    timeZone: location.timezone,
+    month: 'numeric',
+    day: 'numeric',
+    year: 'numeric',
+  }] as const;
+
   console.log('Moon Over Oakland');
   console.log('================================================================================');
-  console.log(`Date:           ${now.toLocaleDateString(...localeOptions)}`);
+  console.log(`Calculated At:  ${now.toLocaleString(...localeDateTimeOptions)}`);
   console.log(`Phase:          ${moonData.phase}`);
   console.log(`Illumination:   ${moonData.illumination}%`);
   console.log(`Age:            ${moonData.age} days`);
   console.log(`Distance:       ${moonData.distance.toLocaleString()} km`);
-  console.log(`Moonrise:       ${moonData.moonrise.toLocaleString(...localeOptions)}`);
-  console.log(`Moonset:        ${moonData.moonset.toLocaleString(...localeOptions)}`);
-  console.log(`Next New Moon:  ${moonData.nextNewMoon.toLocaleDateString(...localeOptions)}`);
-  console.log(`Next Full Moon: ${moonData.nextFullMoon.toLocaleDateString(...localeOptions)}`);
+  console.log(`Moonrise:       ${moonData.moonrise.toLocaleString(...localeDateTimeOptions)}`);
+  console.log(`Moonset:        ${moonData.moonset.toLocaleString(...localeDateTimeOptions)}`);
+  console.log(`Next New Moon:  ${moonData.nextNewMoon.toLocaleString(...localeDateOptions)}`);
+  console.log(`Next Full Moon: ${moonData.nextFullMoon.toLocaleString(...localeDateOptions)}`);
   console.log();
 
   if (!PHASES_TO_POST.includes(moonData.phase)) {
