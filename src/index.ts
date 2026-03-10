@@ -7,8 +7,8 @@ import { createBlueskyClient } from './social/bluesky.js';
 
 const PHASES_TO_POST: MoonPhase[] = [
   'new',
-  'full',
   'first-quarter',
+  'full',
   'third-quarter',
 ];
 
