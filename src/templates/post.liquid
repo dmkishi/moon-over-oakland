@@ -22,13 +22,12 @@
   {% when 'new' %}
     🌑 New Moon
   {% when 'first-quarter' %}
-    🌓 First Quarter
+    🌓 Half Moon (First Quarter)
   {% when 'full' %}
     🌕 Full Moon
   {% when 'third-quarter' %}
-    🌗 Third Quarter
+    🌗 Half Moon (Third Quarter)
 {% endcase %}
 
-{{ date | date: DATE_FORMAT }}
 {% if moonrise %}Moonrise: {{ moonrise | date: TIME_FORMAT }}{% endif %}
 {% if moonset %}Moonset: {{ moonset | date: TIME_FORMAT }}{% endif %}
