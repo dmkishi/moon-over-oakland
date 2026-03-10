@@ -24,7 +24,7 @@ async function main(): Promise<void> {
 
   const localeOptions = ['en-US', { timeZone: 'America/Los_Angeles' }] as const;
   console.log('Moon Over Oakland');
-  console.log('=================');
+  console.log('================================================================================');
   console.log(`Date:           ${now.toLocaleDateString(...localeOptions)}`);
   console.log(`Phase:          ${moonData.phase}`);
   console.log(`Illumination:   ${moonData.illumination}%`);
@@ -48,9 +48,9 @@ async function main(): Promise<void> {
 
   const content = await renderTemplate(moonData, location.timezone);
   console.log('Content of post:');
-  console.log('-'.repeat(80));
+  console.log('--------------------------------------------------------------------------------');
   console.log(content);
-  console.log('-'.repeat(80));
+  console.log('--------------------------------------------------------------------------------');
   console.log();
 
   if (isDryRun) {
