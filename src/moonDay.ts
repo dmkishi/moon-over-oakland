@@ -43,7 +43,7 @@ interface MoonMidpoint {
 }
 
 export interface MoonDay {
-  date: Date;
+  day: Date;
   average: MoonMidpoint;
   moonrise: MoonEvent;
   moonset: MoonEvent;
@@ -73,44 +73,44 @@ function phaseValueToName(phase: number): MoonPhase {
 }
 
 function celestialEvent(
-  date: Date,
+  day: Date,
   latitude: number,
   longitude: number,
   getPosition: (date: Date, lat: number, lng: number) => { azimuth: number },
 ): CelestialEvent {
-  const azimuthDeg = getPosition(date, latitude, longitude).azimuth * RAD_TO_DEG;
+  const azimuthDeg = getPosition(day, latitude, longitude).azimuth * RAD_TO_DEG;
   const compassDeg = (azimuthDeg + 180 + 360) % 360;
   const compassDirection = COMPASS_DIRECTIONS[Math.round(compassDeg / 22.5) % 16];
   return {
-    date,
+    date: day,
     compassDeg,
     compassDirection,
   };
 }
 
 function moonEvent(
-  date: Date,
+  day: Date,
   latitude: number,
   longitude: number,
 ): MoonEvent {
-  const { angle } = SunCalc.getMoonIllumination(date);
-  const { parallacticAngle } = SunCalc.getMoonPosition(date, latitude, longitude);
+  const { angle } = SunCalc.getMoonIllumination(day);
+  const { parallacticAngle } = SunCalc.getMoonPosition(day, latitude, longitude);
   const tiltDeg = (angle - parallacticAngle) * RAD_TO_DEG;
   return {
-    ...celestialEvent(date, latitude, longitude, SunCalc.getMoonPosition),
+    ...celestialEvent(day, latitude, longitude, SunCalc.getMoonPosition),
     tiltDeg,
   };
 }
 
 export function calculateMoonDay(
-  date: Date,
+  day: Date,
   timezone: string,
   latitude: number,
   longitude: number
 ): MoonDay {
   const localNoon: Date = new Date(
     Temporal.Instant
-      .fromEpochMilliseconds(date.getTime())
+      .fromEpochMilliseconds(day.getTime())
       .toZonedDateTimeISO(timezone)
       .with({ hour: 12, minute: 0, second: 0, millisecond: 0, microsecond: 0, nanosecond: 0 })
       .toInstant()
@@ -128,7 +128,7 @@ export function calculateMoonDay(
     : (1.5 - phase) * LUNAR_CYCLE_DAYS;
 
   return {
-    date,
+    day: day,
     average: {
       phaseName: phaseValueToName(phase),
       phase,

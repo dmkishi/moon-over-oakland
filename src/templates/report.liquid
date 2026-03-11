@@ -16,7 +16,7 @@
   assign TIME_FORMAT = "%-l:%M %p"
 -%}
 
-Date:           {{ date | date: DATE_FORMAT }}
+Day:            {{ day | date: DATE_FORMAT }}
 Average:
   Phase Name:   {{ average.phaseName }}
   Phase:        {{ average.phase }}

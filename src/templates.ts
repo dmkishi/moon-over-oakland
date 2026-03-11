@@ -28,7 +28,7 @@ export async function renderReport(
   moonDay: MoonDay,
   timezone: string,
 ): Promise<string> {
-  const today = moonDay.date;
+  const today = moonDay.day;
   const engine = createEngine(timezone);
 
   engine.registerFilter('localeString', (value: number) => value.toLocaleString());
