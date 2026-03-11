@@ -51,28 +51,28 @@ async function main(): Promise<void> {
   console.log(`Calculated At:  ${oaklandDateTime.format(now)}`);
   console.log(`Phase Name:     ${moonData.phaseName}`);
   console.log(`Phase:          ${moonData.phase}`);
-  console.log(`Illumination:   ${(moonData.illumination * 100).toFixed(0)}%`);
+  console.log(`Illumination:   ${Math.round(moonData.illumination * 100)}%`);
   console.log(`Age:            ${moonData.age} days`);
   console.log(`Distance:       ${moonData.distanceKm.toLocaleString()} km`);
 
   const moonriseTime = oaklandDateTime.format(moonData.moonrise.date);
   const moonriseCompassDirection = moonData.moonrise.compassDirection;
-  const moonriseCompassDeg = moonData.moonrise.compassDeg.toFixed(1);
+  const moonriseCompassDeg = Math.round(moonData.moonrise.compassDeg);
   console.log(`Moonrise:       ${moonriseTime} (${moonriseCompassDirection}, ${moonriseCompassDeg}°)`);
 
   const moonsetTime = oaklandDateTime.format(moonData.moonset.date);
   const moonsetCompassDirection = moonData.moonset.compassDirection;
-  const moonsetCompassDeg = moonData.moonset.compassDeg.toFixed(1);
+  const moonsetCompassDeg = Math.round(moonData.moonset.compassDeg);
   console.log(`Moonset:        ${moonsetTime} (${moonsetCompassDirection}, ${moonsetCompassDeg}°)`);
 
   const sunriseTime = oaklandDateTime.format(moonData.sunrise.date);
   const sunriseCompassDirection = moonData.sunrise.compassDirection;
-  const sunriseCompassDeg = moonData.sunrise.compassDeg.toFixed(1);
+  const sunriseCompassDeg = Math.round(moonData.sunrise.compassDeg);
   console.log(`Sunrise:        ${sunriseTime} (${sunriseCompassDirection}, ${sunriseCompassDeg}°)`);
 
   const sunsetTime = oaklandDateTime.format(moonData.sunset.date);
   const sunsetCompassDirection = moonData.sunset.compassDirection;
-  const sunsetCompassDeg = moonData.sunset.compassDeg.toFixed(1);
+  const sunsetCompassDeg = Math.round(moonData.sunset.compassDeg);
   console.log(`Sunset:         ${sunsetTime} (${sunsetCompassDirection}, ${sunsetCompassDeg}°)`);
 
   const nextNewMoonDaysAway = daysAway(moonData.nextNewMoon);
