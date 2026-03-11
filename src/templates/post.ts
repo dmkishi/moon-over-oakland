@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { Liquid } from 'liquidjs';
-import type { MoonData } from './moon.js';
+import type { MoonData } from '../moon.js';
 
 export async function renderPost(
   moonData: MoonData,
