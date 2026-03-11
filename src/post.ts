@@ -14,10 +14,6 @@ export async function renderTemplate(
     timezoneOffset: timezone,
   });
 
-  const context = {
-    ...moonData,
-    date: new Date(),
-  };
-  const result = await engine.renderFile('post', context);
+  const result = await engine.renderFile('post', moonData);
   return result.trim();
 }
