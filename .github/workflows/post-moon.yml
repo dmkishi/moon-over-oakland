@@ -1,4 +1,4 @@
-name: Moon Phase Check
+name: Post Moon (If Phase Is Permitted)
 
 on:
   schedule:
