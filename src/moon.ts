@@ -87,22 +87,22 @@ export function calculateMoonData(
     .set({ hour: 12, minute: 0, second: 0, millisecond: 0 })
     .toJSDate();
 
-  const illumination = SunCalc.getMoonIllumination(localNoon);
-  const position = SunCalc.getMoonPosition(localNoon, latitude, longitude);
+  const { phase, fraction: illumination } = SunCalc.getMoonIllumination(localNoon);
+  const { distance } = SunCalc.getMoonPosition(localNoon, latitude, longitude);
   const { rise, set } = SunCalc.getMoonTimes(localNoon, latitude, longitude);
   const { sunrise, sunset } = SunCalc.getTimes(localNoon, latitude, longitude);
-  const age = Math.round(illumination.phase * LUNAR_CYCLE_DAYS * 100) / 100;
-  const daysUntilNew = (1 - illumination.phase) * LUNAR_CYCLE_DAYS;
-  const daysUntilFull = illumination.phase < 0.5
-    ? (0.5 - illumination.phase) * LUNAR_CYCLE_DAYS
-    : (1.5 - illumination.phase) * LUNAR_CYCLE_DAYS;
+  const age = Math.round(phase * LUNAR_CYCLE_DAYS * 100) / 100;
+  const daysUntilNew = (1 - phase) * LUNAR_CYCLE_DAYS;
+  const daysUntilFull = phase < 0.5
+    ? (0.5 - phase) * LUNAR_CYCLE_DAYS
+    : (1.5 - phase) * LUNAR_CYCLE_DAYS;
 
   return {
-    phaseName: phaseValueToName(illumination.phase),
-    phase: illumination.phase,
-    illumination: Math.round(illumination.fraction * 100 * 10) / 10,
+    phaseName: phaseValueToName(phase),
+    phase,
+    illumination: Math.round(illumination * 100 * 10) / 10,
     age,
-    distanceKm: Math.round(position.distance),
+    distanceKm: Math.round(distance),
     moonrise: calculateCelestialEvent(rise, latitude, longitude, SunCalc.getMoonPosition),
     moonset: calculateCelestialEvent(set, latitude, longitude, SunCalc.getMoonPosition),
     sunrise: calculateCelestialEvent(sunrise, latitude, longitude, SunCalc.getPosition),
