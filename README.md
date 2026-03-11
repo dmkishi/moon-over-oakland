@@ -64,7 +64,8 @@ Go to your repo → Settings → Secrets and variables → Actions → Secrets:
 - `BLUESKY_APP_PASSWORD`: Your app password
 
 ### 2. Enable the workflow
-The workflow runs daily at 8 PM UTC (noon PST). You can also trigger it manually from the Actions tab.
+The workflow runs daily at 6 AM PST / 7 AM PDT (1 PM UTC). You can also trigger
+it manually from the Actions tab.
 
 See Also
 --------------------------------------------------------------------------------

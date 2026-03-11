@@ -2,8 +2,8 @@ name: Post Moon (If Phase Is Permitted)
 
 on:
   schedule:
-    # Run daily at 8 PM UTC (noon PST / 1 PM PDT)
-    - cron: '0 20 * * *'
+    # Run daily at 6 AM PST / 7 AM PDT (1 PM UTC)
+    - cron: '0 13 * * *'
 
   workflow_dispatch:
     inputs:
