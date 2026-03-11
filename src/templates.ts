@@ -14,7 +14,7 @@ function createEngine(timezone: string): Liquid {
 
 export async function renderPost(
   moonData: MoonData,
-  timezone: string
+  timezone: string,
 ): Promise<string> {
   const engine = createEngine(timezone);
   const result = await engine.renderFile('post', moonData);
