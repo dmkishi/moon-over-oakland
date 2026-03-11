@@ -2,8 +2,7 @@ import pc from 'picocolors';
 import { config } from './config.js';
 import { location } from './constants.js';
 import { calculateMoonData, type MoonPhase } from './moon.js';
-import { renderDataReport } from './templates/dataReport.js';
-import { renderPost } from './templates/post.js';
+import { renderDataReport, renderPost } from './templates.js';
 import { createBlueskyClient } from './social/bluesky.js';
 
 const PHASES_TO_POST: MoonPhase[] = [
