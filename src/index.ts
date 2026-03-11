@@ -26,8 +26,8 @@ async function main(): Promise<void> {
   console.log(await renderDataReport(moonData, location.timezone));
   console.log();
 
-  if (!PHASES_TO_POST.includes(moonData.phaseName)) {
-    console.log(pc.red('Nothing to post.'), `Phase "${moonData.phaseName}" is not a posting phase.`);
+  if (!PHASES_TO_POST.includes(moonData.average.phaseName)) {
+    console.log(pc.red('Nothing to post.'), `Phase "${moonData.average.phaseName}" is not a posting phase.`);
     console.log();
     return;
   }

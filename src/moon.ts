@@ -29,13 +29,22 @@ interface MoonEvent extends CelestialEvent {
   tiltDeg: number;
 }
 
-export interface MoonData {
-  date: Date;
+/**
+ * Snapshot of lunar conditions calculated at solar noon in Oakland—the midpoint
+ * of its calendar day. This provides an "average" reading for the day because
+ * the moon's position and phase are constantly changing throughout the day.
+ */
+interface MoonMidpoint {
   phaseName: MoonPhase;
   phase: number;        // 0-1: 0 and 1 = new moon, 0.5 = full moon
   illumination: number; // 0-1: 0 = new moon, 1 = full moon
   age: number;          // 0-29.5 days into lunar cycle
   distanceKm: number;
+}
+
+export interface MoonData {
+  date: Date;
+  average: MoonMidpoint;
   moonrise: MoonEvent;
   moonset: MoonEvent;
   sunrise: CelestialEvent;
@@ -99,7 +108,6 @@ export function calculateMoonData(
   latitude: number,
   longitude: number
 ): MoonData {
-  // Use noon local-time for consistent phase calculation
   const localNoon: Date = DateTime
     .fromJSDate(date)
     .setZone(timezone)
@@ -118,11 +126,13 @@ export function calculateMoonData(
 
   return {
     date,
-    phaseName: phaseValueToName(phase),
-    phase,
-    illumination,
-    age,
-    distanceKm: Math.round(distance),
+    average: {
+      phaseName: phaseValueToName(phase),
+      phase,
+      illumination,
+      age,
+      distanceKm: Math.round(distance),
+    },
     moonrise: moonEvent(rise, latitude, longitude),
     moonset: moonEvent(set, latitude, longitude),
     sunrise: celestialEvent(sunrise, latitude, longitude, SunCalc.getPosition),
