@@ -47,16 +47,7 @@ const COMPASS_DIRECTIONS: CompassDirection[] = [
   'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW',
 ];
 
-/**
- * Convert phase value (0-1) to named phase
- */
 function phaseValueToName(phase: number): MoonPhase {
-  // Phase values from suncalc:
-  // 0.00 = new moon
-  // 0.25 = first quarter
-  // 0.50 = full moon
-  // 0.75 = third quarter
-  // 1.00 = new moon (cycle complete)
   if (phase < 0.025 || phase >= 0.975) return 'new';
   if (phase < 0.225) return 'waxing-crescent';
   if (phase < 0.275) return 'first-quarter';
