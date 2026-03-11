@@ -11,7 +11,7 @@ export type MoonPhase =
   | 'third-quarter'
   | 'waning-crescent';
 
-interface MoonEvent {
+export interface CelestialEvent {
   date: Date;
   azimuthDeg: number;
 }
@@ -22,8 +22,10 @@ export interface MoonData {
   illumination: number;   // 0-100
   age: number;            // 0-29.5 days into lunar cycle
   distanceKm: number;
-  moonrise: MoonEvent;
-  moonset: MoonEvent;
+  moonrise: CelestialEvent;
+  moonset: CelestialEvent;
+  sunrise: CelestialEvent;
+  sunset: CelestialEvent;
   nextNewMoon: Date;
   nextFullMoon: Date;
 }
@@ -52,15 +54,15 @@ function phaseValueToName(phase: number): MoonPhase {
   return 'waning-crescent';
 }
 
-function calculateMoonEvent(
+function calculateCelestialEvent(
   date: Date,
   latitude: number,
-  longitude: number
-): MoonEvent {
+  longitude: number,
+  getPosition: (date: Date, lat: number, lng: number) => { azimuth: number },
+): CelestialEvent {
   return {
     date,
-    azimuthDeg:
-      SunCalc.getMoonPosition(date, latitude, longitude).azimuth * RAD_TO_DEG,
+    azimuthDeg: getPosition(date, latitude, longitude).azimuth * RAD_TO_DEG,
   };
 }
 
@@ -80,6 +82,7 @@ export function calculateMoonData(
   const illumination = SunCalc.getMoonIllumination(localNoon);
   const position = SunCalc.getMoonPosition(localNoon, latitude, longitude);
   const { rise, set } = SunCalc.getMoonTimes(localNoon, latitude, longitude);
+  const { sunrise, sunset } = SunCalc.getTimes(localNoon, latitude, longitude);
   const age = Math.round(illumination.phase * LUNAR_CYCLE_DAYS * 100) / 100;
   const daysUntilNew = (1 - illumination.phase) * LUNAR_CYCLE_DAYS;
   const daysUntilFull = illumination.phase < 0.5
@@ -92,8 +95,10 @@ export function calculateMoonData(
     illumination: Math.round(illumination.fraction * 100 * 10) / 10,
     age,
     distanceKm: Math.round(position.distance),
-    moonrise: calculateMoonEvent(rise, latitude, longitude),
-    moonset: calculateMoonEvent(set, latitude, longitude),
+    moonrise: calculateCelestialEvent(rise, latitude, longitude, SunCalc.getMoonPosition),
+    moonset: calculateCelestialEvent(set, latitude, longitude, SunCalc.getMoonPosition),
+    sunrise: calculateCelestialEvent(sunrise, latitude, longitude, SunCalc.getPosition),
+    sunset: calculateCelestialEvent(sunset, latitude, longitude, SunCalc.getPosition),
     nextNewMoon: new Date(localNoon.getTime() + daysUntilNew * MS_PER_DAY),
     nextFullMoon: new Date(localNoon.getTime() + daysUntilFull * MS_PER_DAY),
   };

@@ -63,6 +63,14 @@ async function main(): Promise<void> {
   const moonsetAzimuthDeg = moonData.moonset.azimuthDeg.toFixed(1);
   console.log(`Moonset:        ${moonsetTime} (${moonsetAzimuthDeg}°)`);
 
+  const sunriseTime = oaklandDateTime.format(moonData.sunrise.date);
+  const sunriseAzimuthDeg = moonData.sunrise.azimuthDeg.toFixed(1);
+  console.log(`Sunrise:        ${sunriseTime} (${sunriseAzimuthDeg}°)`);
+
+  const sunsetTime = oaklandDateTime.format(moonData.sunset.date);
+  const sunsetAzimuthDeg = moonData.sunset.azimuthDeg.toFixed(1);
+  console.log(`Sunset:         ${sunsetTime} (${sunsetAzimuthDeg}°)`);
+
   const nextNewMoonDaysAway = daysAway(moonData.nextNewMoon);
   const nextNewMoonDate = oaklandDate.format(moonData.nextNewMoon);
   console.log(`Next New Moon:  ${nextNewMoonDaysAway} days (${nextNewMoonDate})`);
