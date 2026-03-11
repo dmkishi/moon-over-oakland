@@ -25,14 +25,18 @@ interface CelestialEvent {
   compassDirection: CompassDirection;
 }
 
+interface MoonEvent extends CelestialEvent {
+  tiltDeg: number;
+}
+
 export interface MoonData {
   phaseName: MoonPhase;
   phase: number;        // 0-1: 0 and 1 = new moon, 0.5 = full moon
   illumination: number; // 0-1: 0 = new moon, 1 = full moon
   age: number;          // 0-29.5 days into lunar cycle
   distanceKm: number;
-  moonrise: CelestialEvent;
-  moonset: CelestialEvent;
+  moonrise: MoonEvent;
+  moonset: MoonEvent;
   sunrise: CelestialEvent;
   sunset: CelestialEvent;
   nextNewMoon: Date;
@@ -74,6 +78,20 @@ function calculateCelestialEvent(
   };
 }
 
+function calculateMoonEvent(
+  date: Date,
+  latitude: number,
+  longitude: number,
+): MoonEvent {
+  const { angle } = SunCalc.getMoonIllumination(date);
+  const { parallacticAngle } = SunCalc.getMoonPosition(date, latitude, longitude);
+  const tiltDeg = (angle - parallacticAngle) * RAD_TO_DEG;
+  return {
+    ...calculateCelestialEvent(date, latitude, longitude, SunCalc.getMoonPosition),
+    tiltDeg,
+  };
+}
+
 export function calculateMoonData(
   date: Date,
   timezone: string,
@@ -103,8 +121,8 @@ export function calculateMoonData(
     illumination,
     age,
     distanceKm: Math.round(distance),
-    moonrise: calculateCelestialEvent(rise, latitude, longitude, SunCalc.getMoonPosition),
-    moonset: calculateCelestialEvent(set, latitude, longitude, SunCalc.getMoonPosition),
+    moonrise: calculateMoonEvent(rise, latitude, longitude),
+    moonset: calculateMoonEvent(set, latitude, longitude),
     sunrise: calculateCelestialEvent(sunrise, latitude, longitude, SunCalc.getPosition),
     sunset: calculateCelestialEvent(sunset, latitude, longitude, SunCalc.getPosition),
     nextNewMoon: new Date(localNoon.getTime() + daysUntilNew * MS_PER_DAY),

@@ -58,12 +58,14 @@ async function main(): Promise<void> {
   const moonriseTime = oaklandDateTime.format(moonData.moonrise.date);
   const moonriseCompassDirection = moonData.moonrise.compassDirection;
   const moonriseCompassDeg = Math.round(moonData.moonrise.compassDeg);
-  console.log(`Moonrise:       ${moonriseTime} (${moonriseCompassDirection}, ${moonriseCompassDeg}°)`);
+  const moonriseTiltDeg = Math.round(moonData.moonrise.tiltDeg);
+  console.log(`Moonrise:       ${moonriseTime} (${moonriseCompassDirection}, ${moonriseCompassDeg}°, Tilt: ${moonriseTiltDeg}°)`);
 
   const moonsetTime = oaklandDateTime.format(moonData.moonset.date);
   const moonsetCompassDirection = moonData.moonset.compassDirection;
   const moonsetCompassDeg = Math.round(moonData.moonset.compassDeg);
-  console.log(`Moonset:        ${moonsetTime} (${moonsetCompassDirection}, ${moonsetCompassDeg}°)`);
+  const moonsetTiltDeg = Math.round(moonData.moonset.tiltDeg);
+  console.log(`Moonset:        ${moonsetTime} (${moonsetCompassDirection}, ${moonsetCompassDeg}°, Tilt: ${moonsetTiltDeg}°)`);
 
   const sunriseTime = oaklandDateTime.format(moonData.sunrise.date);
   const sunriseCompassDirection = moonData.sunrise.compassDirection;
