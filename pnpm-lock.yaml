@@ -11,15 +11,15 @@ importers:
       '@atproto/api':
         specifier: ^0.13.35
         version: 0.13.35
+      '@js-temporal/polyfill':
+        specifier: ^0.5.1
+        version: 0.5.1
       dotenv:
         specifier: ^16.6.1
         version: 16.6.1
       liquidjs:
         specifier: ^10.25.0
         version: 10.25.0
-      luxon:
-        specifier: ^3.7.2
-        version: 3.7.2
       picocolors:
         specifier: ^1.1.1
         version: 1.1.1
@@ -33,9 +33,6 @@ importers:
       '@dmkishi/markdownlint-cli2.yaml':
         specifier: ^0.0.3
         version: 0.0.3
-      '@types/luxon':
-        specifier: ^3.7.1
-        version: 3.7.1
       '@types/node':
         specifier: ^22.19.15
         version: 22.19.15
@@ -238,8 +235,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@types/luxon@3.7.1':
-    resolution: {integrity: sha512-H3iskjFIAn5SlJU7OuxUmTEpebK6TKB8rxZShDslBMZJ5u9S//KM1sbdAisiSrqwLQncVjnpi2OK2J51h+4lsg==}
+  '@js-temporal/polyfill@0.5.1':
+    resolution: {integrity: sha512-hloP58zRVCRSpgDxmqCWJNlizAlUgJFqG2ypq79DCvyv9tHjRYMDOcPFjzfl/A1/YxDvRCZz8wvZvmapQnKwFQ==}
+    engines: {node: '>=12'}
 
   '@types/node@22.19.15':
     resolution: {integrity: sha512-F0R/h2+dsy5wJAUe3tAU6oqa2qbWY5TpNfL/RGmo1y38hiyO1w3x2jPtt76wmuaJI4DQnOBu21cNXQ2STIUUWg==}
@@ -274,14 +272,13 @@ packages:
   iso-datestring-validator@2.2.2:
     resolution: {integrity: sha512-yLEMkBbLZTlVQqOnQ4FiMujR6T4DEcCb1xizmvXS+OxuhwcbtynoosRzdMA69zZCShCNAbi+gJ71FxZBBXx1SA==}
 
+  jsbi@4.3.2:
+    resolution: {integrity: sha512-9fqMSQbhJykSeii05nxKl4m6Eqn2P6rOlYiS+C5Dr/HPIU/7yZxu5qzbs40tgaFORiw2Amd0mirjxatXYMkIew==}
+
   liquidjs@10.25.0:
     resolution: {integrity: sha512-XpO7AiGULTG4xcTlwkcTI5JreFG7b6esLCLp+aUSh7YuQErJZEoUXre9u9rbdb0057pfWG4l0VursvLd5Q/eAw==}
     engines: {node: '>=16'}
     hasBin: true
-
-  luxon@3.7.2:
-    resolution: {integrity: sha512-vtEhXh/gNjI9Yg1u4jX/0YVPMvxzHuGgCm6tC5kZyb08yjGWGnqAjGJvcXbqQR2P3MyMEFnRbpcdFS6PBcLqew==}
-    engines: {node: '>=12'}
 
   multiformats@9.9.0:
     resolution: {integrity: sha512-HoMUjhH9T8DDBNT+6xzkrd9ga/XiBI4xLr58LJACwK6G3HTOPeMz4nB4KJs33L2BelrIJa7P0VuNaVF3hMYfjg==}
@@ -459,7 +456,9 @@ snapshots:
   '@esbuild/win32-x64@0.27.3':
     optional: true
 
-  '@types/luxon@3.7.1': {}
+  '@js-temporal/polyfill@0.5.1':
+    dependencies:
+      jsbi: 4.3.2
 
   '@types/node@22.19.15':
     dependencies:
@@ -511,11 +510,11 @@ snapshots:
 
   iso-datestring-validator@2.2.2: {}
 
+  jsbi@4.3.2: {}
+
   liquidjs@10.25.0:
     dependencies:
       commander: 10.0.1
-
-  luxon@3.7.2: {}
 
   multiformats@9.9.0: {}
 

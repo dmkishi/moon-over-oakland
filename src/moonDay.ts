@@ -1,4 +1,4 @@
-import { DateTime } from 'luxon';
+import { Temporal } from '@js-temporal/polyfill';
 import SunCalc from 'suncalc';
 
 export type MoonPhase =
@@ -108,11 +108,14 @@ export function calculateMoonDay(
   latitude: number,
   longitude: number
 ): MoonDay {
-  const localNoon: Date = DateTime
-    .fromJSDate(date)
-    .setZone(timezone)
-    .set({ hour: 12, minute: 0, second: 0, millisecond: 0 })
-    .toJSDate();
+  const localNoon: Date = new Date(
+    Temporal.Instant
+      .fromEpochMilliseconds(date.getTime())
+      .toZonedDateTimeISO(timezone)
+      .with({ hour: 12, minute: 0, second: 0, millisecond: 0, microsecond: 0, nanosecond: 0 })
+      .toInstant()
+      .epochMilliseconds
+  );
 
   const { phase, fraction: illumination } = SunCalc.getMoonIllumination(localNoon);
   const { distance } = SunCalc.getMoonPosition(localNoon, latitude, longitude);

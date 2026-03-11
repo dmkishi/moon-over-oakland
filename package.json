@@ -20,16 +20,15 @@
   },
   "dependencies": {
     "@atproto/api": "^0.13.35",
+    "@js-temporal/polyfill": "^0.5.1",
     "dotenv": "^16.6.1",
     "liquidjs": "^10.25.0",
-    "luxon": "^3.7.2",
     "picocolors": "^1.1.1",
     "suncalc": "^1.9.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
     "@dmkishi/markdownlint-cli2.yaml": "^0.0.3",
-    "@types/luxon": "^3.7.1",
     "@types/node": "^22.19.15",
     "@types/suncalc": "^1.9.2",
     "tsx": "^4.21.0",
