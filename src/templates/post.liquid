@@ -1,15 +1,5 @@
 {% comment %}
-  @param {string} phaseName - Moon phase name: new, first-quarter, full, third-quarter
-  @param {string} phase - Moon phase value: 0-1, where 0 and 1 are new moon
-  @param {number} illumination - Percent illuminated
-  @param {number} age - Days into lunar cycle
-  @param {number} distanceKm
-  @param {Date} moonrise.date - Oakland moonrise time
-  @param {number} moonrise.compassDeg - Azimuth at moonrise in degrees
-  @param {Date} moonset.date - Oakland moonset time
-  @param {number} moonset.compassDeg  - Azimuth at moonset in degrees
-  @param {Date} nextNewMoon - Date of next new moon
-  @param {Date} nextFullMoon - Date of next full moon
+  @param {MoonData.*} - See `src/moon.ts`.
 {% endcomment %}
 
 {% liquid
