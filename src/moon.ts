@@ -62,7 +62,7 @@ function phaseValueToName(phase: number): MoonPhase {
   return 'waning-crescent';
 }
 
-function calculateCelestialEvent(
+function celestialEvent(
   date: Date,
   latitude: number,
   longitude: number,
@@ -78,7 +78,7 @@ function calculateCelestialEvent(
   };
 }
 
-function calculateMoonEvent(
+function moonEvent(
   date: Date,
   latitude: number,
   longitude: number,
@@ -87,7 +87,7 @@ function calculateMoonEvent(
   const { parallacticAngle } = SunCalc.getMoonPosition(date, latitude, longitude);
   const tiltDeg = (angle - parallacticAngle) * RAD_TO_DEG;
   return {
-    ...calculateCelestialEvent(date, latitude, longitude, SunCalc.getMoonPosition),
+    ...celestialEvent(date, latitude, longitude, SunCalc.getMoonPosition),
     tiltDeg,
   };
 }
@@ -121,10 +121,10 @@ export function calculateMoonData(
     illumination,
     age,
     distanceKm: Math.round(distance),
-    moonrise: calculateMoonEvent(rise, latitude, longitude),
-    moonset: calculateMoonEvent(set, latitude, longitude),
-    sunrise: calculateCelestialEvent(sunrise, latitude, longitude, SunCalc.getPosition),
-    sunset: calculateCelestialEvent(sunset, latitude, longitude, SunCalc.getPosition),
+    moonrise: moonEvent(rise, latitude, longitude),
+    moonset: moonEvent(set, latitude, longitude),
+    sunrise: celestialEvent(sunrise, latitude, longitude, SunCalc.getPosition),
+    sunset: celestialEvent(sunset, latitude, longitude, SunCalc.getPosition),
     nextNewMoon: new Date(localNoon.getTime() + daysUntilNew * MS_PER_DAY),
     nextFullMoon: new Date(localNoon.getTime() + daysUntilFull * MS_PER_DAY),
   };
