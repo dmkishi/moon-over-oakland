@@ -21,7 +21,10 @@ export async function renderPost(
   return result.trim();
 }
 
-export async function renderDataReport(
+/**
+ * Renders a data report for the given moon day.
+ */
+export async function renderReport(
   moonDay: MoonDay,
   timezone: string,
 ): Promise<string> {
@@ -37,6 +40,6 @@ export async function renderDataReport(
     return Math.round((targetStart - todayStart) / msPerDay);
   });
 
-  const result = await engine.renderFile('dataReport', moonDay);
+  const result = await engine.renderFile('report', moonDay);
   return result.trimEnd();
 }

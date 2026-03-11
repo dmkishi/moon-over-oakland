@@ -2,7 +2,7 @@ import pc from 'picocolors';
 import { config } from './config.js';
 import { location } from './constants.js';
 import { calculateMoonDay, type MoonPhase } from './moonDay.js';
-import { renderDataReport, renderPost } from './templates.js';
+import { renderReport, renderPost } from './templates.js';
 import { createBlueskyClient } from './social/bluesky.js';
 
 const PHASES_TO_POST: MoonPhase[] = [
@@ -23,7 +23,7 @@ async function main(): Promise<void> {
 
   console.log('Moon Over Oakland');
   console.log('================================================================================');
-  console.log(await renderDataReport(moonDay, location.timezone));
+  console.log(await renderReport(moonDay, location.timezone));
   console.log();
 
   if (!PHASES_TO_POST.includes(moonDay.average.phaseName)) {
