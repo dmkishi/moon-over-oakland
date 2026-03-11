@@ -15,8 +15,8 @@
     "typecheck": "tsc --noEmit",
     "build": "tsc",
     "tryPost": "node dist/index.js",
-    "tryPost:dryRun:dev": "DRY_RUN=true tsx src/index.ts",
-    "tryPost:dryRun:build": "DRY_RUN=true node dist/index.js"
+    "view:dev": "DRY_RUN=true tsx src/index.ts",
+    "view:build": "DRY_RUN=true node dist/index.js"
   },
   "dependencies": {
     "@atproto/api": "^0.13.35",
