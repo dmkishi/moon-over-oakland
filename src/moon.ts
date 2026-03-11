@@ -27,9 +27,9 @@ export interface CelestialEvent {
 
 export interface MoonData {
   phaseName: MoonPhase;
-  phase: number;          // 0-1, where 0 and 1 are new moon
-  illumination: number;   // 0-100
-  age: number;            // 0-29.5 days into lunar cycle
+  phase: number;        // 0-1: 0 and 1 = new moon, 0.5 = full moon
+  illumination: number; // 0-1: 0 = new moon, 1 = full moon
+  age: number;          // 0-29.5 days into lunar cycle
   distanceKm: number;
   moonrise: CelestialEvent;
   moonset: CelestialEvent;
@@ -100,7 +100,7 @@ export function calculateMoonData(
   return {
     phaseName: phaseValueToName(phase),
     phase,
-    illumination: Math.round(illumination * 100 * 10) / 10,
+    illumination,
     age,
     distanceKm: Math.round(distance),
     moonrise: calculateCelestialEvent(rise, latitude, longitude, SunCalc.getMoonPosition),

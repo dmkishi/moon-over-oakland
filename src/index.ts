@@ -51,7 +51,7 @@ async function main(): Promise<void> {
   console.log(`Calculated At:  ${oaklandDateTime.format(now)}`);
   console.log(`Phase Name:     ${moonData.phaseName}`);
   console.log(`Phase:          ${moonData.phase}`);
-  console.log(`Illumination:   ${moonData.illumination}%`);
+  console.log(`Illumination:   ${(moonData.illumination * 100).toFixed(0)}%`);
   console.log(`Age:            ${moonData.age} days`);
   console.log(`Distance:       ${moonData.distanceKm.toLocaleString()} km`);
 
