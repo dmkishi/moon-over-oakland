@@ -11,7 +11,7 @@ export type MoonPhase =
   | 'third-quarter'
   | 'waning-crescent';
 
-export type CompassDirection =
+type CompassDirection =
   | 'N' | 'NNE' | 'NE' | 'ENE' | 'E' | 'ESE' | 'SE' | 'SSE'
   | 'S' | 'SSW' | 'SW' | 'WSW' | 'W' | 'WNW' | 'NW' | 'NNW';
 
@@ -19,7 +19,7 @@ export type CompassDirection =
  * `compassDeg` is used to explicitly distinguish from SunCalc's `azimuth`,
  * which uses a non-standard convention: 0° at south, increasing westward.
  */
-export interface CelestialEvent {
+interface CelestialEvent {
   date: Date;
   compassDeg: number;
   compassDirection: CompassDirection;
