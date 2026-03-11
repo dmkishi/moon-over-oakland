@@ -16,7 +16,7 @@ export interface MoonData {
   phase: number;          // 0-1, where 0 and 1 are new moon
   illumination: number;   // 0-100
   age: number;            // 0-29.5 days into lunar cycle
-  distance: number;       // km from Earth
+  distanceKm: number;
   moonrise: Date;
   moonset: Date;
   nextNewMoon: Date;
@@ -76,7 +76,7 @@ export function calculateMoonData(
     phase: illumination.phase,
     illumination: Math.round(illumination.fraction * 100 * 10) / 10,
     age,
-    distance: Math.round(position.distance),
+    distanceKm: Math.round(position.distance),
     moonrise: rise,
     moonset: set,
     nextNewMoon: new Date(localNoon.getTime() + daysUntilNew * MS_PER_DAY),
