@@ -11,7 +11,7 @@ const PHASES_TO_POST: MoonPhase[] = [
   'first-quarter',
   'full',
   'third-quarter',
-];
+] as const;
 
 async function main(): Promise<void> {
   const isDryRun = process.env.DRY_RUN === 'true';
