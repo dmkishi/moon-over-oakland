@@ -24,7 +24,7 @@ async function main(): Promise<void> {
 
   console.log('Moon Over Oakland');
   console.log('================================================================================');
-  console.log(await renderDataReport(moonData, now, location.timezone));
+  console.log(await renderDataReport(moonData, location.timezone, now));
   console.log();
 
   if (!PHASES_TO_POST.includes(moonData.phaseName)) {

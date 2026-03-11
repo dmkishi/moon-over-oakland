@@ -23,8 +23,8 @@ export async function renderPost(
 
 export async function renderDataReport(
   moonData: MoonData,
-  now: Date,
   timezone: string,
+  now: Date,
 ): Promise<string> {
   const engine = createEngine(timezone);
 
