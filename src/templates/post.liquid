@@ -4,8 +4,10 @@
   @param {number} illumination - Percent illuminated
   @param {number} age - Days into lunar cycle
   @param {number} distanceKm
-  @param {Date} moonrise - Local moonrise time
-  @param {Date} moonset - Local moonset time
+  @param {Date} moonrise.date - Oakland moonrise time
+  @param {number} moonrise.azimuthDeg - Azimuth at moonrise in degrees
+  @param {Date} moonset.date - Oakland moonset time
+  @param {number} moonset.azimuthDeg  - Azimuth at moonset in degrees
   @param {Date} nextNewMoon - Date of next new moon
   @param {Date} nextFullMoon - Date of next full moon
 {% endcomment %}
@@ -29,5 +31,5 @@
     🌗 Half Moon (Third Quarter)
 {% endcase %}
 
-{% if moonrise %}Moonrise: {{ moonrise | date: TIME_FORMAT }}{% endif %}
-{% if moonset %}Moonset: {{ moonset | date: TIME_FORMAT }}{% endif %}
+{% if moonrise %}Moonrise: {{ moonrise.date | date: TIME_FORMAT }}{% endif %}
+{% if moonset %}Moonset: {{ moonset.date | date: TIME_FORMAT }}{% endif %}

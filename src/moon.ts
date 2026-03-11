@@ -11,20 +11,26 @@ export type MoonPhase =
   | 'third-quarter'
   | 'waning-crescent';
 
+interface MoonEvent {
+  date: Date;
+  azimuthDeg: number;
+}
+
 export interface MoonData {
   phaseName: MoonPhase;
   phase: number;          // 0-1, where 0 and 1 are new moon
   illumination: number;   // 0-100
   age: number;            // 0-29.5 days into lunar cycle
   distanceKm: number;
-  moonrise: Date;
-  moonset: Date;
+  moonrise: MoonEvent;
+  moonset: MoonEvent;
   nextNewMoon: Date;
   nextFullMoon: Date;
 }
 
 const LUNAR_CYCLE_DAYS = 29.530589;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const RAD_TO_DEG = 180 / Math.PI;
 
 /**
  * Convert phase value (0-1) to named phase
@@ -46,9 +52,18 @@ function phaseValueToName(phase: number): MoonPhase {
   return 'waning-crescent';
 }
 
-/**
- * Calculate moon data for a given date and location
- */
+function calculateMoonEvent(
+  date: Date,
+  latitude: number,
+  longitude: number
+): MoonEvent {
+  return {
+    date,
+    azimuthDeg:
+      SunCalc.getMoonPosition(date, latitude, longitude).azimuth * RAD_TO_DEG,
+  };
+}
+
 export function calculateMoonData(
   date: Date,
   timezone: string,
@@ -77,8 +92,8 @@ export function calculateMoonData(
     illumination: Math.round(illumination.fraction * 100 * 10) / 10,
     age,
     distanceKm: Math.round(position.distance),
-    moonrise: rise,
-    moonset: set,
+    moonrise: calculateMoonEvent(rise, latitude, longitude),
+    moonset: calculateMoonEvent(set, latitude, longitude),
     nextNewMoon: new Date(localNoon.getTime() + daysUntilNew * MS_PER_DAY),
     nextFullMoon: new Date(localNoon.getTime() + daysUntilFull * MS_PER_DAY),
   };

@@ -54,8 +54,14 @@ async function main(): Promise<void> {
   console.log(`Illumination:   ${moonData.illumination}%`);
   console.log(`Age:            ${moonData.age} days`);
   console.log(`Distance:       ${moonData.distanceKm.toLocaleString()} km`);
-  console.log(`Moonrise:       ${oaklandDateTime.format(moonData.moonrise)}`);
-  console.log(`Moonset:        ${oaklandDateTime.format(moonData.moonset)}`);
+
+  const moonriseTime = oaklandDateTime.format(moonData.moonrise.date);
+  const moonriseAzimuthDeg = moonData.moonrise.azimuthDeg.toFixed(1);
+  console.log(`Moonrise:       ${moonriseTime} (${moonriseAzimuthDeg}°)`);
+
+  const moonsetTime = oaklandDateTime.format(moonData.moonset.date);
+  const moonsetAzimuthDeg = moonData.moonset.azimuthDeg.toFixed(1);
+  console.log(`Moonset:        ${moonsetTime} (${moonsetAzimuthDeg}°)`);
 
   const nextNewMoonDaysAway = daysAway(moonData.nextNewMoon);
   const nextNewMoonDate = oaklandDate.format(moonData.nextNewMoon);
