@@ -30,6 +30,7 @@ interface MoonEvent extends CelestialEvent {
 }
 
 export interface MoonData {
+  date: Date;
   phaseName: MoonPhase;
   phase: number;        // 0-1: 0 and 1 = new moon, 0.5 = full moon
   illumination: number; // 0-1: 0 = new moon, 1 = full moon
@@ -116,6 +117,7 @@ export function calculateMoonData(
     : (1.5 - phase) * LUNAR_CYCLE_DAYS;
 
   return {
+    date,
     phaseName: phaseValueToName(phase),
     phase,
     illumination,

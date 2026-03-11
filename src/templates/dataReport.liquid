@@ -1,5 +1,4 @@
 {% comment %}
-  @param {Date} now - The current date/time.
   @param {MoonData.*} - See `src/moon.ts`.
 {% endcomment %}
 
@@ -11,7 +10,7 @@
   assign DATE_FORMAT = "%-m/%-d/%Y"
 -%}
 
-Calculated At:  {{ now | date: DATETIME_FORMAT }}
+Date:           {{ date | date: DATETIME_FORMAT }}
 Phase Name:     {{ phaseName }}
 Phase:          {{ phase }}
 Illumination:   {{ illumination | times: 100 | round }}%

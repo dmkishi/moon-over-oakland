@@ -24,19 +24,19 @@ export async function renderPost(
 export async function renderDataReport(
   moonData: MoonData,
   timezone: string,
-  now: Date,
 ): Promise<string> {
+  const today = moonData.date;
   const engine = createEngine(timezone);
 
   engine.registerFilter('localeString', (value: number) => value.toLocaleString());
 
   engine.registerFilter('daysAway', (date: Date) => {
     const msPerDay = 24 * 60 * 60 * 1000;
-    const todayStart = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayStart = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
     const targetStart = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
     return Math.round((targetStart - todayStart) / msPerDay);
   });
 
-  const result = await engine.renderFile('dataReport', { ...moonData, now });
+  const result = await engine.renderFile('dataReport', { ...moonData });
   return result.trimEnd();
 }

@@ -14,9 +14,8 @@ const PHASES_TO_POST: MoonPhase[] = [
 
 async function main(): Promise<void> {
   const isDryRun = process.env.DRY_RUN === 'true';
-  const now = new Date();
   const moonData = calculateMoonData(
-    now,
+    new Date(),
     location.timezone,
     location.latitude,
     location.longitude,
@@ -24,7 +23,7 @@ async function main(): Promise<void> {
 
   console.log('Moon Over Oakland');
   console.log('================================================================================');
-  console.log(await renderDataReport(moonData, location.timezone, now));
+  console.log(await renderDataReport(moonData, location.timezone));
   console.log();
 
   if (!PHASES_TO_POST.includes(moonData.phaseName)) {
