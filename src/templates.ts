@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { Liquid } from 'liquidjs';
-import type { MoonData } from './moon.js';
+import type { MoonDay } from './moonDay.js';
 
 function createEngine(timezone: string): Liquid {
   const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -13,19 +13,19 @@ function createEngine(timezone: string): Liquid {
 }
 
 export async function renderPost(
-  moonData: MoonData,
+  moonDay: MoonDay,
   timezone: string,
 ): Promise<string> {
   const engine = createEngine(timezone);
-  const result = await engine.renderFile('post', moonData);
+  const result = await engine.renderFile('post', moonDay);
   return result.trim();
 }
 
 export async function renderDataReport(
-  moonData: MoonData,
+  moonDay: MoonDay,
   timezone: string,
 ): Promise<string> {
-  const today = moonData.date;
+  const today = moonDay.date;
   const engine = createEngine(timezone);
 
   engine.registerFilter('localeString', (value: number) => value.toLocaleString());
@@ -37,6 +37,6 @@ export async function renderDataReport(
     return Math.round((targetStart - todayStart) / msPerDay);
   });
 
-  const result = await engine.renderFile('dataReport', { ...moonData });
+  const result = await engine.renderFile('dataReport', moonDay);
   return result.trimEnd();
 }

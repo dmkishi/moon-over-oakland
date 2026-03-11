@@ -42,7 +42,7 @@ interface MoonMidpoint {
   distanceKm: number;
 }
 
-export interface MoonData {
+export interface MoonDay {
   date: Date;
   average: MoonMidpoint;
   moonrise: MoonEvent;
@@ -102,12 +102,12 @@ function moonEvent(
   };
 }
 
-export function calculateMoonData(
+export function calculateMoonDay(
   date: Date,
   timezone: string,
   latitude: number,
   longitude: number
-): MoonData {
+): MoonDay {
   const localNoon: Date = DateTime
     .fromJSDate(date)
     .setZone(timezone)

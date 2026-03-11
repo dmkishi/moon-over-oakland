@@ -1,7 +1,7 @@
 import pc from 'picocolors';
 import { config } from './config.js';
 import { location } from './constants.js';
-import { calculateMoonData, type MoonPhase } from './moon.js';
+import { calculateMoonDay, type MoonPhase } from './moonDay.js';
 import { renderDataReport, renderPost } from './templates.js';
 import { createBlueskyClient } from './social/bluesky.js';
 
@@ -14,7 +14,7 @@ const PHASES_TO_POST: MoonPhase[] = [
 
 async function main(): Promise<void> {
   const isDryRun = process.env.DRY_RUN === 'true';
-  const moonData = calculateMoonData(
+  const moonDay = calculateMoonDay(
     new Date(),
     location.timezone,
     location.latitude,
@@ -23,16 +23,16 @@ async function main(): Promise<void> {
 
   console.log('Moon Over Oakland');
   console.log('================================================================================');
-  console.log(await renderDataReport(moonData, location.timezone));
+  console.log(await renderDataReport(moonDay, location.timezone));
   console.log();
 
-  if (!PHASES_TO_POST.includes(moonData.average.phaseName)) {
-    console.log(pc.red('Nothing to post.'), `Phase "${moonData.average.phaseName}" is not a posting phase.`);
+  if (!PHASES_TO_POST.includes(moonDay.average.phaseName)) {
+    console.log(pc.red('Nothing to post.'), `Phase "${moonDay.average.phaseName}" is not a posting phase.`);
     console.log();
     return;
   }
 
-  const content = await renderPost(moonData, location.timezone);
+  const content = await renderPost(moonDay, location.timezone);
   console.log('Content of post:');
   console.log('--------------------------------------------------------------------------------');
   console.log(content);
