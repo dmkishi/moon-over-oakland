@@ -11,9 +11,13 @@ export type MoonPhase =
   | 'third-quarter'
   | 'waning-crescent';
 
+/**
+ * `compassDeg` is used to explicitly distinguish from SunCalc's `azimuth`,
+ * which uses a non-standard convention: 0° at south, increasing westward.
+ */
 export interface CelestialEvent {
   date: Date;
-  azimuthDeg: number;
+  compassDeg: number;
 }
 
 export interface MoonData {
@@ -60,9 +64,11 @@ function calculateCelestialEvent(
   longitude: number,
   getPosition: (date: Date, lat: number, lng: number) => { azimuth: number },
 ): CelestialEvent {
+  const azimuthDeg = getPosition(date, latitude, longitude).azimuth * RAD_TO_DEG;
+  const compassDeg = (azimuthDeg + 180 + 360) % 360;
   return {
     date,
-    azimuthDeg: getPosition(date, latitude, longitude).azimuth * RAD_TO_DEG,
+    compassDeg,
   };
 }
 
