@@ -11,6 +11,10 @@ export type MoonPhase =
   | 'third-quarter'
   | 'waning-crescent';
 
+export type CompassDirection =
+  | 'N' | 'NNE' | 'NE' | 'ENE' | 'E' | 'ESE' | 'SE' | 'SSE'
+  | 'S' | 'SSW' | 'SW' | 'WSW' | 'W' | 'WNW' | 'NW' | 'NNW';
+
 /**
  * `compassDeg` is used to explicitly distinguish from SunCalc's `azimuth`,
  * which uses a non-standard convention: 0° at south, increasing westward.
@@ -18,6 +22,7 @@ export type MoonPhase =
 export interface CelestialEvent {
   date: Date;
   compassDeg: number;
+  compassDirection: CompassDirection;
 }
 
 export interface MoonData {
@@ -37,6 +42,10 @@ export interface MoonData {
 const LUNAR_CYCLE_DAYS = 29.530589;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const RAD_TO_DEG = 180 / Math.PI;
+const COMPASS_DIRECTIONS: CompassDirection[] = [
+  'N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
+  'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW',
+];
 
 /**
  * Convert phase value (0-1) to named phase
@@ -66,9 +75,11 @@ function calculateCelestialEvent(
 ): CelestialEvent {
   const azimuthDeg = getPosition(date, latitude, longitude).azimuth * RAD_TO_DEG;
   const compassDeg = (azimuthDeg + 180 + 360) % 360;
+  const compassDirection = COMPASS_DIRECTIONS[Math.round(compassDeg / 22.5) % 16];
   return {
     date,
     compassDeg,
+    compassDirection,
   };
 }
 

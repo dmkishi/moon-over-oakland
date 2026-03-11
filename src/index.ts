@@ -56,20 +56,24 @@ async function main(): Promise<void> {
   console.log(`Distance:       ${moonData.distanceKm.toLocaleString()} km`);
 
   const moonriseTime = oaklandDateTime.format(moonData.moonrise.date);
+  const moonriseCompassDirection = moonData.moonrise.compassDirection;
   const moonriseCompassDeg = moonData.moonrise.compassDeg.toFixed(1);
-  console.log(`Moonrise:       ${moonriseTime} (${moonriseCompassDeg}°)`);
+  console.log(`Moonrise:       ${moonriseTime} (${moonriseCompassDirection}, ${moonriseCompassDeg}°)`);
 
   const moonsetTime = oaklandDateTime.format(moonData.moonset.date);
+  const moonsetCompassDirection = moonData.moonset.compassDirection;
   const moonsetCompassDeg = moonData.moonset.compassDeg.toFixed(1);
-  console.log(`Moonset:        ${moonsetTime} (${moonsetCompassDeg}°)`);
+  console.log(`Moonset:        ${moonsetTime} (${moonsetCompassDirection}, ${moonsetCompassDeg}°)`);
 
   const sunriseTime = oaklandDateTime.format(moonData.sunrise.date);
+  const sunriseCompassDirection = moonData.sunrise.compassDirection;
   const sunriseCompassDeg = moonData.sunrise.compassDeg.toFixed(1);
-  console.log(`Sunrise:        ${sunriseTime} (${sunriseCompassDeg}°)`);
+  console.log(`Sunrise:        ${sunriseTime} (${sunriseCompassDirection}, ${sunriseCompassDeg}°)`);
 
   const sunsetTime = oaklandDateTime.format(moonData.sunset.date);
+  const sunsetCompassDirection = moonData.sunset.compassDirection;
   const sunsetCompassDeg = moonData.sunset.compassDeg.toFixed(1);
-  console.log(`Sunset:         ${sunsetTime} (${sunsetCompassDeg}°)`);
+  console.log(`Sunset:         ${sunsetTime} (${sunsetCompassDirection}, ${sunsetCompassDeg}°)`);
 
   const nextNewMoonDaysAway = daysAway(moonData.nextNewMoon);
   const nextNewMoonDate = oaklandDate.format(moonData.nextNewMoon);
