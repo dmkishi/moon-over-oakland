@@ -3,7 +3,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import type { MoonData } from './moon.js';
 
-export async function renderTemplate(
+export async function renderPost(
   moonData: MoonData,
   timezone: string
 ): Promise<string> {

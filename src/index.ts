@@ -3,7 +3,7 @@ import { config } from './config.js';
 import { location } from './constants.js';
 import { calculateMoonData, type MoonPhase } from './moon.js';
 import { renderDataReport } from './dataReport.js';
-import { renderTemplate } from './post.js';
+import { renderPost } from './post.js';
 import { createBlueskyClient } from './social/bluesky.js';
 
 const PHASES_TO_POST: MoonPhase[] = [
@@ -34,7 +34,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  const content = await renderTemplate(moonData, location.timezone);
+  const content = await renderPost(moonData, location.timezone);
   console.log('Content of post:');
   console.log('--------------------------------------------------------------------------------');
   console.log(content);
