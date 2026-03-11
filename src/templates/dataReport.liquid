@@ -1,0 +1,25 @@
+{% comment %}
+  @param {Date} now - The current date/time.
+  @param {MoonData.*} - See `src/moon.ts`.
+{% endcomment %}
+
+{%- liquid
+  # E.g. "Wed, 3/11/2026, 2:30 PM"
+  assign DATETIME_FORMAT = "%a, %-m/%-d/%Y, %-l:%M %p"
+
+  # E.g. "3/11/2026"
+  assign DATE_FORMAT = "%-m/%-d/%Y"
+-%}
+
+Calculated At:  {{ now | date: DATETIME_FORMAT }}
+Phase Name:     {{ phaseName }}
+Phase:          {{ phase }}
+Illumination:   {{ illumination | times: 100 | round }}%
+Age:            {{ age }} days
+Distance:       {{ distanceKm | localeString }} km
+Moonrise:       {{ moonrise.date | date: DATETIME_FORMAT }} ({{ moonrise.compassDirection }}, {{ moonrise.compassDeg | round }}°, Tilt: {{ moonrise.tiltDeg | round }}°)
+Moonset:        {{ moonset.date | date: DATETIME_FORMAT }} ({{ moonset.compassDirection }}, {{ moonset.compassDeg | round }}°, Tilt: {{ moonset.tiltDeg | round }}°)
+Sunrise:        {{ sunrise.date | date: DATETIME_FORMAT }} ({{ sunrise.compassDirection }}, {{ sunrise.compassDeg | round }}°)
+Sunset:         {{ sunset.date | date: DATETIME_FORMAT }} ({{ sunset.compassDirection }}, {{ sunset.compassDeg | round }}°)
+Next New Moon:  {{ nextNewMoon | daysAway }} days ({{ nextNewMoon | date: DATE_FORMAT }})
+Next Full Moon: {{ nextFullMoon | daysAway }} days ({{ nextFullMoon | date: DATE_FORMAT }})
