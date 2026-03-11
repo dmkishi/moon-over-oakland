@@ -41,6 +41,7 @@ async function main(): Promise<void> {
   console.log('Moon Over Oakland');
   console.log('================================================================================');
   console.log(`Calculated At:  ${now.toLocaleString(...localeDateTimeOptions)}`);
+  console.log(`Phase Name:     ${moonData.phaseName}`);
   console.log(`Phase:          ${moonData.phase}`);
   console.log(`Illumination:   ${moonData.illumination}%`);
   console.log(`Age:            ${moonData.age} days`);
@@ -51,8 +52,8 @@ async function main(): Promise<void> {
   console.log(`Next Full Moon: ${moonData.nextFullMoon.toLocaleString(...localeDateOptions)}`);
   console.log();
 
-  if (!PHASES_TO_POST.includes(moonData.phase)) {
-    console.log(pc.red('Nothing to post.'), `Phase "${moonData.phase}" is not a posting phase.`);
+  if (!PHASES_TO_POST.includes(moonData.phaseName)) {
+    console.log(pc.red('Nothing to post.'), `Phase "${moonData.phaseName}" is not a posting phase.`);
     console.log();
     return;
   }

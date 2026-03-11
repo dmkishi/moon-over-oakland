@@ -12,7 +12,8 @@ export type MoonPhase =
   | 'waning-crescent';
 
 export interface MoonData {
-  phase: MoonPhase;
+  phaseName: MoonPhase;
+  phase: number;          // 0-1, where 0 and 1 are new moon
   illumination: number;   // 0-100
   age: number;            // 0-29.5 days into lunar cycle
   distance: number;       // km from Earth
@@ -71,7 +72,8 @@ export function calculateMoonData(
     : (1.5 - illumination.phase) * LUNAR_CYCLE_DAYS;
 
   return {
-    phase: phaseValueToName(illumination.phase),
+    phaseName: phaseValueToName(illumination.phase),
+    phase: illumination.phase,
     illumination: Math.round(illumination.fraction * 100 * 10) / 10,
     age,
     distance: Math.round(position.distance),

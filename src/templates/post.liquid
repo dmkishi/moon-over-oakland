@@ -1,5 +1,6 @@
 {% comment %}
-  @param {string} phase - Moon phase name: new, first-quarter, full, third-quarter
+  @param {string} phaseName - Moon phase name: new, first-quarter, full, third-quarter
+  @param {string} phase - Moon phase value: 0-1, where 0 and 1 are new moon
   @param {number} illumination - Percent illuminated
   @param {number} age - Days into lunar cycle
   @param {number} distance - Distance in km
@@ -18,7 +19,7 @@
   assign TIME_FORMAT = "%-l:%M %p"
 %}
 
-{% case phase %}
+{% case phaseName %}
   {% when 'new' %}
     🌑 New Moon
   {% when 'first-quarter' %}
