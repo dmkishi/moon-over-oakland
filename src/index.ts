@@ -12,6 +12,14 @@ const PHASES_TO_POST: MoonPhase[] = [
   'third-quarter',
 ];
 
+function daysAway(date: Date): number {
+  const now = new Date();
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const todayStart = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const targetStart = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+  return Math.round((targetStart - todayStart) / msPerDay);
+}
+
 async function main(): Promise<void> {
   const isDryRun = process.env.DRY_RUN === 'true';
   const now = new Date();
@@ -48,8 +56,15 @@ async function main(): Promise<void> {
   console.log(`Distance:       ${moonData.distanceKm.toLocaleString()} km`);
   console.log(`Moonrise:       ${oaklandDateTime.format(moonData.moonrise)}`);
   console.log(`Moonset:        ${oaklandDateTime.format(moonData.moonset)}`);
-  console.log(`Next New Moon:  ${oaklandDate.format(moonData.nextNewMoon)}`);
-  console.log(`Next Full Moon: ${oaklandDate.format(moonData.nextFullMoon)}`);
+
+  const nextNewMoonDaysAway = daysAway(moonData.nextNewMoon);
+  const nextNewMoonDate = oaklandDate.format(moonData.nextNewMoon);
+  console.log(`Next New Moon:  ${nextNewMoonDaysAway} days (${nextNewMoonDate})`);
+
+  const nextFullMoonDaysAway = daysAway(moonData.nextFullMoon);
+  const nextFullMoonDate = oaklandDate.format(moonData.nextFullMoon);
+  console.log(`Next Full Moon: ${nextFullMoonDaysAway} days (${nextFullMoonDate})`);
+
   console.log();
 
   if (!PHASES_TO_POST.includes(moonData.phaseName)) {
