@@ -17,7 +17,8 @@
     "build": "tsc",
     "tryPost": "node dist/index.js",
     "view:dev": "DRY_RUN=true tsx src/index.ts",
-    "view:build": "DRY_RUN=true node dist/index.js"
+    "view:build": "DRY_RUN=true node dist/index.js",
+    "horizons": "tsx scripts/nasaJplHorizons.ts"
   },
   "dependencies": {
     "@atproto/api": "^0.13.35",

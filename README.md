@@ -56,6 +56,18 @@ pnpm view:dev    # View calculated moon-day data and post-draft (never posts)
 pnpm view:build  # "
 ```
 
+NASA JPL Horizons Script
+--------------------------------------------------------------------------------
+Use this script to request and generate authoritative data for use as test
+fixtures.
+
+This script queries the JPL Horizons API for daily Moon position data and
+summarizes moonrise/moonset times, azimuth, tilt, illumination, and distance.
+
+```sh
+pnpm horizons -- [YYYY-MM-DD] [--freq=N] [--show-raw] [--show-table]
+```
+
 GitHub Actions Setup
 --------------------------------------------------------------------------------
 ### 1. Add repository secrets

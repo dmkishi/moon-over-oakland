@@ -12,7 +12,7 @@ const TOLERANCE = {
 };
 
 interface CelestialEvent {
-  time: string | null;
+  dateTime: string | null;
 }
 
 interface MoonEvent extends CelestialEvent {
@@ -96,9 +96,9 @@ for (const fixture of fixtures as Fixture[]) {
     for (const name of eventNames) {
       const fixtureEvent = fixture.events[name];
 
-      if (fixtureEvent.time != null) {
+      if (fixtureEvent.dateTime != null) {
         it(`${name} time is within ±${TOLERANCE.timeMinutes} minutes`, () => {
-          const expected = new Date(fixtureEvent.time!);
+          const expected = new Date(fixtureEvent.dateTime!);
           const actual = result[name].date;
           expect(minutesBetween(actual, expected)).toBeLessThanOrEqual(TOLERANCE.timeMinutes);
         });
