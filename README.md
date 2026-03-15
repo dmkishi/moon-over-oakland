@@ -54,6 +54,9 @@ pnpm build
 pnpm tryPost     # Post online (only if permitted moon phase)
 pnpm view:dev    # View calculated moon-day data and post-draft (never posts)
 pnpm view:build  # "
+
+# Optionally specify a date (never posts)
+pnpm view:dev 2026-01-01
 ```
 
 NASA JPL Horizons Script

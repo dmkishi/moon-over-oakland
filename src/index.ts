@@ -1,3 +1,4 @@
+import { Temporal } from '@js-temporal/polyfill';
 import pc from 'picocolors';
 import { config } from './config.js';
 import { location } from './constants.js';
@@ -12,10 +13,26 @@ const PHASES_TO_POST: MoonPhase[] = [
   'third-quarter',
 ] as const;
 
+/**
+ * Parse optional date override from CLI args. Passing a date forces dry run.
+ */
+function parseArgs(): { date: Date; isDryRun: boolean } {
+  const dateArg = process.argv[2];
+  const date = dateArg
+    ? new Date(Temporal.PlainDate.from(dateArg).toZonedDateTime(location.timezone).epochMilliseconds)
+    : new Date();
+  if (isNaN(date.getTime())) {
+    console.error(pc.red(`Invalid date: "${dateArg}"`));
+    process.exit(1);
+  }
+  const isDryRun = process.env.DRY_RUN === 'true' || !!dateArg;
+  return { date, isDryRun };
+}
+
 async function main(): Promise<void> {
-  const isDryRun = process.env.DRY_RUN === 'true';
+  const { date, isDryRun } = parseArgs();
   const moonDay = calculateMoonDay(
-    new Date(),
+    date,
     location.timezone,
     location.latitude,
     location.longitude,
