@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { Temporal } from '@js-temporal/polyfill';
 import { calculateMoonDay } from '../src/moonDay';
 import { location } from '../src/constants';
 import fixtures from './fixtures/moonDayFixtures.json';
@@ -48,7 +49,7 @@ function minutesBetween(a: Date, b: Date): number {
 
 for (const fixture of fixtures as Fixture[]) {
   const label = fixture.description || fixture.day;
-  const date = new Date(fixture.day);
+  const date = new Date(Temporal.PlainDate.from(fixture.day).toZonedDateTime(timezone).epochMilliseconds);
 
   describe(`calculateMoonDay(${label})`, () => {
     const result = calculateMoonDay(date, timezone, latitude, longitude);
