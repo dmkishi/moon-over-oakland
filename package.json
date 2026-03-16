@@ -18,7 +18,8 @@
     "tryPost": "node dist/index.js",
     "view:dev": "DRY_RUN=true tsx src/index.ts",
     "view:build": "DRY_RUN=true node dist/index.js",
-    "horizons": "tsx scripts/nasaJplHorizons.ts"
+    "horizons": "tsx scripts/nasaJplHorizons.ts",
+    "prepare": "husky"
   },
   "dependencies": {
     "@atproto/api": "^0.13.35",
@@ -33,6 +34,7 @@
     "@dmkishi/markdownlint-cli2.yaml": "^0.0.3",
     "@types/node": "^22.19.15",
     "@types/suncalc": "^1.9.2",
+    "husky": "^9.1.7",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"

@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -e
+
+################################################################################
+# Check version numbers
+################################################################################
+# Get the current Git tag, if any.
+GIT_TAG=$(git describe --tags --exact-match 2>/dev/null || echo '[None]')
+
+# Get version from `package.json`.
+PACKAGE=v$(grep -o '"version": "[^"]*"' package.json | sed 's/"version": "//;s/"//g')
+
+# Get first version number listed in `README.md`.
+README=$(grep -oE '^### v([0-9]+\.){2}[0-9]+' README.md | head -n 1 | sed 's/^### //')
+
+if [ "$GIT_TAG" != "$PACKAGE" ] || [ "$PACKAGE" != "$README" ]; then
+  echo 'Version mismatch detected:' >&2
+  echo "  - Git Tag:      $GIT_TAG" >&2
+  echo "  - package.json: $PACKAGE" >&2
+  echo "  - README.md:    $README" >&2
+  echo 'Please update all version references to match.' >&2
+  exit 1
+fi
+
+################################################################################
+# Check changelog date
+################################################################################
+if grep -qE "^### ${README} \([0-9]{4}-[0-9]{1,2}-[0-9]{1,2}\)" README.md; then
+  :
+else
+  echo 'README.md: Missing or invalid date in the Changelog.'
+  exit 1
+fi
+
+################################################################################
+# TO TEST THIS HOOK: uncomment statement below
+################################################################################
+# exit 1
