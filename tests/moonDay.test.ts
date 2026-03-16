@@ -47,6 +47,18 @@ function minutesBetween(a: Date, b: Date): number {
   return Math.abs(a.getTime() - b.getTime()) / 60_000;
 }
 
+/**
+ * Assert diff ≤ tolerance. Unlike Vitest's expect(), which appends its own
+ * assertion details after the custom message, this throws only the given message.
+ */
+function expectWithin(diff: number, tolerance: number, message: string): void {
+  if (diff > tolerance) {
+    const error = new Error(message);
+    error.name = 'AssertionError';
+    throw error;
+  }
+}
+
 for (const fixture of fixtures as Fixture[]) {
   const label = fixture.description || fixture.day;
   const date = new Date(Temporal.PlainDate.from(fixture.day).toZonedDateTime(timezone).epochMilliseconds);
@@ -88,7 +100,11 @@ for (const fixture of fixtures as Fixture[]) {
       const actual = result.average.illumination * 100;
       const diff = Math.abs(actual - expected);
       const str = (value: number): string => `${value.toFixed(1)}%`;
-      expect(diff, `expected ${str(expected)}, got ${str(actual)} (Δ ${str(diff)})`).toBeLessThanOrEqual(TOLERANCE.illumination);
+      expectWithin(
+        diff,
+        TOLERANCE.illumination,
+        `expected ${str(expected)}, got ${str(actual)} (Δ ${str(diff)})`
+      );
     });
 
     it(`distanceKm is within ±${TOLERANCE.distanceKm} km`, () => {
@@ -96,7 +112,11 @@ for (const fixture of fixtures as Fixture[]) {
       const actual = result.average.distanceKm;
       const diff = Math.abs(actual - expected);
       const str = (value: number): string => `${Math.round(value).toLocaleString('en-US')} km`;
-      expect(diff, `expected ${str(expected)}, got ${str(actual)} (Δ ${str(diff)})`).toBeLessThanOrEqual(TOLERANCE.distanceKm);
+      expectWithin(
+        diff,
+        TOLERANCE.distanceKm,
+        `expected ${str(expected)}, got ${str(actual)} (Δ ${str(diff)})`
+      );
     });
 
     const eventNames = ['moonrise', 'moonset', 'sunrise', 'sunset'] as const;
@@ -108,7 +128,11 @@ for (const fixture of fixtures as Fixture[]) {
           const expected = new Date(fixtureEvent.dateTime!);
           const actual = result[name].date;
           const diff = minutesBetween(actual, expected);
-          expect(diff, `expected ${expected.toISOString()}, got ${actual.toISOString()} (Δ ${diff.toFixed(1)} min)`).toBeLessThanOrEqual(TOLERANCE.timeMinutes);
+          expectWithin(
+            diff,
+            TOLERANCE.timeMinutes,
+            `expected ${expected.toISOString()}, got ${actual.toISOString()} (Δ ${diff.toFixed(1)} min)`
+          );
         });
       }
 
@@ -118,7 +142,11 @@ for (const fixture of fixtures as Fixture[]) {
           const actual = result[name].compassDeg;
           const diff = Math.abs(actual - expected);
           const str = (value: number): string => `${value.toFixed(1)}°`;
-          expect(diff, `expected ${str(expected)}, got ${str(actual)} (Δ ${str(diff)})`).toBeLessThanOrEqual(TOLERANCE.azimuthDeg);
+          expectWithin(
+            diff,
+            TOLERANCE.azimuthDeg,
+            `expected ${str(expected)}, got ${str(actual)} (Δ ${str(diff)})`
+          );
         });
 
         it(`${name} tilt is within ±${TOLERANCE.tiltDeg}°`, () => {
@@ -126,7 +154,11 @@ for (const fixture of fixtures as Fixture[]) {
           const actual = (result[name] as { tiltDeg: number }).tiltDeg;
           const diff = Math.abs(actual - expected);
           const str = (value: number): string => `${value.toFixed(1)}°`;
-          expect(diff, `expected ${str(expected)}, got ${str(actual)} (Δ ${str(diff)})`).toBeLessThanOrEqual(TOLERANCE.tiltDeg);
+          expectWithin(
+            diff,
+            TOLERANCE.tiltDeg,
+            `expected ${str(expected)}, got ${str(actual)} (Δ ${str(diff)})`
+          );
         });
       }
     }
