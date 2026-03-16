@@ -84,13 +84,19 @@ for (const fixture of fixtures as Fixture[]) {
     });
 
     it(`illumination is within ±${TOLERANCE.illumination}%`, () => {
-      const diff = Math.abs(result.average.illumination * 100 - fixture.noon.illumination);
-      expect(diff).toBeLessThanOrEqual(TOLERANCE.illumination);
+      const expected = fixture.noon.illumination;
+      const actual = result.average.illumination * 100;
+      const diff = Math.abs(actual - expected);
+      const str = (value: number): string => `${value.toFixed(1)}%`;
+      expect(diff, `expected ${str(expected)}, got ${str(actual)} (Δ ${str(diff)})`).toBeLessThanOrEqual(TOLERANCE.illumination);
     });
 
     it(`distanceKm is within ±${TOLERANCE.distanceKm} km`, () => {
-      const diff = Math.abs(result.average.distanceKm - fixture.noon.distanceKm);
-      expect(diff).toBeLessThanOrEqual(TOLERANCE.distanceKm);
+      const expected = fixture.noon.distanceKm;
+      const actual = result.average.distanceKm;
+      const diff = Math.abs(actual - expected);
+      const str = (value: number): string => `${Math.round(value).toLocaleString('en-US')} km`;
+      expect(diff, `expected ${str(expected)}, got ${str(actual)} (Δ ${str(diff)})`).toBeLessThanOrEqual(TOLERANCE.distanceKm);
     });
 
     const eventNames = ['moonrise', 'moonset', 'sunrise', 'sunset'] as const;
@@ -101,19 +107,26 @@ for (const fixture of fixtures as Fixture[]) {
         it(`${name} time is within ±${TOLERANCE.timeMinutes} minutes`, () => {
           const expected = new Date(fixtureEvent.dateTime!);
           const actual = result[name].date;
-          expect(minutesBetween(actual, expected)).toBeLessThanOrEqual(TOLERANCE.timeMinutes);
+          const diff = minutesBetween(actual, expected);
+          expect(diff, `expected ${expected.toISOString()}, got ${actual.toISOString()} (Δ ${diff.toFixed(1)} min)`).toBeLessThanOrEqual(TOLERANCE.timeMinutes);
         });
       }
 
       if ('azimuthDeg' in fixtureEvent && fixtureEvent.azimuthDeg != null) {
         it(`${name} azimuth is within ±${TOLERANCE.azimuthDeg}°`, () => {
-          const diff = Math.abs(result[name].compassDeg - fixtureEvent.azimuthDeg!);
-          expect(diff).toBeLessThanOrEqual(TOLERANCE.azimuthDeg);
+          const expected = fixtureEvent.azimuthDeg!;
+          const actual = result[name].compassDeg;
+          const diff = Math.abs(actual - expected);
+          const str = (value: number): string => `${value.toFixed(1)}°`;
+          expect(diff, `expected ${str(expected)}, got ${str(actual)} (Δ ${str(diff)})`).toBeLessThanOrEqual(TOLERANCE.azimuthDeg);
         });
 
         it(`${name} tilt is within ±${TOLERANCE.tiltDeg}°`, () => {
-          const diff = Math.abs((result[name] as { tiltDeg: number }).tiltDeg - (fixtureEvent as MoonEvent).tiltDeg!);
-          expect(diff).toBeLessThanOrEqual(TOLERANCE.tiltDeg);
+          const expected = (fixtureEvent as MoonEvent).tiltDeg!;
+          const actual = (result[name] as { tiltDeg: number }).tiltDeg;
+          const diff = Math.abs(actual - expected);
+          const str = (value: number): string => `${value.toFixed(1)}°`;
+          expect(diff, `expected ${str(expected)}, got ${str(actual)} (Δ ${str(diff)})`).toBeLessThanOrEqual(TOLERANCE.tiltDeg);
         });
       }
     }
