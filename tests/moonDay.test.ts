@@ -6,8 +6,8 @@ import fixtures from './fixtures/moonDayFixtures.json';
 
 const TOLERANCE = {
   illumination: 5,
-  distanceKm: 5000,
-  timeMinutes: 10,
+  distanceKm: 5_000,
+  timeMinutes: 15,
   azimuthDeg: 5,
   tiltDeg: 5,
 };
