@@ -6,7 +6,7 @@ import { describe, it, expect } from 'vitest';
 import { Temporal } from '@js-temporal/polyfill';
 import { evaluatePostingRule } from '../src/postingRule';
 import { location } from '../src/constants';
-import fixtures from './fixtures/postingRuleFixtures.json';
+import { loadFixture } from './loadFixture';
 
 type PostDay = 'same' | 'next' | 'prev';
 
@@ -15,6 +15,10 @@ interface Fixture {
   postDay: PostDay;
   phase: string;
 }
+
+const fixtures = loadFixture<Fixture[]>(
+  new URL('./fixtures/postingRuleFixtures.jsonc', import.meta.url)
+);
 
 const { timezone, latitude, longitude } = location;
 
@@ -42,7 +46,7 @@ function resolvePostDate(eventDate: string, postDay: PostDay): string {
 }
 
 describe('evaluatePostingRule() posts on the correct date', () => {
-  for (const fixture of fixtures as Fixture[]) {
+  for (const fixture of fixtures) {
     const postDate = resolvePostDate(fixture.eventDate, fixture.postDay);
     const label = fixture.postDay === 'same'
       ? `${fixture.phase} moon ${fixture.eventDate} → posts same day`
@@ -58,7 +62,7 @@ describe('evaluatePostingRule() posts on the correct date', () => {
 });
 
 describe('evaluatePostingRule() does not post on adjacent dates', () => {
-  for (const fixture of fixtures as Fixture[]) {
+  for (const fixture of fixtures) {
     const postDate = resolvePostDate(fixture.eventDate, fixture.postDay);
     const dayBefore = resolvePostDate(fixture.eventDate, 'prev');
     const dayAfter = resolvePostDate(fixture.eventDate, 'next');

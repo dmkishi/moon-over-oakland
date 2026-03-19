@@ -1,6 +1,11 @@
+/**
+ * Derived via `scripts/nasaJplHorizons.ts`.
+ *
+ * Run `pnpm horizons YYYY-MM-DD` to generate additional fixtures.
+ */
 [
   {
-    "description": "",
+    "description": "First day of calendar year",
     "day": "2026-01-01",
     "noon": {
       "illumination": 96,

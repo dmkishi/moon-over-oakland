@@ -1,3 +1,6 @@
+/**
+ * Derived from `docs/posting-algorithm`.
+ */
 [
   { "eventDate": "2026-01-18", "postDay": "same", "phase": "new" },
   { "eventDate": "2026-02-17", "postDay": "same", "phase": "new" },

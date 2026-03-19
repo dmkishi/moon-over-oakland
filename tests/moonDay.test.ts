@@ -6,7 +6,7 @@ import { describe, it, expect } from 'vitest';
 import { Temporal } from '@js-temporal/polyfill';
 import { calculateMoonDay } from '../src/moonDay';
 import { location } from '../src/constants';
-import fixtures from './fixtures/moonDayFixtures.json';
+import { loadFixture } from './loadFixture';
 
 const TOLERANCE = {
   illumination: 5,
@@ -40,6 +40,10 @@ interface Fixture {
   };
 }
 
+const fixtures = loadFixture<Fixture[]>(
+  new URL('./fixtures/moonDayFixtures.jsonc', import.meta.url)
+);
+
 const COMPASS_DIRECTIONS = new Set([
   'N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
   'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW',
@@ -63,7 +67,7 @@ function expectWithin(diff: number, tolerance: number, message: string): void {
   }
 }
 
-for (const fixture of fixtures as Fixture[]) {
+for (const fixture of fixtures) {
   const label = fixture.description || fixture.day;
   const date = new Date(Temporal.PlainDate.from(fixture.day).toZonedDateTime(timezone).epochMilliseconds);
 
