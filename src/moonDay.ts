@@ -30,9 +30,9 @@ interface MoonEvent extends CelestialEvent {
 }
 
 /**
- * Snapshot of lunar conditions calculated at solar noon in Oakland—the midpoint
- * of its calendar day. This provides an "average" reading for the day because
- * the moon's position and phase are constantly changing throughout the day.
+ * Snapshot of lunar attributes calculated at 12-noon in Oakland for a given
+ * calendar day, i.e. its midpoint of the day. This provides an "average"
+ * reading for that calendar day.
  */
 interface MoonMidpoint {
   phaseName: MoonPhase;
