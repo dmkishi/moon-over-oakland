@@ -2,16 +2,10 @@ import { Temporal } from '@js-temporal/polyfill';
 import pc from 'picocolors';
 import { config } from './config.js';
 import { location } from './constants.js';
-import { calculateMoonDay, type MoonPhase } from './moonDay.js';
+import { calculateMoonDay } from './moonDay.js';
+import { evaluatePostingRule } from './postingRule.js';
 import { renderReport, renderPost } from './templates.js';
 import { createBlueskyClient } from './social/bluesky.js';
-
-const PHASES_TO_POST: MoonPhase[] = [
-  'new',
-  'first-quarter',
-  'full',
-  'third-quarter',
-] as const;
 
 /**
  * Parse optional date override from CLI args. Passing a date forces dry run.
@@ -31,25 +25,27 @@ function parseArgs(): { date: Date; isDryRun: boolean } {
 
 async function main(): Promise<void> {
   const { date, isDryRun } = parseArgs();
-  const moonDay = calculateMoonDay(
+  const args = [
     date,
     location.timezone,
     location.latitude,
     location.longitude,
-  );
+  ] as const;
 
+  const moonDay = calculateMoonDay(...args);
   console.log('Moon Over Oakland');
   console.log('================================================================================');
   console.log(await renderReport(moonDay, location.timezone));
   console.log();
 
-  if (!PHASES_TO_POST.includes(moonDay.average.phaseName)) {
-    console.log(pc.red('Nothing to post.'), `Phase "${moonDay.average.phaseName}" is not a posting phase.`);
+  const decision = evaluatePostingRule(...args);
+  if (!decision.doPost) {
+    console.log(pc.red('Nothing to post.'));
     console.log();
     return;
   }
 
-  const content = await renderPost(moonDay, location.timezone);
+  const content = await renderPost(moonDay, location.timezone, decision.phase!);
   console.log('Content of post:');
   console.log('--------------------------------------------------------------------------------');
   console.log(content);

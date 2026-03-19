@@ -47,6 +47,8 @@ export interface MoonDay {
   average: MoonMidpoint;
   moonrise: MoonEvent;
   moonset: MoonEvent;
+  upperCulmination: Date;
+  lowerCulmination: Date;
   sunrise: CelestialEvent;
   sunset: CelestialEvent;
   nextNewMoon: Date;
@@ -117,9 +119,30 @@ export function calculateMoonDay(
       .epochMilliseconds
   );
 
+  // `getMoonTimes()` returns undefined when the moonrise or moonset time
+  //  straddles midnight; fall back to the previous day's moonrise or moonset
+  // time to get a complete pair.
+  const moonTimes = SunCalc.getMoonTimes(localNoon, latitude, longitude);
+  const rise = moonTimes.rise
+    ?? SunCalc.getMoonTimes(new Date(localNoon.getTime() - MS_PER_DAY), latitude, longitude).rise;
+  const set = moonTimes.set
+    ?? SunCalc.getMoonTimes(new Date(localNoon.getTime() + MS_PER_DAY), latitude, longitude).set;
+
+  // When the moonset precedes moonrise (e.g. full moon: set=7 AM, rise=6 PM),
+  // they belong to different transits. Use the next morning's set to pair
+  // with the evening rise for the correct visible-arc midpoint.
+  let transitSetMs = set.getTime();
+  if (transitSetMs < rise.getTime()) {
+    const nextSet = SunCalc.getMoonTimes(
+      new Date(localNoon.getTime() + MS_PER_DAY), latitude, longitude
+    ).set;
+    if (nextSet) transitSetMs = nextSet.getTime();
+  }
+  const upperCulmination = new Date((rise.getTime() + transitSetMs) / 2);
+  const lowerCulmination = new Date(upperCulmination.getTime() + 12 * 3_600_000);
+
   const { phase, fraction: illumination } = SunCalc.getMoonIllumination(localNoon);
   const { distance } = SunCalc.getMoonPosition(localNoon, latitude, longitude);
-  const { rise, set } = SunCalc.getMoonTimes(localNoon, latitude, longitude);
   const { sunrise, sunset } = SunCalc.getTimes(localNoon, latitude, longitude);
   const age = Math.round(phase * LUNAR_CYCLE_DAYS * 100) / 100;
   const daysUntilNew = (1 - phase) * LUNAR_CYCLE_DAYS;
@@ -138,6 +161,8 @@ export function calculateMoonDay(
     },
     moonrise: moonEvent(rise, latitude, longitude),
     moonset: moonEvent(set, latitude, longitude),
+    upperCulmination,
+    lowerCulmination,
     sunrise: celestialEvent(sunrise, latitude, longitude, SunCalc.getPosition),
     sunset: celestialEvent(sunset, latitude, longitude, SunCalc.getPosition),
     nextNewMoon: new Date(localNoon.getTime() + daysUntilNew * MS_PER_DAY),

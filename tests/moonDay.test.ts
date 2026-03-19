@@ -93,6 +93,17 @@ for (const fixture of fixtures as Fixture[]) {
       }
     });
 
+    it('culmination dates are valid and correctly offset', () => {
+      expect(result.upperCulmination).toBeInstanceOf(Date);
+      expect(isNaN(result.upperCulmination.getTime())).toBe(false);
+      expect(result.lowerCulmination).toBeInstanceOf(Date);
+      expect(isNaN(result.lowerCulmination.getTime())).toBe(false);
+
+      const oK = result.upperCulmination.getTime();
+      const uK = result.lowerCulmination.getTime();
+      expect(uK).toBe(oK + 12 * 3_600_000);
+    });
+
     it('compass directions are valid 16-point values', () => {
       for (const event of [result.moonrise, result.moonset, result.sunrise, result.sunset]) {
         expect(COMPASS_DIRECTIONS.has(event.compassDirection)).toBe(true);

@@ -15,7 +15,7 @@
   Moonset: {{ moonset.date | date: TIME_FORMAT }}
 {% endcapture %}
 
-{% case average.phaseName %}
+{% case eventPhase %}
   {% when 'new' %}
     🌑 New Moon
 
