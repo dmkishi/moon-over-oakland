@@ -10,16 +10,40 @@
   assign TIME_FORMAT = "%-l:%M %p"
 %}
 
+{% capture moonrise_moonset %}
+  Moonrise: {{ moonrise.date | date: TIME_FORMAT }}
+  Moonset: {{ moonset.date | date: TIME_FORMAT }}
+{% endcapture %}
+
 {% case average.phaseName %}
   {% when 'new' %}
     🌑 New Moon
+
+    It is a New Moon today. The moon will rise and set nearly in tandem with the
+    sun. You can't see it but the moon will be in the sky all day long.
+
+    {{ moonrise_moonset }}
+    Next Half Moon:
+    Next Full Moon:
   {% when 'first-quarter' %}
     🌓 Half Moon (First Quarter)
+
+    {{ moonrise_moonset }}
+    Next Full Moon:
+    Next Half Moon:
   {% when 'full' %}
     🌕 Full Moon
+
+    It is a Full Moon tonight. The moon will rise around sunset and, on the next
+    day, set around sunrise.
+
+    {{ moonrise_moonset }}
+    Next Half Moon:
+    Next New Moon:
   {% when 'third-quarter' %}
     🌗 Half Moon (Third Quarter)
-{% endcase %}
 
-Moonrise: {{ moonrise.date | date: TIME_FORMAT }}
-Moonset: {{ moonset.date | date: TIME_FORMAT }}
+    {{ moonrise_moonset }}
+    Next Half Moon:
+    Next Full Moon:
+{% endcase %}
