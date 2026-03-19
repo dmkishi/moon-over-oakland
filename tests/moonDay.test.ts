@@ -1,3 +1,7 @@
+/**
+ * Verifies that calculateMoonDay() returns accurate illumination, distance,
+ * rise/set times, and azimuth/tilt values against known astronomical data.
+ */
 import { describe, it, expect } from 'vitest';
 import { Temporal } from '@js-temporal/polyfill';
 import { calculateMoonDay } from '../src/moonDay';
