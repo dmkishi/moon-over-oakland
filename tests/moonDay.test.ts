@@ -99,11 +99,11 @@ for (const fixture of fixtures as Fixture[]) {
       const expected = fixture.noon.illumination;
       const actual = result.average.illumination * 100;
       const diff = Math.abs(actual - expected);
-      const str = (value: number): string => `${value.toFixed(1)}%`;
+      const toStr = (value: number): string => `${value.toFixed(1)}%`;
       expectWithin(
         diff,
         TOLERANCE.illumination,
-        `expected ${str(expected)}, got ${str(actual)} (Δ ${str(diff)})`
+        `expected ${toStr(expected)}, got ${toStr(actual)} (Δ ${toStr(diff)})`
       );
     });
 
@@ -111,11 +111,11 @@ for (const fixture of fixtures as Fixture[]) {
       const expected = fixture.noon.distanceKm;
       const actual = result.average.distanceKm;
       const diff = Math.abs(actual - expected);
-      const str = (value: number): string => `${Math.round(value).toLocaleString('en-US')} km`;
+      const toStr = (value: number): string => `${Math.round(value).toLocaleString('en-US')} km`;
       expectWithin(
         diff,
         TOLERANCE.distanceKm,
-        `expected ${str(expected)}, got ${str(actual)} (Δ ${str(diff)})`
+        `expected ${toStr(expected)}, got ${toStr(actual)} (Δ ${toStr(diff)})`
       );
     });
 
@@ -141,11 +141,11 @@ for (const fixture of fixtures as Fixture[]) {
           const expected = fixtureEvent.azimuthDeg!;
           const actual = result[name].compassDeg;
           const diff = Math.abs(actual - expected);
-          const str = (value: number): string => `${value.toFixed(1)}°`;
+          const toStr = (value: number): string => `${value.toFixed(1)}°`;
           expectWithin(
             diff,
             TOLERANCE.azimuthDeg,
-            `expected ${str(expected)}, got ${str(actual)} (Δ ${str(diff)})`
+            `expected ${toStr(expected)}, got ${toStr(actual)} (Δ ${toStr(diff)})`
           );
         });
 
@@ -153,11 +153,11 @@ for (const fixture of fixtures as Fixture[]) {
           const expected = (fixtureEvent as MoonEvent).tiltDeg!;
           const actual = (result[name] as { tiltDeg: number }).tiltDeg;
           const diff = Math.abs(actual - expected);
-          const str = (value: number): string => `${value.toFixed(1)}°`;
+          const toStr = (value: number): string => `${value.toFixed(1)}°`;
           expectWithin(
             diff,
             TOLERANCE.tiltDeg,
-            `expected ${str(expected)}, got ${str(actual)} (Δ ${str(diff)})`
+            `expected ${toStr(expected)}, got ${toStr(actual)} (Δ ${toStr(diff)})`
           );
         });
       }
