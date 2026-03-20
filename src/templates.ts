@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { Liquid } from 'liquidjs';
-import type { MoonDay } from './moonDay.js';
+import type { MoonPost } from './moonPost.js';
 
 function createEngine(timezone: string): Liquid {
   const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -13,12 +13,11 @@ function createEngine(timezone: string): Liquid {
 }
 
 export async function renderPost(
-  moonDay: MoonDay,
+  moonPost: MoonPost,
   timezone: string,
-  eventPhase: string,
 ): Promise<string> {
   const engine = createEngine(timezone);
-  const result = await engine.renderFile('post', { ...moonDay, eventPhase });
+  const result = await engine.renderFile('post', moonPost);
   return result.trim();
 }
 
@@ -26,7 +25,7 @@ export async function renderPost(
  * Renders a data report for the given moon day.
  */
 export async function renderReport(
-  moonDay: MoonDay,
+  moonDay: MoonPost,
   timezone: string,
 ): Promise<string> {
   const today = moonDay.day;

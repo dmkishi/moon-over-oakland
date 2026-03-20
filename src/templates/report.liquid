@@ -1,5 +1,5 @@
 {% comment %}
-  @param {MoonDay.*} - See `src/moonDay.ts`.
+  @param {MoonPost.*} - See `src/moonPost.ts`.
 {% endcomment %}
 
 {%- liquid
@@ -18,14 +18,15 @@
 
 Day:            {{ day | date: DATE_FORMAT }}
 Average:
-  Phase Name:   {{ average.phaseName }}
-  Phase:        {{ average.phase }}
+  Phase:        {{ phase }}
   Illumination: {{ average.illumination | times: 100 | round }}%
   Age:          {{ average.age }} days
   Distance:     {{ average.distanceKm | localeString }} km
-Moonrise:       {{ moonrise.date | date: DATETIME_FORMAT }} ({{ moonrise.compassDirection }}, {{ moonrise.compassDeg | round }}°, Tilt: {{ moonrise.tiltDeg | round }}°)
-Moonset:        {{ moonset.date | date: DATETIME_FORMAT }} ({{ moonset.compassDirection }}, {{ moonset.compassDeg | round }}°, Tilt: {{ moonset.tiltDeg | round }}°)
+Moonrise:       {{ moonRise.date | date: DATETIME_FORMAT }} ({{ moonRise.compassDirection }}, {{ moonRise.compassDeg | round }}°, Tilt: {{ moonRise.tiltDeg | round }}°)
+Moonset:        {{ moonSet.date | date: DATETIME_FORMAT }} ({{ moonSet.compassDirection }}, {{ moonSet.compassDeg | round }}°, Tilt: {{ moonSet.tiltDeg | round }}°)
 Sunrise:        {{ sunrise.date | date: TIME_FORMAT }} ({{ sunrise.compassDirection }}, {{ sunrise.compassDeg | round }}°)
 Sunset:         {{ sunset.date | date: TIME_FORMAT }} ({{ sunset.compassDirection }}, {{ sunset.compassDeg | round }}°)
-Next New Moon:  {{ nextNewMoon | daysAway }} days ({{ nextNewMoon | date: DATE_FORMAT_SHORT }})
-Next Full Moon: {{ nextFullMoon | daysAway }} days ({{ nextFullMoon | date: DATE_FORMAT_SHORT }})
+Next New Moon:  {{ nextEvents.newMoon | daysAway }} days ({{ nextEvents.newMoon | date: DATE_FORMAT_SHORT }})
+Next 1st Qtr:   {{ nextEvents.firstQuarter | daysAway }} days ({{ nextEvents.firstQuarter | date: DATE_FORMAT_SHORT }})
+Next Full Moon: {{ nextEvents.fullMoon | daysAway }} days ({{ nextEvents.fullMoon | date: DATE_FORMAT_SHORT }})
+Next Last Qtr:  {{ nextEvents.lastQuarter | daysAway }} days ({{ nextEvents.lastQuarter | date: DATE_FORMAT_SHORT }})

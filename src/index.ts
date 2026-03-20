@@ -2,8 +2,7 @@ import { Temporal } from '@js-temporal/polyfill';
 import pc from 'picocolors';
 import { config } from './config.js';
 import { location } from './constants.js';
-import { calculateMoonDay } from './moonDay.js';
-import { evaluatePostingRule } from './postingRule.js';
+import { calculateMoonPost } from './moonPost.js';
 import { renderReport, renderPost } from './templates.js';
 import { createBlueskyClient } from './social/bluesky.js';
 
@@ -25,27 +24,25 @@ function parseArgs(): { date: Date; isDryRun: boolean } {
 
 async function main(): Promise<void> {
   const { date, isDryRun } = parseArgs();
-  const args = [
+  const moonPost = calculateMoonPost(
     date,
     location.timezone,
     location.latitude,
     location.longitude,
-  ] as const;
+  );
 
-  const moonDay = calculateMoonDay(...args);
   console.log('Moon Over Oakland');
   console.log('================================================================================');
-  console.log(await renderReport(moonDay, location.timezone));
+  console.log(await renderReport(moonPost, location.timezone));
   console.log();
 
-  const decision = evaluatePostingRule(...args);
-  if (!decision.doPost) {
+  if (!moonPost.doPost) {
     console.log(pc.red('Nothing to post.'));
     console.log();
     return;
   }
 
-  const content = await renderPost(moonDay, location.timezone, decision.phase!);
+  const content = await renderPost(moonPost, location.timezone);
   console.log('Content of post:');
   console.log('--------------------------------------------------------------------------------');
   console.log(content);

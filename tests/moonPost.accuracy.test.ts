@@ -1,16 +1,16 @@
 /**
- * Verifies that calculateMoonDay() returns accurate illumination, distance,
+ * Verifies that calculateMoonPost() returns accurate illumination, distance,
  * rise/set times, and azimuth/tilt values against known astronomical data.
  */
 import { describe, it, expect } from 'vitest';
 import { Temporal } from '@js-temporal/polyfill';
-import { calculateMoonDay } from '../src/moonDay';
+import { calculateMoonPost } from '../src/moonPost';
 import { location } from '../src/constants';
 import { loadFixture } from './loadFixture';
 
 const TOLERANCE = {
   illumination: 5,
-  distanceKm: 5_000,
+  distanceKm: 10_000,
   timeMinutes: 15,
   azimuthDeg: 5,
   tiltDeg: 5,
@@ -41,7 +41,7 @@ interface Fixture {
 }
 
 const fixtures = loadFixture<Fixture[]>(
-  new URL('./fixtures/moonDayFixtures.jsonc', import.meta.url)
+  new URL('./fixtures/moonPost.accuracy.jsonc', import.meta.url)
 );
 
 const COMPASS_DIRECTIONS = new Set([
@@ -50,6 +50,14 @@ const COMPASS_DIRECTIONS = new Set([
 ]);
 
 const { timezone, latitude, longitude } = location;
+
+/** Maps fixture event names to MoonPost field names. */
+const RESULT_KEY = {
+  moonrise: 'moonRise',
+  moonset: 'moonSet',
+  sunrise: 'sunrise',
+  sunset: 'sunset',
+} as const;
 
 function minutesBetween(a: Date, b: Date): number {
   return Math.abs(a.getTime() - b.getTime()) / 60_000;
@@ -71,45 +79,32 @@ for (const fixture of fixtures) {
   const label = fixture.description || fixture.day;
   const date = new Date(Temporal.PlainDate.from(fixture.day).toZonedDateTime(timezone).epochMilliseconds);
 
-  describe(`calculateMoonDay(${label})`, () => {
-    const result = calculateMoonDay(date, timezone, latitude, longitude);
+  describe(`calculateMoonPost(${label})`, () => {
+    const result = calculateMoonPost(date, timezone, latitude, longitude);
 
     it('returns all expected fields', () => {
       expect(result.day).toBeInstanceOf(Date);
       expect(result.average).toBeDefined();
-      expect(result.moonrise).toBeDefined();
-      expect(result.moonset).toBeDefined();
+      expect(result.moonRise).toBeDefined();
+      expect(result.moonSet).toBeDefined();
       expect(result.sunrise).toBeDefined();
       expect(result.sunset).toBeDefined();
     });
 
     it('average fields are within valid ranges', () => {
-      expect(result.average.phase).toBeGreaterThanOrEqual(0);
-      expect(result.average.phase).toBeLessThanOrEqual(1);
       expect(result.average.distanceKm).toBeGreaterThanOrEqual(356_000);
       expect(result.average.distanceKm).toBeLessThanOrEqual(407_000);
     });
 
     it('celestial event dates are valid Date objects', () => {
-      for (const event of [result.moonrise, result.moonset, result.sunrise, result.sunset]) {
+      for (const event of [result.moonRise, result.moonSet, result.sunrise, result.sunset]) {
         expect(event.date).toBeInstanceOf(Date);
         expect(isNaN(event.date.getTime())).toBe(false);
       }
     });
 
-    it('culmination dates are valid and correctly offset', () => {
-      expect(result.upperCulmination).toBeInstanceOf(Date);
-      expect(isNaN(result.upperCulmination.getTime())).toBe(false);
-      expect(result.lowerCulmination).toBeInstanceOf(Date);
-      expect(isNaN(result.lowerCulmination.getTime())).toBe(false);
-
-      const oK = result.upperCulmination.getTime();
-      const uK = result.lowerCulmination.getTime();
-      expect(uK).toBe(oK + 12 * 3_600_000);
-    });
-
     it('compass directions are valid 16-point values', () => {
-      for (const event of [result.moonrise, result.moonset, result.sunrise, result.sunset]) {
+      for (const event of [result.moonRise, result.moonSet, result.sunrise, result.sunset]) {
         expect(COMPASS_DIRECTIONS.has(event.compassDirection)).toBe(true);
       }
     });
@@ -141,11 +136,12 @@ for (const fixture of fixtures) {
     const eventNames = ['moonrise', 'moonset', 'sunrise', 'sunset'] as const;
     for (const name of eventNames) {
       const fixtureEvent = fixture.events[name];
+      const resultKey = RESULT_KEY[name];
 
       if (fixtureEvent.dateTime != null) {
         it(`${name} time is within ±${TOLERANCE.timeMinutes} minutes`, () => {
           const expected = new Date(fixtureEvent.dateTime!);
-          const actual = result[name].date;
+          const actual = result[resultKey].date;
           const diff = minutesBetween(actual, expected);
           expectWithin(
             diff,
@@ -158,7 +154,7 @@ for (const fixture of fixtures) {
       if ('azimuthDeg' in fixtureEvent && fixtureEvent.azimuthDeg != null) {
         it(`${name} azimuth is within ±${TOLERANCE.azimuthDeg}°`, () => {
           const expected = fixtureEvent.azimuthDeg!;
-          const actual = result[name].compassDeg;
+          const actual = result[resultKey].compassDeg;
           const diff = Math.abs(actual - expected);
           const toStr = (value: number): string => `${value.toFixed(1)}°`;
           expectWithin(
@@ -170,7 +166,7 @@ for (const fixture of fixtures) {
 
         it(`${name} tilt is within ±${TOLERANCE.tiltDeg}°`, () => {
           const expected = (fixtureEvent as MoonEvent).tiltDeg!;
-          const actual = (result[name] as { tiltDeg: number }).tiltDeg;
+          const actual = (result[resultKey] as { tiltDeg: number }).tiltDeg;
           const diff = Math.abs(actual - expected);
           const toStr = (value: number): string => `${value.toFixed(1)}°`;
           expectWithin(

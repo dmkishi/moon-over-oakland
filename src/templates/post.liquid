@@ -1,5 +1,5 @@
 {% comment %}
-  @param {MoonDay.*} - See `src/moonDay.ts`.
+  @param {MoonPost.*} - See `src/moonPost.ts`.
 {% endcomment %}
 
 {% liquid
@@ -11,11 +11,11 @@
 %}
 
 {% capture moonrise_moonset %}
-  Moonrise: {{ moonrise.date | date: TIME_FORMAT }}
-  Moonset: {{ moonset.date | date: TIME_FORMAT }}
+  Moonrise: {{ moonRise.date | date: TIME_FORMAT }}
+  Moonset: {{ moonSet.date | date: TIME_FORMAT }}
 {% endcapture %}
 
-{% case eventPhase %}
+{% case phase %}
   {% when 'new' %}
     🌑 New Moon
 
