@@ -1,52 +1,53 @@
 Moon Over Oakland
 ================================================================================
-Automatically post moon phase updates for Oakland, CA to Bluesky using GitHub Actions.
+Automatically post moon phase updates for Oakland, CA to Bluesky using GitHub
+Actions. The posts are targeted towards a general audience.
 
 Features
 --------------------------------------------------------------------------------
-- Posts on new moon, first quarter, full moon, and third quarter.
-- Moon calculations (esp. rise/set times) are Oakland-based.
-- Customizable Liquid templates with moon phase-specific snippets.
-- Automated daily checks via GitHub Actions.
-- Secure credential management via GitHub Secrets.
+- Posts on **new moon**, **first quarter**, **full moon**, and **third quarter**.
+- Moon calculations (esp. rise/set times) are **Oakland specific**.
+- Moon phase-specific **posts are customizable with Liquid templates**.
+- Postings are **automated with GitHub Actions**.
+- Secure credential management with GitHub Secrets.
 
 Setup
 --------------------------------------------------------------------------------
-### 1. Clone and install
+### 1. Install
 ```sh
 git clone https://github.com/dmkishi/moon-over-oakland.git
 cd moon-over-oakland
 pnpm install
 ```
 
-### 2. Configure social media credentials in `.env`
+### 2. Configure social media credentials
 Make new copy of `.env`:
 ```sh
 cp .env.example .env
 ```
 
-Edit `.env` with your Bluesky credentials:
+Then edit `.env` with your Bluesky credentials:
 ```sh
 BLUESKY_HANDLE=your-handle.bsky.social
 BLUESKY_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
 ```
 
-#### New Account on Bluesky
+#### To Create a New Account on Bluesky
 To create a new Bluesky account, **a unique email address is required**. The
-easiest solution is to use a pre-existing Gmail account with an email alias,
+simplest solution is to use a pre-existing Gmail account with an email alias,
 AKA plus ("+") sign addressing. All these go to the same inbox:
 
 - `your.username@gmail.com`
 - `your.username+bksy@gmail.com`
 - `your.username+moon-over-oakland.bksy.social@gmail.com`
 
-#### App Password on Bluesky
-To create a Bluesky app password:
-1. Go to Settings → Privacy and Security → App Passwords
+#### To Create an App Password on Bluesky
+1. Go to **Settings** → **Privacy and Security** → **App Passwords**
 2. Create a new app password
-3. Copy it to your `.env` file
+3. Copy-and-paste it into the `.env` file
 
-### 3. Test locally
+Usage
+--------------------------------------------------------------------------------
 ```sh
 pnpm check
 pnpm build
@@ -58,17 +59,30 @@ pnpm view:build  # "
 pnpm view:dev 2026-01-01
 ```
 
-NASA JPL Horizons Script
---------------------------------------------------------------------------------
-Use this script to request and generate authoritative data for use as test
-fixtures.
-
-This script queries the JPL Horizons API for daily Moon position data and
-summarizes moonrise/moonset times, azimuth, tilt, illumination, and distance.
-
+### NASA JPL Horizons
 ```sh
-pnpm horizons -- [YYYY-MM-DD] [--freq=N] [--show-raw] [--show-table]
+pnpm horizons [YYYY-MM-DD] [--freq=N] [--show-table] [--show-raw]
 ```
+
+Use this script to request authoritative data from [JPL Horizons](
+https://ssd.jpl.nasa.gov/horizons/) for debugging or creating test fixtures.
+
+- **Positional Argument**
+  - `YYYY-MM-DD` — Observation date. Defaults to today.
+- **Named Options**
+  - `--freq=N` — Step size in minutes between ephemeris samples. Default `1`.
+  - `--show-table` — Prints formatted table with all ephemeris samples. Default
+    `false`.
+  - `--show-raw` — Prints raw, unparsed CSV response from the API. Default
+    `false`.
+- **Always Prints**
+  - **Summary**
+  - **Fixture JSON** — A test-fixture-shaped object, for pasting into files
+    such as [`tests/fixtures/moonPost.accuracy.jsonc`](
+    tests/fixtures/moonPost.accuracy.jsonc).
+
+**Note**: The location and timezone are sourced from [`src/constants.ts`](
+src/constants.ts)
 
 GitHub Actions Setup
 --------------------------------------------------------------------------------

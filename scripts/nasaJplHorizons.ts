@@ -2,7 +2,7 @@
  * Queries the JPL Horizons API for daily Moon position data and summarizes
  * moonrise/moonset times, azimuth, tilt, illumination, and distance.
  *
- * @usage pnpm horizons -- [YYYY-MM-DD] [--freq=N] [--show-raw] [--show-table]
+ * @usage pnpm horizons [YYYY-MM-DD] [--freq=N] [--show-table] [--show-raw]
  *
  * NASA's JPL Horizons On-Line Ephemeris System provides access to key Solar
  * System data and flexible production of highly accurate ephemerides for Solar
