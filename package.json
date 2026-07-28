@@ -12,13 +12,14 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "test": "vitest",
-    "typecheck": "tsc --noEmit",
     "build": "tsc",
     "tryPost": "node dist/index.js",
     "view:dev": "DRY_RUN=true tsx src/index.ts",
     "view:build": "DRY_RUN=true node dist/index.js",
     "horizons": "tsx scripts/nasaJplHorizons.ts",
+    "check": "pnpm typecheck && pnpm test",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
     "prepare": "husky"
   },
   "dependencies": {
