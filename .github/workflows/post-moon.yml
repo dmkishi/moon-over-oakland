@@ -42,7 +42,7 @@ jobs:
         run: pnpm build
 
       - name: Check moon phase and post
-        run: pnpm tryPost
+        run: pnpm post
         env:
           BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
           BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}

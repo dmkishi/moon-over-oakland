@@ -13,9 +13,9 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "tryPost": "node dist/index.js",
-    "view:dev": "DRY_RUN=true tsx src/index.ts",
-    "view:build": "DRY_RUN=true node dist/index.js",
+    "post": "node dist/index.js",
+    "preview": "DRY_RUN=true tsx src/index.ts",
+    "preview:dist": "pnpm build && DRY_RUN=true pnpm post",
     "horizons": "tsx scripts/nasaJplHorizons.ts",
     "check": "pnpm typecheck && pnpm test",
     "typecheck": "tsc --noEmit",
