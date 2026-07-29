@@ -1,9 +1,8 @@
 # This config file installed via "@dmkishi/markdownlint-cli2.yaml".
 # See <https://www.npmjs.com/package/@dmkishi/markdownlint-cli2.yaml>
 #
-# Upon updating the package, it is necessary to re-run the install command to
-# update this config file.
-# `npx @dmkishi/markdownlint-cli2.yaml --force
+# To pull the latest version of this config:
+# `npx --yes @dmkishi/markdownlint-cli2.yaml@latest --force`
 
 gitignore: true
 globs: ["**/*.md"]
