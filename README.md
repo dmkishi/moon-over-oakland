@@ -6,6 +6,7 @@ Actions. The posts are targeted towards a general audience.
 Features
 --------------------------------------------------------------------------------
 - Posts on **new moon**, **first quarter**, **full moon**, and **third quarter**.
+  - [Posting algorithm](docs/posting-algorithm.md)
 - Moon calculations (esp. rise/set times) are **Oakland specific**.
 - Moon phase-specific **posts are customizable with Liquid templates**.
 - Postings are **automated with GitHub Actions**.
@@ -46,6 +47,17 @@ AKA plus ("+") sign addressing. All these go to the same inbox:
 2. Create a new app password
 3. Copy-and-paste it into the `.env` file
 
+### 3. Configure GitHub Actions
+#### 1. Add repository secrets
+Go to your repo → Settings → Secrets and variables → Actions → Secrets:
+
+- `BLUESKY_HANDLE`: Your Bluesky handle (e.g., `your-handle.bsky.social`)
+- `BLUESKY_APP_PASSWORD`: Your app password
+
+#### 2. Enable the workflow
+The workflow runs daily at 6 AM PST / 7 AM PDT (1 PM UTC). You can also trigger
+it manually from the Actions tab.
+
 Usage
 --------------------------------------------------------------------------------
 ```sh
@@ -81,18 +93,6 @@ https://ssd.jpl.nasa.gov/horizons/) for debugging or creating test fixtures.
 
 **Note**: The location and timezone are sourced from [`src/constants.ts`](
 src/constants.ts)
-
-GitHub Actions Setup
---------------------------------------------------------------------------------
-### 1. Add repository secrets
-Go to your repo → Settings → Secrets and variables → Actions → Secrets:
-
-- `BLUESKY_HANDLE`: Your Bluesky handle (e.g., `your-handle.bsky.social`)
-- `BLUESKY_APP_PASSWORD`: Your app password
-
-### 2. Enable the workflow
-The workflow runs daily at 6 AM PST / 7 AM PDT (1 PM UTC). You can also trigger
-it manually from the Actions tab.
 
 See Also
 --------------------------------------------------------------------------------
