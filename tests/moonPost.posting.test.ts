@@ -4,9 +4,9 @@
  */
 import { describe, it, expect } from 'vitest';
 import { Temporal } from '@js-temporal/polyfill';
-import { calculateMoonPost } from '../src/moonPost';
-import { location } from '../src/constants';
-import { loadFixture } from './loadFixture';
+import { calculateMoonPost } from '../src/moonPost.js';
+import { location } from '../src/constants.js';
+import { loadFixture } from './loadFixture.js';
 
 type PostDay = 'same' | 'next' | 'prev';
 

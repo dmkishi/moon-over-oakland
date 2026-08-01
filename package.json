@@ -10,15 +10,12 @@
   ],
   "license": "MIT",
   "type": "module",
-  "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
-    "post": "node dist/index.js",
-    "preview": "DRY_RUN=true tsx src/index.ts",
-    "preview:dist": "pnpm build && DRY_RUN=true pnpm post",
+    "post": "tsx src/index.ts",
+    "preview": "DRY_RUN=true pnpm post",
     "horizons": "tsx scripts/nasaJplHorizons.ts",
     "check": "pnpm typecheck && pnpm test",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc",
     "test": "vitest",
     "prepare": "husky"
   },

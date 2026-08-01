@@ -62,10 +62,8 @@ Usage
 --------------------------------------------------------------------------------
 ```sh
 pnpm check
-pnpm build
 pnpm post                # Posts online (but only on permitted moon phases)
 pnpm preview             # Preview post with calculated data (NEVER posts)
-pnpm preview:dist        # Same as `pnpm preview` but runs `dist/` version
 pnpm preview 2026-01-01  # Optionally specify a date
 ```
 
