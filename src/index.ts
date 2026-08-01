@@ -1,10 +1,10 @@
 import { Temporal } from '@js-temporal/polyfill';
 import pc from 'picocolors';
-import { config } from './config.js';
-import { location } from './constants.js';
-import { calculateMoonPost } from './moonPost.js';
-import { renderReport, renderPost } from './templates.js';
-import { createBlueskyClient } from './social/bluesky.js';
+import { config } from './config.ts';
+import { location } from './constants.ts';
+import { calculateMoonPost } from './moonPost.ts';
+import { renderReport, renderPost } from './templates.ts';
+import { createBlueskyClient } from './social/bluesky.ts';
 
 /**
  * Parse optional date override from CLI args. Passing a date forces dry run.

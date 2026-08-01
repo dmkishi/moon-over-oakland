@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { Liquid } from 'liquidjs';
-import type { MoonPost } from './moonPost.js';
+import type { MoonPost } from './moonPost.ts';
 
 function createEngine(timezone: string): Liquid {
   const __dirname = dirname(fileURLToPath(import.meta.url));

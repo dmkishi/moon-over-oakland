@@ -12,7 +12,7 @@
  */
 import { parseArgs } from 'node:util';
 import { Temporal } from '@js-temporal/polyfill';
-import { location } from '../src/constants.js';
+import { location } from '../src/constants.ts';
 
 interface Observer {
   date: string; // "YYYY-MM-DD"
