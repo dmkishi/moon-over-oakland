@@ -3,17 +3,15 @@
  * moonrise/moonset times, azimuth, tilt, illumination, and distance.
  *
  * @usage pnpm horizons [YYYY-MM-DD] [--freq=N] [--show-table] [--show-raw]
- *
- * NASA's JPL Horizons On-Line Ephemeris System provides access to key Solar
- * System data and flexible production of highly accurate ephemerides for Solar
- * System objects.
- *
- * The API is free, requires no keys, and has no published rate limits.
  */
 import { parseArgs } from 'node:util';
 import { Temporal } from '@js-temporal/polyfill';
 import { location } from '../src/constants.ts';
 
+/**
+ * The observing location and date for which the ephemeris is requested, i.e.
+ * where and when the Moon is being watched from.
+ */
 interface Observer {
   date: string; // "YYYY-MM-DD"
   timeZone: string; // IANA, e.g. "America/Los_Angeles"
@@ -22,6 +20,11 @@ interface Observer {
   elevationMeter: number;
 }
 
+/**
+ * The Moon's observer-centric ephemeris at a single instant: its apparent
+ * position and appearance in the observer's sky, i.e. one `--freq` step of the
+ * ephemeris.
+ */
 interface MoonEphemeris {
   datetime: string; // Observer-local civil datetime, e.g. "2001-12-31 23:59"
   /**
@@ -41,6 +44,9 @@ interface MoonEphemeris {
   tiltDeg: number; // Tilt of the moon (relative to the local vertical)
 }
 
+/**
+ * A single observing day distilled from the full `MoonEphemeris` run.
+ */
 interface MoonSummary {
   metadata: {
     date: string; // "YYYY-MM-DD"
@@ -49,10 +55,18 @@ interface MoonSummary {
       offset: string; // e.g. "-07:00"
     };
   };
+  /**
+   * The noon values represent an average of the Moon's illumination and
+   * distance of the day.
+   */
   noon: {
     illuminatedFraction: number;
     distanceKm: number;
   };
+  /**
+   * - Times are observer-local civil times ("HH:mm".)
+   * - `null` event means it did not occur on this date (e.g. the Moon never rose.)
+   */
   events: {
     moonrise: { time: string; azimuthDeg: number; tiltDeg: number } | null;
     moonset: { time: string; azimuthDeg: number; tiltDeg: number } | null;
@@ -128,6 +142,9 @@ async function queryHorizons(
   return res.text();
 }
 
+/**
+ * A single row of the Horizons CSV data block.
+ */
 interface HorizonsRow {
   datetime: string;
   flags: string[];
