@@ -128,7 +128,7 @@ async function queryHorizons(
   return res.text();
 }
 
-interface HorizonsEphemeris {
+interface HorizonsRow {
   datetime: string;
   flags: string[];
   raDeg: number;
@@ -141,7 +141,7 @@ interface HorizonsEphemeris {
   paSunDeg: number;
 }
 
-function parseHorizonsCSV(raw: string): HorizonsEphemeris[] {
+function parseHorizonsCSV(raw: string): HorizonsRow[] {
   // Index the data block delimited by `$$SOE` (start of ephemeris) and `$$EOE`
   // (end of ephemeris).
   const soeIndex = raw.indexOf('$$SOE');
@@ -271,7 +271,7 @@ function moonTilt(
 }
 
 function computeMoonEphemeris(
-  rows: HorizonsEphemeris[],
+  rows: HorizonsRow[],
   observer: Observer,
 ): MoonEphemeris[] {
   return rows
