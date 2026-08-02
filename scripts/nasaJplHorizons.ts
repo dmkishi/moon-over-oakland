@@ -23,7 +23,7 @@ interface Observer {
 }
 
 interface MoonEphemeris {
-  datetime: string; // UTC datetime string, e.g. "2026-03-02 04:30"
+  datetime: string; // Observer-local civil datetime, e.g. "2001-12-31 23:59"
   /**
    * Flag legend:
    * - `*`: Sun is above the horizon (daytime)
