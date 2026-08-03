@@ -7,6 +7,7 @@
 import { parseArgs } from 'node:util';
 import { Temporal } from '@js-temporal/polyfill';
 import { location } from '../src/constants.ts';
+import type { MoonPhase } from '../src/moonPost.ts';
 
 /**
  * The observing location and date for which the ephemeris is requested, i.e.
@@ -44,6 +45,8 @@ interface MoonEphemeris {
   tiltDeg: number; // Tilt of the moon (relative to the local vertical)
 }
 
+type PhaseEventName = Extract<MoonPhase, 'new' | 'first-quarter' | 'full' | 'third-quarter'>;
+
 /**
  * A single observing day distilled from the full `MoonEphemeris` run.
  */
@@ -68,6 +71,7 @@ interface MoonSummary {
    * - `null` event means it did not occur on this date (e.g. the Moon never rose.)
    */
   events: {
+    phaseEvent: { time: string; name: PhaseEventName } | null;
     moonrise: { time: string; azimuthDeg: number; tiltDeg: number } | null;
     moonset: { time: string; azimuthDeg: number; tiltDeg: number } | null;
     sunrise: string | null;
@@ -76,17 +80,31 @@ interface MoonSummary {
 }
 
 /**
- * Fetch Moon ephemeris from the NASA JPL Horizons API, returning the raw text
- * response.
+ * Calls the NASA JPL Horizons API and returns the raw text response.
  */
-async function queryHorizons(
+async function fetchHorizons(params: Record<string, string>): Promise<string> {
+  const query = Object.entries(params).map(([k, v]) => `${k}=${v}`).join('&');
+  const url = `https://ssd.jpl.nasa.gov/api/horizons.api?${query}`;
+  console.log(`Calling <${url}>`);
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Horizons API error: ${res.status} ${res.statusText}`);
+  }
+  return res.text();
+}
+
+/**
+ * Fetches the Moon's topocentric, observer-centric ephemeris and returns the
+ * raw text response.
+ */
+async function queryMoonEphemeris(
   observer: Observer,
   startTime: string,
   stopTime: string,
   stepSize: string,
 ): Promise<string> {
   const timeZoneOffset = getUtcOffset(observer.date, observer.timeZone);
-  const params = Object.entries({
+  return fetchHorizons({
     format: 'text', // `json` merely wraps the text content in a JSON object
     CSV_FORMAT: "'YES'", // Request CSV output for easier parsing
     COMMAND: "'301'", // Request the Moon as target body
@@ -132,34 +150,62 @@ async function queryHorizons(
      *     bright-limb position angle.
      */
     QUANTITIES: "'1,4,7,10,20,27'",
-  }).map(([k, v]) => `${k}=${v}`).join('&');
-  const url = `https://ssd.jpl.nasa.gov/api/horizons.api?${params}`;
-  console.log(`Calling <${url}>`);
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Horizons API error: ${res.status} ${res.statusText}`);
-  }
-  return res.text();
+  });
 }
 
 /**
- * A single row of the Horizons CSV data block.
+ * Fetches a geocentric ecliptic longitude table for the Moon or Sun and returns
+ * the raw text response.
+ *
+ * @param body - Taken by name rather than by NAIF ID so that transposing the
+ *   two call sites is a compile error rather than a silently inverted
+ *   difference.
  */
-interface HorizonsRow {
-  datetime: string;
-  flags: string[];
-  raDeg: number;
-  decDeg: number;
-  azimuthDeg: number;
-  elevationDeg: number;
-  lst: number; // hours (local apparent sidereal time)
-  illuminatedFraction: number;
-  distanceAU: number;
-  paSunDeg: number;
+async function queryEclipticLongitude(
+  body: 'moon' | 'sun',
+  observer: Observer,
+  startTime: string,
+  stopTime: string,
+): Promise<string> {
+  const timeZoneOffset = getUtcOffset(observer.date, observer.timeZone);
+  return fetchHorizons({
+    format: 'text',
+    CSV_FORMAT: "'YES'",
+    COMMAND: { moon: "'301'", sun: "'10'" }[body], // Horizons target body ID
+    OBJ_DATA: "'NO'",
+    MAKE_EPHEM: "'YES'",
+    EPHEM_TYPE: "'OBSERVER'",
+    // Phase is defined geocentrically, so the observer is Earth's center — no
+    // `COORD_TYPE`/`SITE_COORD`.
+    CENTER: "'500@399'",
+    TIME_ZONE: `'${timeZoneOffset}'`, // Specify local civil time offset relative to UT
+    START_TIME: `'${startTime}'`,
+    STOP_TIME: `'${stopTime}'`,
+    /**
+     * Step size for the ecliptic longitude tables, independent of `--freq`. The
+     * Moon-Sun difference in longitude advances a near-linear ~0.00847°/min, so
+     * interpolating across 10 minutes resolves the crossing to well under a
+     * second.
+     */
+    STEP_SIZE: `'10m'`,
+    ANG_FORMAT: "'DEG'",
+    /**
+     * Observer Table Quantities
+     * <https://ssd.jpl.nasa.gov/horizons/manual.html#obsquan>
+     *
+     * - [31]: "Observer ecliptic longitude & latitude"
+     *   - `ObsEcLon`: Apparent ecliptic longitude, in degrees.
+     *   - `ObsEcLat`: Apparent ecliptic latitude, in degrees.
+     */
+    QUANTITIES: "'31'",
+  });
 }
 
-function parseHorizonsCSV(raw: string): HorizonsRow[] {
-  // Index the data block delimited by `$$SOE` (start of ephemeris) and `$$EOE`
+/**
+ * Split a Horizons raw text response into its CSV header names and data rows.
+ */
+function parseCsvBlock(raw: string): { headers: string[]; rows: string[][] } {
+  // Locate the data block delimited by `$$SOE` (start of ephemeris) and `$$EOE`
   // (end of ephemeris).
   const soeIndex = raw.indexOf('$$SOE');
   const eoeIndex = raw.indexOf('$$EOE');
@@ -171,7 +217,7 @@ function parseHorizonsCSV(raw: string): HorizonsRow[] {
     );
   }
 
-  // Extract the CSV header.
+  // Extract the CSV header: the last comma-bearing line before the data block.
   const preSOE = raw.slice(0, soeIndex);
   const preLines = preSOE.split('\n').filter((line) => line.trim().length > 0);
   let headerLine = '';
@@ -183,49 +229,164 @@ function parseHorizonsCSV(raw: string): HorizonsRow[] {
   }
   const headers = headerLine.split(',').map((h) => h.trim());
 
+  // Extract the CSV data rows: the lines between `$$SOE` and `$$EOE`.
+  const dataBlock = raw.slice(soeIndex + 5, eoeIndex).trim();
+  const rows = dataBlock
+    .split('\n')
+    .filter((line) => line.trim().length > 0)
+    .map((line) => line.split(',').map((c) => c.trim()));
+
+  return { headers, rows };
+}
+
+/**
+ * Resolve a column by name so we don't rely on fixed column positions.
+ */
+function columnIndex(headers: string[], pattern: RegExp): number {
+  const index = headers.findIndex((header) => pattern.test(header));
+  if (index === -1) {
+    throw new Error(
+      `Column matching ${pattern} not found. Headers: ${JSON.stringify(headers)}`,
+    );
+  }
+  return index;
+}
+
+/**
+ * Parse a `queryMoonEphemeris` response into one `MoonEphemeris` per step,
+ * resolving each quantity by header name rather than by position.
+ *
+ * Right ascension, declination and sidereal time are consumed here rather than
+ * carried forward: they exist only to derive `tiltDeg`.
+ */
+function parseMoonEphemeris(raw: string, observer: Observer): MoonEphemeris[] {
+  const { headers, rows } = parseCsvBlock(raw);
+
   // Collect flag columns, identified by empty headers.
   const flagIndices = headers
     .map((h, i) => ({ h, i }))
     .filter(({ h }) => h === '')
     .map(({ i }) => i);
 
-  // Build a name → index map so we don't rely on fixed column positions.
-  const columnIndex = (pattern: RegExp): number => {
-    const index = headers.findIndex((header) => pattern.test(header));
-    if (index === -1) {
-      throw new Error(
-        `Column matching ${pattern} not found. Headers: ${JSON.stringify(headers)}`,
-      );
-    }
-    return index;
-  };
-  const iRA = columnIndex(/R.A._\(ICRF\)/); // Right ascension of the Moon
-  const iDEC = columnIndex(/DEC_\(ICRF\)/); // Declination of the Moon
-  const iAZ = columnIndex(/Azi_\(a-app\)/); // Apparent azimuth of the Moon
-  const iEL = columnIndex(/Elev_\(a-app\)/); // Apparent elevation (altitude) of the Moon
-  const iLST = columnIndex(/L_Ap_Sid_Time/); // Local apparent sidereal time
-  const iIllum = columnIndex(/Illu%/); // Illuminated fraction of the Moon
-  const iDelta = columnIndex(/^delta$/i); // Distance in AU
-  const iPsAng = columnIndex(/PsAng/); // Position angle of the Sun w/r/t to the Moon
+  const iRA = columnIndex(headers, /R.A._\(ICRF\)/); // Right ascension of the Moon
+  const iDEC = columnIndex(headers, /DEC_\(ICRF\)/); // Declination of the Moon
+  const iAZ = columnIndex(headers, /Azi_\(a-app\)/); // Apparent azimuth of the Moon
+  const iEL = columnIndex(headers, /Elev_\(a-app\)/); // Apparent elevation (altitude) of the Moon
+  const iLST = columnIndex(headers, /L_Ap_Sid_Time/); // Local apparent sidereal time
+  const iIllum = columnIndex(headers, /Illu%/); // Illuminated fraction of the Moon
+  const iDelta = columnIndex(headers, /^delta$/i); // Distance in AU
+  const iPsAng = columnIndex(headers, /PsAng/); // Position angle of the Sun w/r/t to the Moon
 
-  const dataBlock = raw.slice(soeIndex + 5, eoeIndex).trim();
-  const lines = dataBlock.split("\n").filter((line) => line.trim().length > 0);
-
-  return lines.map((line) => {
-    const cols = line.split(',').map((c) => c.trim());
+  return rows.map((cols) => {
     return {
       datetime: cols[0],
       flags: flagIndices.map(i => cols[i]).filter(f => f !== ''),
-      raDeg: parseFloat(cols[iRA]),
-      decDeg: parseFloat(cols[iDEC]),
       azimuthDeg: parseFloat(cols[iAZ]),
-      elevationDeg: parseFloat(cols[iEL]),
-      lst: parseFloat(cols[iLST]),
+      altitudeDeg: parseFloat(cols[iEL]),
       illuminatedFraction: parseFloat(cols[iIllum]),
-      distanceAU: parseFloat(cols[iDelta]),
-      paSunDeg: parseFloat(cols[iPsAng]),
+      distanceKm: parseFloat(cols[iDelta]) * AU_TO_KM,
+      tiltDeg: moonTilt(
+        parseFloat(cols[iLST]),
+        parseFloat(cols[iRA]),
+        parseFloat(cols[iDEC]),
+        observer.lat,
+        parseFloat(cols[iPsAng]),
+      ),
     };
   });
+}
+
+/**
+ * One sample of a body's ecliptic longitude, timed relative to the observing
+ * day's midnight.
+ */
+interface EclipticLongitude {
+  minutesFromMidnight: number;
+  lonDeg: number;
+}
+
+function parseEclipticLongitudes(raw: string): EclipticLongitude[] {
+  const { headers, rows } = parseCsvBlock(raw);
+  const iLon = columnIndex(headers, /ObsEcLon/);
+
+  // The query window closes on the *next* day's 00:00, which would otherwise
+  // parse back to minute 0. Keep the series monotonic by counting past
+  // midnight, so that final sample lands on minute 1440.
+  let dayOffsetMin = 0;
+  let prevMinutes = -1;
+
+  return rows.map((cols) => {
+    const timePart = cols[0].split(' ')[1] ?? '00:00';
+    const [hour, minute] = timePart.split(':').map(Number);
+    const minutes = hour * 60 + minute;
+    if (minutes < prevMinutes) dayOffsetMin += 1440;
+    prevMinutes = minutes;
+    return {
+      minutesFromMidnight: minutes + dayOffsetMin,
+      lonDeg: parseFloat(cols[iLon]),
+    };
+  });
+}
+
+const PHASE_CROSSINGS: { targetDeg: number; name: PhaseEventName }[] = [
+  { targetDeg: 0,   name: 'new' },
+  { targetDeg: 90,  name: 'first-quarter' },
+  { targetDeg: 180, name: 'full' },
+  { targetDeg: 270, name: 'third-quarter' },
+];
+
+/**
+ * Signed distance from a target longitude, in `[-180, 180)`. Wrapping the
+ * difference this way makes the 360°→0° rollover at new moon need no special
+ * case: the offset simply passes through zero like any other crossing.
+ */
+function signedOffsetDeg(deltaLonDeg: number, targetDeg: number): number {
+  return (((deltaLonDeg - targetDeg + 540) % 360 + 360) % 360) - 180;
+}
+
+/**
+ * Find the cardinal phase instant, if any, that falls on the observing day.
+ *
+ * At most one can: cardinal events are ~7.4 days apart. Returns `null` when the
+ * day holds none, including when a crossing interpolates to midnight or later,
+ * which belongs to the next civil day.
+ */
+function findPhaseEvent(
+  moonLons: EclipticLongitude[],
+  sunLons: EclipticLongitude[],
+): MoonSummary['events']['phaseEvent'] {
+  if (moonLons.length !== sunLons.length) {
+    throw new Error(
+      `Ecliptic longitude series differ in length: ` +
+      `Moon has ${moonLons.length} rows, Sun has ${sunLons.length}.`,
+    );
+  }
+
+  const series = moonLons.map((moon, i) => ({
+    minutes: moon.minutesFromMidnight,
+    deltaLonDeg: ((moon.lonDeg - sunLons[i].lonDeg) % 360 + 360) % 360,
+  }));
+
+  for (let i = 1; i < series.length; i++) {
+    const prev = series[i - 1];
+    const curr = series[i];
+    for (const { targetDeg, name } of PHASE_CROSSINGS) {
+      const prevOffset = signedOffsetDeg(prev.deltaLonDeg, targetDeg);
+      const currOffset = signedOffsetDeg(curr.deltaLonDeg, targetDeg);
+      // The difference in longitude increases monotonically, so a sign change
+      // is always a forward crossing of this target.
+      if (prevOffset < 0 && currOffset >= 0) {
+        const frac = -prevOffset / (currOffset - prevOffset);
+        const at = Math.round(prev.minutes + frac * (curr.minutes - prev.minutes));
+        if (at >= 1440) return null;
+        const hh = String(Math.floor(at / 60)).padStart(2, '0');
+        const mm = String(at % 60).padStart(2, '0');
+        return { time: `${hh}:${mm}`, name };
+      }
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -287,30 +448,6 @@ function moonTilt(
   return tiltDeg;
 }
 
-function computeMoonEphemeris(
-  rows: HorizonsRow[],
-  observer: Observer,
-): MoonEphemeris[] {
-  return rows
-    .map((row) => {
-      return {
-        datetime: row.datetime,
-        flags: row.flags,
-        azimuthDeg: row.azimuthDeg,
-        altitudeDeg: row.elevationDeg,
-        illuminatedFraction: row.illuminatedFraction,
-        distanceKm: row.distanceAU * AU_TO_KM,
-        tiltDeg: moonTilt(
-          row.lst,
-          row.raDeg,
-          row.decDeg,
-          observer.lat,
-          row.paSunDeg,
-        ),
-      };
-    });
-}
-
 /**
  * Formats a "HH:MM" string as 12-hour time, e.g. "19:30" → "7:30 PM".
  */
@@ -353,6 +490,7 @@ function findRowNearestToNoon(rows: MoonEphemeris[]): MoonEphemeris {
 function computeMoonSummary(
   rows: MoonEphemeris[],
   observer: Observer,
+  phaseEvent: MoonSummary['events']['phaseEvent'],
 ): MoonSummary {
   let moonrise: MoonSummary['events']['moonrise'] = null;
   let moonset: MoonSummary['events']['moonset'] = null;
@@ -407,6 +545,7 @@ function computeMoonSummary(
       moonset,
       sunrise,
       sunset,
+      phaseEvent,
     },
   };
 }
@@ -431,6 +570,13 @@ function printTable(moonEphemeris: MoonEphemeris[]): void {
   }
 }
 
+const PHASE_EVENT_LABEL: Record<PhaseEventName, string> = {
+  'new': 'New Moon',
+  'first-quarter': 'First Quarter',
+  'full': 'Full Moon',
+  'third-quarter': 'Last Quarter',
+};
+
 function printSummary(s: MoonSummary, observer: Observer, freqMin: string): void {
   const illuminationStr = s.noon.illuminatedFraction.toFixed(1) + '%';
   const distanceStr = Math.round(s.noon.distanceKm).toLocaleString('en-US') + ' km';
@@ -448,6 +594,13 @@ function printSummary(s: MoonSummary, observer: Observer, freqMin: string): void
   console.log(`  Illumination: ${illuminationStr}`);
   console.log(`  Distance:     ${distanceStr}`);
   console.log('Events:');
+  console.log(
+    '  Phase:    ' + (
+      s.events.phaseEvent ?
+        `${PHASE_EVENT_LABEL[s.events.phaseEvent.name]} (${formatTime12h(s.events.phaseEvent.time)})` :
+        NONE_STR
+    )
+  );
   console.log(
     '  Moonrise: ' + (
       s.events.moonrise ?
@@ -478,6 +631,12 @@ function printFixtureJson(summary: MoonSummary): void {
       distanceKm: Math.round(summary.noon.distanceKm),
     },
     events: {
+      phaseEvent: summary.events.phaseEvent
+        ? {
+            name: summary.events.phaseEvent.name,
+            dateTime: toDateTime(summary.events.phaseEvent.time),
+          }
+        : null,
       moonrise: summary.events.moonrise
         ? {
             dateTime: toDateTime(summary.events.moonrise.time),
@@ -533,7 +692,7 @@ async function main(): Promise<void> {
     elevationMeter: 20, // Elevation is hardcoded for now
   };
 
-  const response = await queryHorizons(
+  const response = await queryMoonEphemeris(
     observer,
     `${observer.date} 00:00`,
     `${observer.date} 23:59`,
@@ -541,9 +700,44 @@ async function main(): Promise<void> {
   );
   if (showRaw) console.log(response);
 
-  const rows = parseHorizonsCSV(response);
-  const moonEphemeris = computeMoonEphemeris(rows, observer);
-  const moonSummary = computeMoonSummary(moonEphemeris, observer);
+  const moonEphemeris = parseMoonEphemeris(response, observer);
+
+  // A cardinal phase falls on roughly one day in seven, and the illumination
+  // already parsed for every row is enough to prove most days barren — so skip
+  // the two extra requests unless the day's range reaches a band that could
+  // hold an event. Each bound is the worst-case topocentric illumination *at*
+  // a cardinal instant, so a day holding one always trips its band:
+  //
+  // - Full:    phase angle ≥ 6.3° with parallax, so illumination ≥ 99.70%
+  // - New:     phase angle ≤ 173.7°,             so illumination ≤  0.30%
+  // - Quarter: elongation is exactly 90° regardless of ecliptic latitude,
+  //            so illumination lands in 49.26–51.00%
+  //
+  // The gate errs loose: days flanking an event fetch, find no crossing, and
+  // report `null`. It decides only whether to ask, never what the answer is.
+  const illumination = moonEphemeris.map((row) => row.illuminatedFraction);
+  const minIllum = Math.min(...illumination);
+  const maxIllum = Math.max(...illumination);
+  const mayHavePhaseEvent =
+    maxIllum > 99 || minIllum < 1 || (minIllum <= 52 && maxIllum >= 48);
+
+  let phaseEvent: MoonSummary['events']['phaseEvent'] = null;
+  if (mayHavePhaseEvent) {
+    // Stop at the next day's midnight rather than 23:59, which would leave a
+    // one-minute blind spot.
+    const startTime = `${observer.date} 00:00`;
+    const stopTime = `${Temporal.PlainDate.from(observer.date).add({ days: 1 })} 00:00`;
+    const [moonRaw, sunRaw] = await Promise.all([
+      queryEclipticLongitude('moon', observer, startTime, stopTime),
+      queryEclipticLongitude('sun', observer, startTime, stopTime),
+    ]);
+    phaseEvent = findPhaseEvent(
+      parseEclipticLongitudes(moonRaw),
+      parseEclipticLongitudes(sunRaw),
+    );
+  }
+
+  const moonSummary = computeMoonSummary(moonEphemeris, observer, phaseEvent);
 
   console.log();
   if (showTable) printTable(moonEphemeris);
