@@ -165,15 +165,15 @@ function parseHorizonsCSV(raw: string): HorizonsRow[] {
   const eoeIndex = raw.indexOf('$$EOE');
   if (soeIndex === -1 || eoeIndex === -1) {
     throw new Error(
-      "Could not find $$SOE/$$EOE markers in Horizons output.\n" +
-      "Raw response (first 2000 chars):\n" +
+      'Could not find $$SOE/$$EOE markers in Horizons output.\n' +
+      'Raw response (first 2000 chars):\n' +
       raw.slice(0, 2000),
     );
   }
 
   // Extract the CSV header.
   const preSOE = raw.slice(0, soeIndex);
-  const preLines = preSOE.split("\n").filter((line) => line.trim().length > 0);
+  const preLines = preSOE.split('\n').filter((line) => line.trim().length > 0);
   let headerLine = '';
   for (let i = preLines.length - 1; i >= 0; i--) {
     if (preLines[i].includes(',')) {
