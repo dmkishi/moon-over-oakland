@@ -27,7 +27,7 @@ interface Observer {
  * ephemeris.
  */
 interface MoonEphemeris {
-  datetime: string; // Observer-local civil datetime, e.g. "2001-12-31 23:59"
+  at: Temporal.ZonedDateTime; // Row instant re-expressed in the observer's zone
   /**
    * Flag legend:
    * - `*`: Sun is above the horizon (daytime)
@@ -53,10 +53,7 @@ type PhaseEventName = Extract<MoonPhase, 'new' | 'first-quarter' | 'full' | 'thi
 interface MoonSummary {
   metadata: {
     date: string; // "YYYY-MM-DD"
-    timeZone: {
-      name: string; // IANA, e.g. "America/Los_Angeles"
-      offset: string; // e.g. "-07:00"
-    };
+    timeZone: string; // IANA, e.g. "America/Los_Angeles"
   };
   /**
    * The noon values represent an average of the Moon's illumination and
@@ -67,15 +64,14 @@ interface MoonSummary {
     distanceKm: number;
   };
   /**
-   * - Times are observer-local civil times ("HH:mm".)
-   * - `null` event means it did not occur on this date (e.g. the Moon never rose.)
+   * `null` event means it did not occur on this date (e.g. the Moon never rose.)
    */
   events: {
-    phaseEvent: { time: string; name: PhaseEventName } | null;
-    moonrise: { time: string; azimuthDeg: number; tiltDeg: number } | null;
-    moonset: { time: string; azimuthDeg: number; tiltDeg: number } | null;
-    sunrise: string | null;
-    sunset: string | null;
+    phaseEvent: { at: Temporal.ZonedDateTime; name: PhaseEventName } | null;
+    moonrise: { at: Temporal.ZonedDateTime; azimuthDeg: number; tiltDeg: number } | null;
+    moonset: { at: Temporal.ZonedDateTime; azimuthDeg: number; tiltDeg: number } | null;
+    sunrise: Temporal.ZonedDateTime | null;
+    sunset: Temporal.ZonedDateTime | null;
   };
 }
 
@@ -96,6 +92,14 @@ async function fetchHorizons(params: Record<string, string>): Promise<string> {
 /**
  * Fetches the Moon's topocentric, observer-centric ephemeris and returns the
  * raw text response.
+ *
+ * `TIME_ZONE` is omitted because, as a fixed offset, it cannot express the 23-
+ * and 25-hour civil days that a DST transition produces. Instead, the window
+ * (i.e. `startTime` and `stopTime`) as well as every row label in the response
+ * are UT and the observer's zone is applied per row in `parseHorizonsDatetime`.
+ *
+ * @param startTime - Window start, in UT (see `toHorizonsUtc`)
+ * @param stopTime - Window end, likewise in UT
  */
 async function queryMoonEphemeris(
   observer: Observer,
@@ -103,7 +107,6 @@ async function queryMoonEphemeris(
   stopTime: string,
   stepSize: string,
 ): Promise<string> {
-  const timeZoneOffset = getUtcOffset(observer.date, observer.timeZone);
   return fetchHorizons({
     format: 'text', // `json` merely wraps the text content in a JSON object
     CSV_FORMAT: "'YES'", // Request CSV output for easier parsing
@@ -114,7 +117,6 @@ async function queryMoonEphemeris(
     CENTER: "'coord@399'", // Earth
     COORD_TYPE: "'GEODETIC'", // Geodetic coordinates (lat/lon/elev) for observer location
     SITE_COORD: `'${observer.lon},${observer.lat},${observer.elevationMeter/1000}'`,
-    TIME_ZONE: `'${timeZoneOffset}'`, // Specify local civil time offset relative to UT
     START_TIME: `'${startTime}'`,
     STOP_TIME: `'${stopTime}'`,
     STEP_SIZE: `'${stepSize}'`, // Ex. `1h`, `30m`, etc.
@@ -157,17 +159,20 @@ async function queryMoonEphemeris(
  * Fetches a geocentric ecliptic longitude table for the Moon or Sun and returns
  * the raw text response.
  *
+ * Same as `queryMoonEphemeris`, `TIME_ZONE` is omitted, so the window and the
+ * row labels in the response are UT.
+ *
  * @param body - Taken by name rather than by NAIF ID so that transposing the
  *   two call sites is a compile error rather than a silently inverted
  *   difference.
+ * @param startTime - Window start, in UT (see `toHorizonsUtc`)
+ * @param stopTime - Window end, likewise in UT
  */
 async function queryEclipticLongitude(
   body: 'moon' | 'sun',
-  observer: Observer,
   startTime: string,
   stopTime: string,
 ): Promise<string> {
-  const timeZoneOffset = getUtcOffset(observer.date, observer.timeZone);
   return fetchHorizons({
     format: 'text',
     CSV_FORMAT: "'YES'",
@@ -178,7 +183,6 @@ async function queryEclipticLongitude(
     // Phase is defined geocentrically, so the observer is Earth's center — no
     // `COORD_TYPE`/`SITE_COORD`.
     CENTER: "'500@399'",
-    TIME_ZONE: `'${timeZoneOffset}'`, // Specify local civil time offset relative to UT
     START_TIME: `'${startTime}'`,
     STOP_TIME: `'${stopTime}'`,
     /**
@@ -252,6 +256,26 @@ function columnIndex(headers: string[], pattern: RegExp): number {
   return index;
 }
 
+const HORIZONS_MONTHS = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+];
+
+/**
+ * Convert a Horizons row stamp ("2026-Mar-08 08:00", UT) to the observer's zone.
+ */
+function parseHorizonsDatetime(datetime: string, timeZone: string): Temporal.ZonedDateTime {
+  const [datePart, timePart] = datetime.split(' ');
+  const monthIndex = HORIZONS_MONTHS.indexOf(datePart.slice(5, 8));
+  if (monthIndex === -1) {
+    throw new Error(`Unrecognized month in Horizons datetime: ${datetime}`);
+  }
+  const month = String(monthIndex + 1).padStart(2, '0');
+  return Temporal.PlainDateTime
+    .from(`${datePart.slice(0, 4)}-${month}-${datePart.slice(9)}T${timePart}`)
+    .toZonedDateTime('UTC')
+    .withTimeZone(timeZone);
+}
+
 /**
  * Parse a `queryMoonEphemeris` response into one `MoonEphemeris` per step,
  * resolving each quantity by header name rather than by position.
@@ -279,7 +303,7 @@ function parseMoonEphemeris(raw: string, observer: Observer): MoonEphemeris[] {
 
   return rows.map((cols) => {
     return {
-      datetime: cols[0],
+      at: parseHorizonsDatetime(cols[0], observer.timeZone),
       flags: flagIndices.map(i => cols[i]).filter(f => f !== ''),
       azimuthDeg: parseFloat(cols[iAZ]),
       altitudeDeg: parseFloat(cols[iEL]),
@@ -297,35 +321,31 @@ function parseMoonEphemeris(raw: string, observer: Observer): MoonEphemeris[] {
 }
 
 /**
- * One sample of a body's ecliptic longitude, timed relative to the observing
- * day's midnight.
+ * One sample of a body's ecliptic longitude, timed as real elapsed minutes from
+ * the start of the observing day.
+ *
+ * Measuring from the instant rather than from a wall-clock label keeps the
+ * series monotonic through a DST transition.
  */
 interface EclipticLongitude {
-  minutesFromMidnight: number;
+  minutesFromDayStart: number;
   lonDeg: number;
 }
 
-function parseEclipticLongitudes(raw: string): EclipticLongitude[] {
+function parseEclipticLongitudes(
+  raw: string,
+  observer: Observer,
+  dayStart: Temporal.ZonedDateTime,
+): EclipticLongitude[] {
   const { headers, rows } = parseCsvBlock(raw);
   const iLon = columnIndex(headers, /ObsEcLon/);
 
-  // The query window closes on the *next* day's 00:00, which would otherwise
-  // parse back to minute 0. Keep the series monotonic by counting past
-  // midnight, so that final sample lands on minute 1440.
-  let dayOffsetMin = 0;
-  let prevMinutes = -1;
-
-  return rows.map((cols) => {
-    const timePart = cols[0].split(' ')[1] ?? '00:00';
-    const [hour, minute] = timePart.split(':').map(Number);
-    const minutes = hour * 60 + minute;
-    if (minutes < prevMinutes) dayOffsetMin += 1440;
-    prevMinutes = minutes;
-    return {
-      minutesFromMidnight: minutes + dayOffsetMin,
-      lonDeg: parseFloat(cols[iLon]),
-    };
-  });
+  return rows.map((cols) => ({
+    minutesFromDayStart:
+      (parseHorizonsDatetime(cols[0], observer.timeZone).epochMilliseconds -
+        dayStart.epochMilliseconds) / 60_000,
+    lonDeg: parseFloat(cols[iLon]),
+  }));
 }
 
 const PHASE_CROSSINGS: { targetDeg: number; name: PhaseEventName }[] = [
@@ -354,6 +374,8 @@ function signedOffsetDeg(deltaLonDeg: number, targetDeg: number): number {
 function findPhaseEvent(
   moonLons: EclipticLongitude[],
   sunLons: EclipticLongitude[],
+  dayStart: Temporal.ZonedDateTime,
+  dayEnd: Temporal.ZonedDateTime,
 ): MoonSummary['events']['phaseEvent'] {
   if (moonLons.length !== sunLons.length) {
     throw new Error(
@@ -362,8 +384,10 @@ function findPhaseEvent(
     );
   }
 
+  const dayLengthMinutes = (dayEnd.epochMilliseconds - dayStart.epochMilliseconds) / 60_000;
+
   const series = moonLons.map((moon, i) => ({
-    minutes: moon.minutesFromMidnight,
+    minutes: moon.minutesFromDayStart,
     deltaLonDeg: ((moon.lonDeg - sunLons[i].lonDeg) % 360 + 360) % 360,
   }));
 
@@ -378,10 +402,10 @@ function findPhaseEvent(
       if (prevOffset < 0 && currOffset >= 0) {
         const frac = -prevOffset / (currOffset - prevOffset);
         const at = Math.round(prev.minutes + frac * (curr.minutes - prev.minutes));
-        if (at >= 1440) return null;
-        const hh = String(Math.floor(at / 60)).padStart(2, '0');
-        const mm = String(at % 60).padStart(2, '0');
-        return { time: `${hh}:${mm}`, name };
+        if (at >= dayLengthMinutes) return null;
+        // Advancing by real elapsed minutes lands on the correct wall clock even
+        // when a transition falls between the day's start and the crossing.
+        return { at: dayStart.add({ minutes: at }), name };
       }
     }
   }
@@ -449,23 +473,40 @@ function moonTilt(
 }
 
 /**
- * Formats a "HH:MM" string as 12-hour time, e.g. "19:30" → "7:30 PM".
+ * Formats an instant's local wall clock as 12-hour time, e.g. "7:30 PM".
  */
-function formatTime12h(time: string): string {
-  const pt = Temporal.PlainTime.from(time);
-  const h = pt.hour % 12 || 12;
-  const period = pt.hour < 12 ? 'AM' : 'PM';
-  return `${h}:${String(pt.minute).padStart(2, '0')} ${period}`;
+function formatTime12h(at: Temporal.ZonedDateTime): string {
+  const h = at.hour % 12 || 12;
+  const period = at.hour < 12 ? 'AM' : 'PM';
+  return `${h}:${String(at.minute).padStart(2, '0')} ${period}`;
 }
 
 /**
- * Returns the UTC offset (e.g. "-07:00") for a given date and time zone,
- * accounting for DST.
+ * The observing day's true bounds. DST transition days are 23 or 25 hours long,
+ * so the end is derived by calendar arithmetic rather than by adding 24 hours.
  */
-function getUtcOffset(date: string, timeZone: string): string {
-  const zdt = Temporal.PlainDate.from(date)
-    .toZonedDateTime({ timeZone, plainTime: '12:00' });
-  return zdt.offset;
+function civilDayBounds(observer: Observer): {
+  start: Temporal.ZonedDateTime;
+  end: Temporal.ZonedDateTime;
+} {
+  const start = Temporal.PlainDate.from(observer.date)
+    .toZonedDateTime({ timeZone: observer.timeZone });
+  return { start, end: start.add({ days: 1 }) };
+}
+
+/**
+ * Converts a zoned instant to a Horizons-acceptable "YYYY-MM-DD HH:MM" string
+ * in UT clock time.
+ *
+ * Ex.
+ * Midnight in Oakland on 2026-03-08 is 8:00 UT, so the output is "2026-03-08 08:00".
+ */
+function toHorizonsUtc(zdt: Temporal.ZonedDateTime): string {
+  return zdt.toInstant()
+    .toZonedDateTimeISO('UTC')
+    .toPlainDateTime()
+    .toString({ smallestUnit: 'minute' })
+    .replace('T', ' ');
 }
 
 function parseDateArg(arg: string | undefined): string {
@@ -473,17 +514,14 @@ function parseDateArg(arg: string | undefined): string {
   return arg ?? Temporal.Now.plainDateISO().toString();
 }
 
-function findRowNearestToNoon(rows: MoonEphemeris[]): MoonEphemeris {
-  /** Convert "YYYY-MM-DD HH:MM" → minutes-since-midnight */
-  function datetimeToMinutes(datetime: string): number {
-    const timePart = datetime.split(' ')[1] ?? '00:00';
-    const [h, m] = timePart.split(':').map(Number);
-    return h * 60 + m;
-  }
+function findRowNearestToNoon(rows: MoonEphemeris[], observer: Observer): MoonEphemeris {
+  const noonMs = Temporal.PlainDate.from(observer.date)
+    .toZonedDateTime({ timeZone: observer.timeZone, plainTime: '12:00' })
+    .epochMilliseconds;
 
   return rows.reduce((nearest, row) =>
-    Math.abs(datetimeToMinutes(row.datetime) - 720) <
-    Math.abs(datetimeToMinutes(nearest.datetime) - 720) ? row : nearest
+    Math.abs(row.at.epochMilliseconds - noonMs) <
+    Math.abs(nearest.at.epochMilliseconds - noonMs) ? row : nearest
   );
 }
 
@@ -501,14 +539,14 @@ function computeMoonSummary(
 
     if (moonrise === null && curr.flags.includes('r')) {
       moonrise = {
-        time: curr.datetime.split(' ')[1],
+        at: curr.at,
         azimuthDeg: curr.azimuthDeg,
         tiltDeg: curr.tiltDeg,
       };
     }
     if (moonset === null && curr.flags.includes('s')) {
       moonset = {
-        time: curr.datetime.split(' ')[1],
+        at: curr.at,
         azimuthDeg: curr.azimuthDeg,
         tiltDeg: curr.tiltDeg,
       };
@@ -518,23 +556,20 @@ function computeMoonSummary(
     if (i > 0) {
       const prev = rows[i - 1];
       if (sunrise === null && !prev.flags.includes('*') && curr.flags.includes('*')) {
-        sunrise = curr.datetime.split(' ')[1];
+        sunrise = curr.at;
       }
       if (sunset === null && prev.flags.includes('*') && !curr.flags.includes('*')) {
-        sunset = curr.datetime.split(' ')[1];
+        sunset = curr.at;
       }
     }
   }
 
-  const noonRow = findRowNearestToNoon(rows);
+  const noonRow = findRowNearestToNoon(rows, observer);
 
   return {
     metadata: {
       date: observer.date,
-      timeZone: {
-        name: observer.timeZone,
-        offset: getUtcOffset(observer.date, observer.timeZone),
-      },
+      timeZone: observer.timeZone,
     },
     noon: {
       illuminatedFraction: noonRow.illuminatedFraction,
@@ -558,7 +593,7 @@ function printTable(moonEphemeris: MoonEphemeris[]): void {
     '─────────────────────────┼────────┼────────┼────────┼─────────┼────────',
   );
   for (const row of moonEphemeris) {
-    const datetimeStr = `${row.datetime} ${row.flags.join('')}`.padEnd(25);
+    const datetimeStr = `${row.at.toPlainDateTime().toString({ smallestUnit: 'minute' }).replace('T', ' ')} ${row.flags.join('')}`.padEnd(25);
     const altitudeStr = row.altitudeDeg.toFixed(1).padStart(6);
     const azimuthStr = row.azimuthDeg.toFixed(1).padStart(6);
     const illuminationStr = row.illuminatedFraction.toFixed(3).padStart(6);
@@ -582,11 +617,18 @@ function printSummary(s: MoonSummary, observer: Observer, freqMin: string): void
   const distanceStr = Math.round(s.noon.distanceKm).toLocaleString('en-US') + ' km';
   const NONE_STR = 'not observed today';
 
+  // A day spanning a DST transition has two offsets; showing both makes the 23-
+  // and 25-hour days self-announcing.
+  const { start: dayStart, end: dayEnd } = civilDayBounds(observer);
+  const startOffset = dayStart.offset;
+  const endOffset = dayEnd.subtract({ minutes: 1 }).offset;
+  const offsetStr = startOffset === endOffset ? startOffset : `${startOffset} → ${endOffset}`;
+
   console.log('Summary');
   console.log('--------------------------------------------------------------------------------');
   console.log('Observation Parameters:');
   console.log(`  Date:         ${observer.date}`);
-  console.log(`  Time Zone:    ${observer.timeZone} (${getUtcOffset(observer.date, observer.timeZone)})`);
+  console.log(`  Time Zone:    ${observer.timeZone} (${offsetStr})`);
   console.log(`  Location:     ${observer.lat}, ${observer.lon}, ${observer.elevationMeter} meters`);
   console.log(`  Step Size:    ${freqMin} minutes`);
   console.log();
@@ -597,21 +639,21 @@ function printSummary(s: MoonSummary, observer: Observer, freqMin: string): void
   console.log(
     '  Phase:    ' + (
       s.events.phaseEvent ?
-        `${PHASE_EVENT_LABEL[s.events.phaseEvent.name]} (${formatTime12h(s.events.phaseEvent.time)})` :
+        `${PHASE_EVENT_LABEL[s.events.phaseEvent.name]} (${formatTime12h(s.events.phaseEvent.at)})` :
         NONE_STR
     )
   );
   console.log(
     '  Moonrise: ' + (
       s.events.moonrise ?
-        `${formatTime12h(s.events.moonrise.time)} (Azimuth: ${s.events.moonrise.azimuthDeg.toFixed(0)}°, Tilt: ${s.events.moonrise.tiltDeg.toFixed(0)}°)` :
+        `${formatTime12h(s.events.moonrise.at)} (Azimuth: ${s.events.moonrise.azimuthDeg.toFixed(0)}°, Tilt: ${s.events.moonrise.tiltDeg.toFixed(0)}°)` :
         NONE_STR
     )
   );
   console.log(
     '  Moonset:  ' + (
       s.events.moonset ?
-        `${formatTime12h(s.events.moonset.time)} (Azimuth: ${s.events.moonset.azimuthDeg.toFixed(0)}°, Tilt: ${s.events.moonset.tiltDeg.toFixed(0)}°)` :
+        `${formatTime12h(s.events.moonset.at)} (Azimuth: ${s.events.moonset.azimuthDeg.toFixed(0)}°, Tilt: ${s.events.moonset.tiltDeg.toFixed(0)}°)` :
         NONE_STR
     )
   );
@@ -620,8 +662,11 @@ function printSummary(s: MoonSummary, observer: Observer, freqMin: string): void
 }
 
 function printFixtureJson(summary: MoonSummary): void {
-  const { date, timeZone } = summary.metadata;
-  const toDateTime = (time: string) => `${date}T${time}:00${timeZone.offset}`;
+  const { date } = summary.metadata;
+  // Stamped from each event's own instant, so a day with two offsets — and the
+  // repeated hour of a fall-back day — comes out right.
+  const toDateTime = (at: Temporal.ZonedDateTime) =>
+    at.toString({ smallestUnit: 'second', timeZoneName: 'never' });
 
   const fixture = {
     description: '',
@@ -634,19 +679,19 @@ function printFixtureJson(summary: MoonSummary): void {
       phaseEvent: summary.events.phaseEvent
         ? {
             name: summary.events.phaseEvent.name,
-            dateTime: toDateTime(summary.events.phaseEvent.time),
+            dateTime: toDateTime(summary.events.phaseEvent.at),
           }
         : null,
       moonrise: summary.events.moonrise
         ? {
-            dateTime: toDateTime(summary.events.moonrise.time),
+            dateTime: toDateTime(summary.events.moonrise.at),
             azimuthDeg: summary.events.moonrise.azimuthDeg,
             tiltDeg: summary.events.moonrise.tiltDeg
           }
         : null,
       moonset: summary.events.moonset
         ? {
-            dateTime: toDateTime(summary.events.moonset.time),
+            dateTime: toDateTime(summary.events.moonset.at),
             azimuthDeg: summary.events.moonset.azimuthDeg,
             tiltDeg: summary.events.moonset.tiltDeg
           }
@@ -692,10 +737,12 @@ async function main(): Promise<void> {
     elevationMeter: 20, // Elevation is hardcoded for now
   };
 
+  const { start: dayStart, end: dayEnd } = civilDayBounds(observer);
+
   const response = await queryMoonEphemeris(
     observer,
-    `${observer.date} 00:00`,
-    `${observer.date} 23:59`,
+    toHorizonsUtc(dayStart),
+    toHorizonsUtc(dayEnd.subtract({ minutes: 1 })),
     `${freqMin}m`,
   );
   if (showRaw) console.log(response);
@@ -725,15 +772,17 @@ async function main(): Promise<void> {
   if (mayHavePhaseEvent) {
     // Stop at the next day's midnight rather than 23:59, which would leave a
     // one-minute blind spot.
-    const startTime = `${observer.date} 00:00`;
-    const stopTime = `${Temporal.PlainDate.from(observer.date).add({ days: 1 })} 00:00`;
+    const startTime = toHorizonsUtc(dayStart);
+    const stopTime = toHorizonsUtc(dayEnd);
     const [moonRaw, sunRaw] = await Promise.all([
-      queryEclipticLongitude('moon', observer, startTime, stopTime),
-      queryEclipticLongitude('sun', observer, startTime, stopTime),
+      queryEclipticLongitude('moon', startTime, stopTime),
+      queryEclipticLongitude('sun', startTime, stopTime),
     ]);
     phaseEvent = findPhaseEvent(
-      parseEclipticLongitudes(moonRaw),
-      parseEclipticLongitudes(sunRaw),
+      parseEclipticLongitudes(moonRaw, observer, dayStart),
+      parseEclipticLongitudes(sunRaw, observer, dayStart),
+      dayStart,
+      dayEnd,
     );
   }
 
