@@ -44,7 +44,6 @@ export function printSummary(
   s: MoonSummary,
   observer: Observer,
   day: ObservingDay,
-  freqMin: string,
 ): void {
   const illuminationStr = s.noon.illuminatedFraction.toFixed(1) + '%';
   const distanceStr = Math.round(s.noon.distanceKm).toLocaleString('en-US') + ' km';
@@ -62,7 +61,7 @@ export function printSummary(
   console.log(`  Date:         ${observer.date}`);
   console.log(`  Time Zone:    ${observer.timeZone} (${offsetStr})`);
   console.log(`  Location:     ${observer.lat}, ${observer.lon}, ${observer.elevationMeter} meters`);
-  console.log(`  Step Size:    ${freqMin} minutes`);
+  console.log('  Step Size:    1 minute');
   console.log();
   console.log('Noon (Average):');
   console.log(`  Illumination: ${illuminationStr}`);

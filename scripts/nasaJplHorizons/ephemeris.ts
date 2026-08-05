@@ -5,8 +5,7 @@ import { moonTilt } from './tilt.ts';
 
 /**
  * The Moon's observer-centric ephemeris at a single instant: its apparent
- * position and appearance in the observer's sky, i.e. one `--freq` step of the
- * ephemeris.
+ * position and appearance in the observer's sky.
  */
 export interface MoonEphemeris {
   at: Temporal.ZonedDateTime; // Row instant re-expressed in the observer's zone

@@ -69,7 +69,7 @@ pnpm preview 2026-01-01  # Optionally specify a date
 
 ### NASA JPL Horizons
 ```sh
-pnpm horizons [YYYY-MM-DD] [--freq=N] [--show-table] [--show-raw]
+pnpm horizons [YYYY-MM-DD] [--show-table] [--show-raw]
 ```
 
 Use this script to request authoritative data from [JPL Horizons](
@@ -78,7 +78,6 @@ https://ssd.jpl.nasa.gov/horizons/) for debugging or creating test fixtures.
 - **Positional Argument**
   - `YYYY-MM-DD` — Observation date. Defaults to today.
 - **Named Options**
-  - `--freq=N` — Step size in minutes between ephemeris samples. Default `1`.
   - `--show-table` — Prints formatted table with all ephemeris samples. Default
     `false`.
   - `--show-raw` — Prints raw, unparsed CSV response from the API. Default

@@ -2,7 +2,7 @@
  * Queries the JPL Horizons API for daily Moon position data and summarizes
  * moonrise/moonset times, azimuth, tilt, illumination, and distance.
  *
- * @usage pnpm horizons [YYYY-MM-DD] [--freq=N] [--show-table] [--show-raw]
+ * @usage pnpm horizons [YYYY-MM-DD] [--show-table] [--show-raw]
  */
 import { parseArgs } from 'node:util';
 import { Temporal } from '@js-temporal/polyfill';
@@ -22,14 +22,12 @@ function parseDateArg(arg: string | undefined): string {
 const { values: argValues, positionals: argPositionals } = parseArgs({
   args: process.argv.slice(2),
   options: {
-    freq: { type: 'string', default: '1' },
     'show-raw': { type: 'boolean', default: false },
     'show-table': { type: 'boolean', default: false },
   },
   allowPositionals: true,
 });
 const date = parseDateArg(argPositionals[0]);
-const freqMin = argValues.freq;
 const showRaw = argValues['show-raw'];
 const showTable = argValues['show-table'];
 
@@ -48,7 +46,6 @@ const response = await queryMoonEphemeris(
   day.start,
   // Stop one minute before the end of the day to keep the run to the day's own rows.
   day.end.subtract({ minutes: 1 }),
-  `${freqMin}m`,
 );
 if (showRaw) console.log(response);
 
@@ -66,6 +63,6 @@ const moonSummary = computeMoonSummary(moonEphemeris, observer, day, phaseEvent)
 
 console.log();
 if (showTable) printTable(moonEphemeris);
-printSummary(moonSummary, observer, day, freqMin);
+printSummary(moonSummary, observer, day);
 console.log();
 printFixtureJson(moonSummary);

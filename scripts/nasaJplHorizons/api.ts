@@ -46,7 +46,6 @@ export async function queryMoonEphemeris(
   observer: Observer,
   start: Temporal.ZonedDateTime,
   stop: Temporal.ZonedDateTime,
-  stepSize: string,
 ): Promise<string> {
   return fetchHorizons({
     format: 'text', // `json` merely wraps the text content in a JSON object
@@ -60,7 +59,16 @@ export async function queryMoonEphemeris(
     SITE_COORD: `'${observer.lon},${observer.lat},${observer.elevationMeter/1000}'`,
     START_TIME: `'${toHorizonsUtc(start)}'`,
     STOP_TIME: `'${toHorizonsUtc(stop)}'`,
-    STEP_SIZE: `'${stepSize}'`, // Ex. `1h`, `30m`, etc.
+    /**
+     * Fixed at one minute, and deliberately not configurable. Horizons does not
+     * interpolate rise/set: it tags the nearest grid row with `r`/`s`, so event
+     * resolution equals the step size and the summary's azimuth and tilt are
+     * read off that row.
+     *
+     * One minute bounds the error to ~0.14° of azimuth and ~0.12° of tilt, two
+     * orders of magnitude inside the accuracy suite's tolerances.
+     */
+    STEP_SIZE: `'1m'`,
     ANG_FORMAT: "'DEG'",
     // APPARENT: "'AIRLESS'", // Request apparent coordinates without atmospheric refraction correction
     /**
@@ -127,10 +135,10 @@ export async function queryEclipticLongitude(
     START_TIME: `'${toHorizonsUtc(start)}'`,
     STOP_TIME: `'${toHorizonsUtc(stop)}'`,
     /**
-     * Step size for the ecliptic longitude tables, independent of `--freq`. The
-     * Moon-Sun difference in longitude advances a near-linear ~0.00847°/min, so
-     * interpolating across 10 minutes resolves the crossing to well under a
-     * second.
+     * Step size for the ecliptic longitude tables, independent of the ephemeris
+     * step. The Moon-Sun difference in longitude advances a near-linear
+     * ~0.00847°/min, so interpolating across 10 minutes resolves the crossing
+     * to well under a second.
      */
     STEP_SIZE: `'10m'`,
     ANG_FORMAT: "'DEG'",
