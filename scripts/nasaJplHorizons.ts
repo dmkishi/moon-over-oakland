@@ -41,7 +41,7 @@ interface MoonEphemeris {
   azimuthDeg: number; // Apparent azimuth of the Moon
   altitudeDeg: number; // Apparent altitude of the Moon
   illuminatedFraction: number; // Illuminated fraction (0–100)
-  distanceKm: number; // Distance in km
+  distanceKm: number;
   tiltDeg: number; // Tilt of the moon (relative to the local vertical)
 }
 
@@ -209,8 +209,8 @@ async function queryEclipticLongitude(
  * Split a Horizons raw text response into its CSV header names and data rows.
  */
 function parseCsvBlock(raw: string): { headers: string[]; rows: string[][] } {
-  // Locate the data block delimited by `$$SOE` (start of ephemeris) and `$$EOE`
-  // (end of ephemeris).
+  // Locate the CSV data block delimited by `$$SOE` (start of ephemeris) and
+  // `$$EOE` (end of ephemeris).
   const soeIndex = raw.indexOf('$$SOE');
   const eoeIndex = raw.indexOf('$$EOE');
   if (soeIndex === -1 || eoeIndex === -1) {
@@ -421,7 +421,7 @@ function findPhaseEvent(
  * @returns Hour angle in degrees (positive west)
  */
 function computeHourAngleDeg(lstHours: number, raDeg: number): number {
-  const lstDeg = lstHours * 15; // convert hours → degrees
+  const lstDeg = lstHours * 15;
   let hourAngleDeg = lstDeg - raDeg;
   // Normalize to [-180, +180]
   while (hourAngleDeg > 180) hourAngleDeg -= 360;
