@@ -14,9 +14,21 @@ import { resolvePhaseEvent } from './phaseEvent.ts';
 import { printFixtureJson, printSummary, printTable } from './print.ts';
 import { computeMoonSummary } from './summary.ts';
 
+/**
+ * The observing day to query, as a `YYYY-MM-DD` string. Defaults to today in
+ * the system time zone when the positional argument is omitted.
+ */
 function parseDateArg(arg: string | undefined): string {
-  if (arg !== undefined) Temporal.PlainDate.from(arg); // validates YYYY-MM-DD
-  return arg ?? Temporal.Now.plainDateISO().toString();
+  if (arg === undefined) return Temporal.Now.plainDateISO().toString();
+
+  // `PlainDate.from` alone would accept times, offsets, and calendar
+  // annotations, so require the bare calendar date first.
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(arg)) {
+    throw new Error(`Expected a YYYY-MM-DD date, got: ${arg}`);
+  }
+
+  // `reject` so out-of-range days fail instead of being clamped.
+  return Temporal.PlainDate.from(arg, { overflow: 'reject' }).toString();
 }
 
 const { values: argValues, positionals: argPositionals } = parseArgs({
