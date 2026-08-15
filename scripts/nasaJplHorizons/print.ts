@@ -1,4 +1,5 @@
 import { Temporal } from '@js-temporal/polyfill';
+import pc from 'picocolors';
 import type { MoonEphemeris } from './ephemeris.ts';
 import type { Observer, ObservingDay } from './observer.ts';
 import type { PhaseEventName } from './phaseEvent.ts';
@@ -47,7 +48,7 @@ export function printSummary(
 ): void {
   const illuminationStr = s.noon.illuminatedFraction.toFixed(1) + '%';
   const distanceStr = Math.round(s.noon.distanceKm).toLocaleString('en-US') + ' km';
-  const NONE_STR = 'not observed today';
+  const NONE_STR = pc.red('NONE');
 
   // A day spanning a DST transition has two offsets; showing both makes the 23-
   // and 25-hour days self-announcing.
