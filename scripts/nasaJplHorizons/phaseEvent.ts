@@ -62,8 +62,8 @@ function signedOffsetDeg(deltaLonDeg: number, targetDeg: number): number {
  * Find the cardinal phase instant, if any, that falls on the observing day.
  *
  * At most one can: cardinal events are ~7.4 days apart. Returns `null` when the
- * day holds none, including when a crossing interpolates to midnight or later,
- * which belongs to the next civil day.
+ * day holds none, including when the interpolated crossing falls at midnight or
+ * later — that instant belongs to the next civil day.
  */
 function findPhaseEvent(
   moonLons: EclipticLongitude[],
@@ -94,11 +94,20 @@ function findPhaseEvent(
       // is always a forward crossing of this target.
       if (prevOffset < 0 && currOffset >= 0) {
         const frac = -prevOffset / (currOffset - prevOffset);
-        const at = Math.round(prev.minutes + frac * (curr.minutes - prev.minutes));
-        if (at >= dayLengthMinutes) return null;
-        // Advancing by real elapsed minutes lands on the correct wall clock even
+        const rawAt = prev.minutes + frac * (curr.minutes - prev.minutes);
+        // Which day owns the event is a property of the true crossing, so test
+        // it before quantizing. Rounding one at 23:59:42 up to midnight would
+        // strand it: this day rejects it as the next day's, and the next day's
+        // series begins after it, so its sign change never appears there either.
+        if (rawAt >= dayLengthMinutes) return null;
+        // The 10-minute interpolation resolves the crossing to well under a
+        // second, so carry it as milliseconds rather than rounding away the
+        // precision. Clamping keeps quantization from crossing the boundary the
+        // test above just drew.
+        const atMs = Math.min(Math.round(rawAt * 60_000), dayLengthMinutes * 60_000 - 1);
+        // Advancing by real elapsed time lands on the correct wall clock even
         // when a transition falls between the day's start and the crossing.
-        return { at: day.start.add({ minutes: at }), name };
+        return { at: day.start.add({ milliseconds: atMs }), name };
       }
     }
   }
