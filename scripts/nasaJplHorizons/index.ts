@@ -37,7 +37,10 @@ function parseDateArg(arg: string | undefined): string {
   return Temporal.PlainDate.from(iso, { overflow: 'reject' }).toString();
 }
 
-const { values: argValues, positionals: argPositionals } = parseArgs({
+const {
+  values: argValues,
+  positionals: argPositionals,
+} = parseArgs({
   args: process.argv.slice(2),
   options: {
     'show-raw': { type: 'boolean', default: false },
