@@ -56,8 +56,10 @@ const day = civilDayBounds(observer);
 const response = await queryMoonEphemeris(
   observer,
   day.start,
-  // Stop one minute before the end of the day to keep the run to the day's own rows.
-  day.end.subtract({ minutes: 1 }),
+  // Stop at the next day's midnight rather than 23:59: that extra row is what
+  // lets `findLowerCulmination` bracket a crossing in the day's final minute.
+  // `computeMoonSummary` confines every other reading to the day's own rows.
+  day.end,
 );
 if (showRaw) console.log(response);
 

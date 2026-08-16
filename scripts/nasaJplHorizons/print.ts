@@ -67,30 +67,33 @@ export function printSummary(
   console.log('Noon (Average):');
   console.log(`  Illumination: ${illuminationStr}`);
   console.log(`  Distance:     ${distanceStr}`);
+
   console.log('Events:');
   console.log(
-    '  Phase:    ' + (
+    '  Phase:       ' + (
       s.events.phaseEvent ?
         `${PHASE_EVENT_LABEL[s.events.phaseEvent.name]} (${formatTime12h(s.events.phaseEvent.at)})` :
         NONE_STR
     )
   );
   console.log(
-    '  Moonrise: ' + (
+    '  Moonrise:    ' + (
       s.events.moonrise ?
         `${formatTime12h(s.events.moonrise.at)} (Azimuth: ${s.events.moonrise.azimuthDeg.toFixed(0)}°, Tilt: ${s.events.moonrise.tiltDeg.toFixed(0)}°)` :
         NONE_STR
     )
   );
   console.log(
-    '  Moonset:  ' + (
+    '  Moonset:     ' + (
       s.events.moonset ?
         `${formatTime12h(s.events.moonset.at)} (Azimuth: ${s.events.moonset.azimuthDeg.toFixed(0)}°, Tilt: ${s.events.moonset.tiltDeg.toFixed(0)}°)` :
         NONE_STR
     )
   );
-  console.log(`  Sunrise:  ${s.events.sunrise ? formatTime12h(s.events.sunrise) : NONE_STR}`);
-  console.log(`  Sunset:   ${s.events.sunset  ? formatTime12h(s.events.sunset)  : NONE_STR}`);
+  console.log(`  Upper Culm:  ${s.events.upperCulmination ? formatTime12h(s.events.upperCulmination) : NONE_STR}`);
+  console.log(`  Lower Culm:  ${s.events.lowerCulmination ? formatTime12h(s.events.lowerCulmination) : NONE_STR}`);
+  console.log(`  Sunrise:     ${s.events.sunrise ? formatTime12h(s.events.sunrise) : NONE_STR}`);
+  console.log(`  Sunset:      ${s.events.sunset  ? formatTime12h(s.events.sunset)  : NONE_STR}`);
 }
 
 export function printFixtureJson(summary: MoonSummary): void {
@@ -126,6 +129,12 @@ export function printFixtureJson(summary: MoonSummary): void {
         dateTime: toDateTime(e.at),
         azimuthDeg: e.azimuthDeg,
         tiltDeg: e.tiltDeg,
+      })),
+      upperCulmination: orNull(summary.events.upperCulmination, (at) => ({
+        dateTime: toDateTime(at),
+      })),
+      lowerCulmination: orNull(summary.events.lowerCulmination, (at) => ({
+        dateTime: toDateTime(at),
       })),
       sunrise: orNull(summary.events.sunrise, (at) => ({
         dateTime: toDateTime(at),
