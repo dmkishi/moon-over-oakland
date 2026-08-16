@@ -22,13 +22,19 @@ function parseDateArg(arg: string | undefined): string {
   if (arg === undefined) return Temporal.Now.plainDateISO().toString();
 
   // `PlainDate.from` alone would accept times, offsets, and calendar
-  // annotations, so require the bare calendar date first.
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(arg)) {
-    throw new Error(`Expected a YYYY-MM-DD date, got: ${arg}`);
+  // annotations, so require the bare calendar date first. Month and day may
+  // omit their leading zero (`2000-1-2`).
+  const match = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(arg);
+  if (!match) {
+    throw new Error(`Expected a YYYY-MM-DD date (leading zero optional), got: ${arg}`);
   }
 
-  // `reject` so out-of-range days fail instead of being clamped.
-  return Temporal.PlainDate.from(arg, { overflow: 'reject' }).toString();
+  const [, year, month, day] = match;
+
+  // `PlainDate.from` only parses the padded ISO form, so pad before handing it
+  // over. `reject` so out-of-range days fail instead of being clamped.
+  const iso = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  return Temporal.PlainDate.from(iso, { overflow: 'reject' }).toString();
 }
 
 const { values: argValues, positionals: argPositionals } = parseArgs({

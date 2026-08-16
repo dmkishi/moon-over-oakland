@@ -76,7 +76,8 @@ Use this script to request authoritative data from [JPL Horizons](
 https://ssd.jpl.nasa.gov/horizons/) for debugging or creating test fixtures.
 
 - **Positional Argument**
-  - `YYYY-MM-DD` — Observation date. Defaults to today.
+  - `YYYY-MM-DD` — Observation date; leading zeroes optional (`2000-1-2`).
+    Defaults to today.
 - **Named Options**
   - `--show-table` — Prints formatted table with all ephemeris samples. Default
     `false`.
