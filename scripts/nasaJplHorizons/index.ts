@@ -6,6 +6,7 @@
  */
 import { parseArgs } from 'node:util';
 import { Temporal } from '@js-temporal/polyfill';
+import pc from 'picocolors';
 import { location } from '../../src/constants.ts';
 import { queryMoonEphemeris } from './api.ts';
 import { parseMoonEphemeris } from './ephemeris.ts';
@@ -13,6 +14,8 @@ import { civilDayBounds, type Observer } from './observer.ts';
 import { resolvePhaseEvent } from './phaseEvent.ts';
 import { printFixtureJson, printSummary, printTable } from './print.ts';
 import { computeMoonSummary } from './summary.ts';
+
+class UsageError extends Error {}
 
 /**
  * The observing day to query, as a `YYYY-MM-DD` string. Defaults to today in
@@ -26,7 +29,7 @@ function parseDateArg(arg: string | undefined): string {
   // omit their leading zero (`2000-1-2`).
   const match = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(arg);
   if (!match) {
-    throw new Error(`Expected a YYYY-MM-DD date (leading zero optional), got: ${arg}`);
+    throw new UsageError(`Expected a YYYY-MM-DD date (leading zero optional), got: ${arg}`);
   }
 
   const [, year, month, day] = match;
@@ -34,70 +37,91 @@ function parseDateArg(arg: string | undefined): string {
   // `PlainDate.from` only parses the padded ISO form, so pad before handing it
   // over. `reject` so out-of-range days fail instead of being clamped.
   const iso = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-  return Temporal.PlainDate.from(iso, { overflow: 'reject' }).toString();
+  try {
+    return Temporal.PlainDate.from(iso, { overflow: 'reject' }).toString();
+  } catch {
+    // The regex admits `2026-13-01` and `2026-02-30`; Temporal is what rejects
+    // them, in wording ("invalid RFC 9557 string") that is jargon from here.
+    throw new UsageError(`No such calendar date: ${arg}`);
+  }
 }
 
-const {
-  values: argValues,
-  positionals: argPositionals,
-} = parseArgs({
-  args: process.argv.slice(2),
-  options: {
-    'no-json':    { type: 'boolean', default: false },
-    'no-summary': { type: 'boolean', default: false },
-    'show-raw':   { type: 'boolean', default: false },
-    'show-table': { type: 'boolean', default: false },
-  },
-  allowPositionals: true,
-});
-const date = parseDateArg(argPositionals[0]);
-const showJson = !argValues['no-json'];
-const showSummary = !argValues['no-summary'];
-const showRaw = argValues['show-raw'];
-const showTable = argValues['show-table'];
+try {
+  const {
+    values: argValues,
+    positionals: argPositionals,
+  } = parseArgs({
+    args: process.argv.slice(2),
+    options: {
+      'no-json':    { type: 'boolean', default: false },
+      'no-summary': { type: 'boolean', default: false },
+      'show-raw':   { type: 'boolean', default: false },
+      'show-table': { type: 'boolean', default: false },
+    },
+    allowPositionals: true,
+  });
+  const date = parseDateArg(argPositionals[0]);
+  const showJson = !argValues['no-json'];
+  const showSummary = !argValues['no-summary'];
+  const showRaw = argValues['show-raw'];
+  const showTable = argValues['show-table'];
 
-if (!showSummary && !showJson && !showTable && !showRaw) {
-  throw new Error(
-    'Nothing to print: --no-summary and --no-json together need --show-table or --show-raw.',
+  if (!showSummary && !showJson && !showTable && !showRaw) {
+    throw new UsageError(
+      'Nothing to print: --no-summary and --no-json together need --show-table or --show-raw.',
+    );
+  }
+
+  const observer: Observer = {
+    date,
+    timeZone: location.timezone,
+    lat: location.latitude,
+    lon: location.longitude,
+    elevationMeter: 20, // Elevation is hardcoded for now
+  };
+
+  const day = civilDayBounds(observer);
+
+  const response = await queryMoonEphemeris(
+    observer,
+    day.start,
+    // Stop at the next day's midnight rather than 23:59: that extra row is what
+    // lets `findLowerCulmination` bracket a crossing in the day's final minute.
+    // `computeMoonSummary` confines every other reading to the day's own rows.
+    day.end,
   );
-}
+  if (showRaw) console.log(response);
 
-const observer: Observer = {
-  date,
-  timeZone: location.timezone,
-  lat: location.latitude,
-  lon: location.longitude,
-  elevationMeter: 20, // Elevation is hardcoded for now
-};
+  const moonEphemeris = parseMoonEphemeris(response, observer);
 
-const day = civilDayBounds(observer);
+  const phaseEvent = await resolvePhaseEvent(
+    observer,
+    // This stops at midnight as the last sample, which is needed for the
+    // interpolation to find the phase event.
+    day,
+    moonEphemeris.map((row) => row.illuminatedFraction),
+  );
 
-const response = await queryMoonEphemeris(
-  observer,
-  day.start,
-  // Stop at the next day's midnight rather than 23:59: that extra row is what
-  // lets `findLowerCulmination` bracket a crossing in the day's final minute.
-  // `computeMoonSummary` confines every other reading to the day's own rows.
-  day.end,
-);
-if (showRaw) console.log(response);
+  const moonSummary = computeMoonSummary(moonEphemeris, observer, day, phaseEvent);
 
-const moonEphemeris = parseMoonEphemeris(response, observer);
+  console.log();
+  if (showTable) printTable(moonEphemeris);
+  if (showSummary) printSummary(moonSummary, observer, day);
+  if (showJson) {
+    if (showTable || showSummary) console.log();
+    printFixtureJson(moonSummary);
+  }
+} catch (error) {
+  // Node's own argument errors — unknown flag, missing value — are usage errors
+  // too, so they report the same way. Anything else is a bug or a failed API
+  // call, and keeps its stack.
+  const isUsage = error instanceof UsageError || (
+    error instanceof Error &&
+    'code' in error &&
+    String(error.code).startsWith('ERR_PARSE_ARGS_')
+  );
+  if (!isUsage) throw error;
 
-const phaseEvent = await resolvePhaseEvent(
-  observer,
-  // This stops at midnight as the last sample, which is needed for the
-  // interpolation to find the phase event.
-  day,
-  moonEphemeris.map((row) => row.illuminatedFraction),
-);
-
-const moonSummary = computeMoonSummary(moonEphemeris, observer, day, phaseEvent);
-
-console.log();
-if (showTable) printTable(moonEphemeris);
-if (showSummary) printSummary(moonSummary, observer, day);
-if (showJson) {
-  if (showTable || showSummary) console.log();
-  printFixtureJson(moonSummary);
+  console.error(pc.red(error.message));
+  process.exitCode = 1;
 }
