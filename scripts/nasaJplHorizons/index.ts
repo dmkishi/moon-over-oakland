@@ -2,7 +2,7 @@
  * Queries the JPL Horizons API for daily Moon position data and summarizes
  * moonrise/moonset times, azimuth, tilt, illumination, and distance.
  *
- * @usage pnpm horizons [YYYY-MM-DD] [--show-table] [--show-raw] [--no-summary] [--no-json]
+ * @usage pnpm horizons [YYYY-MM-DD] [--show-table] [--show-csv] [--show-raw] [--no-summary] [--no-json]
  */
 import { parseArgs } from 'node:util';
 import { Temporal } from '@js-temporal/polyfill';
@@ -12,7 +12,7 @@ import { queryMoonEphemeris } from './api.ts';
 import { parseMoonEphemeris } from './ephemeris.ts';
 import { civilDayBounds, type Observer } from './observer.ts';
 import { resolvePhaseEvent } from './phaseEvent.ts';
-import { printFixtureJson, printSummary, printTable } from './print.ts';
+import { printCsv, printFixtureJson, printSummary, printTable } from './print.ts';
 import { computeMoonSummary } from './summary.ts';
 
 class UsageError extends Error {}
@@ -55,6 +55,7 @@ try {
     options: {
       'no-json':    { type: 'boolean', default: false },
       'no-summary': { type: 'boolean', default: false },
+      'show-csv':   { type: 'boolean', default: false },
       'show-raw':   { type: 'boolean', default: false },
       'show-table': { type: 'boolean', default: false },
     },
@@ -63,12 +64,13 @@ try {
   const date = parseDateArg(argPositionals[0]);
   const showJson = !argValues['no-json'];
   const showSummary = !argValues['no-summary'];
+  const showCsv = argValues['show-csv'];
   const showRaw = argValues['show-raw'];
   const showTable = argValues['show-table'];
 
-  if (!showSummary && !showJson && !showTable && !showRaw) {
+  if (!showSummary && !showJson && !showTable && !showCsv && !showRaw) {
     throw new UsageError(
-      'Nothing to print: --no-summary and --no-json together need --show-table or --show-raw.',
+      'Nothing to print: --no-summary and --no-json together need --show-table, --show-csv, or --show-raw.',
     );
   }
 
@@ -106,9 +108,10 @@ try {
 
   console.log();
   if (showTable) printTable(moonEphemeris);
+  if (showCsv) printCsv(moonEphemeris);
   if (showSummary) printSummary(moonSummary, observer, day);
   if (showJson) {
-    if (showTable || showSummary) console.log();
+    if (showTable || showCsv || showSummary) console.log();
     printFixtureJson(moonSummary);
   }
 } catch (error) {

@@ -34,6 +34,30 @@ export function printTable(moonEphemeris: MoonEphemeris[]): void {
   }
 }
 
+/**
+ * The same rows and columns as `printTable` in CSV for piping elsewhere.
+ *
+ * No commas in field values so no quoting is needed: the distance columns drops
+ * the thousands separator. Unlike the other printers this one emits no title or
+ * rule line, which would not survive a CSV parser.
+ */
+export function printCsv(moonEphemeris: MoonEphemeris[]): void {
+  console.log('datetime,flags,altitudeDeg,azimuthDeg,illuminatedFraction,distanceKm,tiltDeg');
+  for (const row of moonEphemeris) {
+    console.log([
+      row.at.toPlainDateTime().toString({ smallestUnit: 'minute' }).replace('T', ' '),
+      // The table mashes these onto the end of the datetime cell; a column of
+      // their own is what makes them readable to whatever consumes this.
+      row.flags.join(''),
+      row.altitudeDeg.toFixed(1),
+      row.azimuthDeg.toFixed(1),
+      (row.illuminatedFraction / 100).toFixed(3),
+      Math.round(row.distanceKm),
+      row.tiltDeg.toFixed(1),
+    ].join(','));
+  }
+}
+
 const PHASE_EVENT_LABEL: Record<PhaseEventName, string> = {
   'new': 'New Moon',
   'first-quarter': 'First Quarter',
