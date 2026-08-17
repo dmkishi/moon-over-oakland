@@ -1,8 +1,8 @@
 import { Temporal } from '@js-temporal/polyfill';
 import type { MoonPhase } from '../../src/moonPost.ts';
 import { queryEclipticLongitude } from './api.ts';
-import { columnIndex, parseCsvBlock, parseHorizonsDatetime } from './csv.ts';
 import type { Observer, ObservingDay } from './observer.ts';
+import { columnIndex, parseCsvBlock, parseHorizonsDatetime } from './responseCsv.ts';
 
 export type PhaseEventName = Extract<MoonPhase, 'new' | 'first-quarter' | 'full' | 'third-quarter'>;
 

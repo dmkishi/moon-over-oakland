@@ -1,6 +1,6 @@
 import { Temporal } from '@js-temporal/polyfill';
-import { columnIndex, parseCsvBlock, parseHorizonsDatetime } from './csv.ts';
 import type { Observer } from './observer.ts';
+import { columnIndex, parseCsvBlock, parseHorizonsDatetime } from './responseCsv.ts';
 import { moonTilt } from './tilt.ts';
 
 /**
