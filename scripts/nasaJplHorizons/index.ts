@@ -2,7 +2,7 @@
  * Queries the JPL Horizons API for daily Moon position data and summarizes
  * moonrise/moonset times, azimuth, tilt, illumination, and distance.
  *
- * @usage pnpm horizons [YYYY-MM-DD] [--show-table] [--show-csv] [--show-raw] [--no-summary] [--no-json]
+ * @usage pnpm horizons [YYYY-MM-DD] [--every=<interval>] [--show-table] [--show-csv] [--show-raw] [--no-summary] [--no-json]
  */
 import { parseArgs } from 'node:util';
 import { Temporal } from '@js-temporal/polyfill';
@@ -12,7 +12,7 @@ import { queryMoonEphemeris } from './api.ts';
 import { parseMoonEphemeris } from './ephemeris.ts';
 import { civilDayBounds, type Observer } from './observer.ts';
 import { resolvePhaseEvent } from './phaseEvent.ts';
-import { printCsv, printFixtureJson, printSummary, printTable } from './print.ts';
+import { printCsv, printFixtureJson, printSummary, printTable, thinEphemeris } from './print.ts';
 import { computeMoonSummary } from './summary.ts';
 
 class UsageError extends Error {}
@@ -46,6 +46,30 @@ function parseDateArg(arg: string | undefined): string {
   }
 }
 
+/**
+ * The display interval for `--show-table` and `--show-csv` in minutes. Accepts
+ * `1h`, `30m`, or `30` as bare count of minutes.
+ */
+function parseEveryArg(arg: string | undefined): number {
+  if (arg === undefined) return 1;
+
+  const match = /^(\d+)(m|h)?$/.exec(arg);
+  if (!match) {
+    throw new UsageError(`Expected an interval such as 1h, 30m, or 30, got: ${arg}`);
+  }
+
+  const [, count, unit] = match;
+  const minutes = Number(count) * (unit === 'h' ? 60 : 1);
+
+  // Zero would select no row at all, and the window is a single day, so nothing
+  // beyond 24 hours thins any further than 24 hours already does.
+  if (minutes < 1 || minutes > 1440) {
+    throw new UsageError(`Interval must fall between 1 minute and 24 hours, got: ${arg}`);
+  }
+
+  return minutes;
+}
+
 try {
   const {
     values: argValues,
@@ -53,6 +77,7 @@ try {
   } = parseArgs({
     args: process.argv.slice(2),
     options: {
+      'every':      { type: 'string' },
       'no-json':    { type: 'boolean', default: false },
       'no-summary': { type: 'boolean', default: false },
       'show-csv':   { type: 'boolean', default: false },
@@ -62,6 +87,7 @@ try {
     allowPositionals: true,
   });
   const date = parseDateArg(argPositionals[0]);
+  const everyMinutes = parseEveryArg(argValues['every']);
   const showJson = !argValues['no-json'];
   const showSummary = !argValues['no-summary'];
   const showCsv = argValues['show-csv'];
@@ -71,6 +97,11 @@ try {
   if (!showSummary && !showJson && !showTable && !showCsv && !showRaw) {
     throw new UsageError(
       'Nothing to print: --no-summary and --no-json together need --show-table, --show-csv, or --show-raw.',
+    );
+  }
+  if (argValues['every'] !== undefined && !showTable && !showCsv) {
+    throw new UsageError(
+      '--every thins --show-table and --show-csv, and neither was asked for.',
     );
   }
 
@@ -107,8 +138,11 @@ try {
   const moonSummary = computeMoonSummary(moonEphemeris, observer, day, phaseEvent);
 
   console.log();
-  if (showTable) printTable(moonEphemeris);
-  if (showCsv) printCsv(moonEphemeris);
+  if (showTable || showCsv) {
+    const displayRows = thinEphemeris(moonEphemeris, everyMinutes);
+    if (showTable) printTable(displayRows);
+    if (showCsv) printCsv(displayRows);
+  }
   if (showSummary) printSummary(moonSummary, observer, day);
   if (showJson) {
     if (showTable || showCsv || showSummary) console.log();

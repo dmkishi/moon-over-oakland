@@ -12,6 +12,9 @@ export interface MoonEphemeris {
   /**
    * Flag legend:
    * - `*`: Sun is above the horizon (daytime)
+   * - `C`: Civil twilight
+   * - `N`: Nautical twilight
+   * - `A`: Astronomical twilight
    * - `r`: Moonrise event
    * - `m`: Refracted upper-limb of Moon on or above apparent horizon
    * - `e`: Moon elevation max (target body maximum elevation angle has occurred)

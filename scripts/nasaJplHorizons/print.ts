@@ -6,6 +6,99 @@ import type { PhaseEventName } from './phaseEvent.ts';
 import type { MoonSummary } from './summary.ts';
 
 /**
+ * Whether a row starts a display interval.
+ */
+function isIntervalStart(row: MoonEphemeris, intervalMinutes: number): boolean {
+  /**
+   * True when the row's local wall clock is a whole number of `intervalMinutes`
+   * past local midnight.
+   *
+   * Rows arrive on a uniform absolute-time grid, so taking every Nth one would
+   * keep the spacing but lose the anchor: past a DST transition every display
+   * time shifts by the offset and stops being a multiple of the interval.
+   * Reading the clock holds the anchor, and the two transition days then need
+   * no special case — a start time inside a fall-back day's repeated hour comes
+   * round twice, and one inside a spring-forward day's skipped hour never
+   * arrives at all.
+   */
+  return (row.at.hour * 60 + row.at.minute) % intervalMinutes === 0;
+}
+
+const EVENT_FLAG_NAMES: Record<string, string> = {
+  'r': 'moonrise',
+  's': 'moonset',
+  't': 'transit',
+};
+
+/**
+ * The events occurring during the row's minute, e.g. ['moonrise'] or
+ * ['transit', 'sunset'].
+ */
+function ephemerisEvents(
+  row: MoonEphemeris,
+  prev: MoonEphemeris | undefined,
+): string[] {
+  const names = row.flags
+    .filter((flag) => flag in EVENT_FLAG_NAMES)
+    .map((flag) => EVENT_FLAG_NAMES[flag]);
+
+  const isDay = row.flags.includes('*');
+  if (prev !== undefined && prev.flags.includes('*') !== isDay) {
+    names.push(isDay ? 'sunrise' : 'sunset');
+  }
+
+  return names;
+}
+
+interface EphemerisDisplayRow {
+  row: MoonEphemeris;
+  events: { name: string; at: Temporal.ZonedDateTime }[];
+}
+
+/**
+ * Reduces the one-row-per-minute grid to one row per `intervalMinutes`, folding
+ * each occurrence into the interval that contains it rather than giving it a
+ * row of its own.
+ *
+ * Events attach to the interval in progress — the most recent display row — so
+ * they read forward from it. Walking the run in order rather than bucketing by
+ * a computed key is what keeps that true through a DST transition, where a wall
+ * clock repeats itself for an hour.
+ *
+ * An event's own altitude, azimuth and tilt are dropped rather than carried
+ * onto its interval's row, which would misreport them by up to a full interval.
+ * `printSummary` is where the readings at moonrise and moonset are taken, off
+ * the full grid, and `--show-raw` is what still holds every sample.
+ *
+ * This thins for display only. `computeMoonSummary` keeps the full grid, whose
+ * one-minute step is the resolution every reported event time is good to.
+ */
+export function thinEphemeris(
+  moonEphemeris: MoonEphemeris[],
+  intervalMinutes: number,
+): EphemerisDisplayRow[] {
+  const displayRows: EphemerisDisplayRow[] = [];
+
+  for (const [i, row] of moonEphemeris.entries()) {
+    if (isIntervalStart(row, intervalMinutes)) {
+      displayRows.push({ row, events: [] });
+    }
+
+    // The run begins at local midnight, which starts an interval whatever the
+    // width, so one is always in progress by the time an event needs somewhere
+    // to go.
+    const current = displayRows.at(-1);
+    if (current === undefined) continue;
+
+    for (const name of ephemerisEvents(row, moonEphemeris[i - 1])) {
+      current.events.push({ name, at: row.at });
+    }
+  }
+
+  return displayRows;
+}
+
+/**
  * Formats an instant's local wall clock as 12-hour time, e.g. "7:30 PM".
  */
 function formatTime12h(at: Temporal.ZonedDateTime): string {
@@ -14,22 +107,39 @@ function formatTime12h(at: Temporal.ZonedDateTime): string {
   return `${h}:${String(at.minute).padStart(2, '0')} ${period}`;
 }
 
-export function printTable(moonEphemeris: MoonEphemeris[]): void {
+/**
+ * Formats an instant's local wall clock as "YYYY-MM-DD HH:MM".
+ */
+function formatDateTime(at: Temporal.ZonedDateTime): string {
+  return at.toPlainDateTime().toString({ smallestUnit: 'minute' }).replace('T', ' ');
+}
+
+/**
+ * A list of the occurrences during the interval, delimited by semicolons, e.g.
+ * "transit 7:21; sunrise 7:26".
+ */
+function formatEvents(events: EphemerisDisplayRow['events']): string {
+  return events
+    .map(({ name, at }) => `${name} ${at.hour}:${String(at.minute).padStart(2, '0')}`)
+    .join('; ');
+}
+
+export function printTable(displayRows: EphemerisDisplayRow[]): void {
   console.log(
-    'Datetime                 | Altº   | Azº    | Illum% | KM      | Tiltº',
+    'Datetime            | Altº   | Azº    | Illum% | KM      | Tiltº  | Events',
   );
   console.log(
-    '─────────────────────────┼────────┼────────┼────────┼─────────┼────────',
+    '────────────────────┼────────┼────────┼────────┼─────────┼────────┼────────',
   );
-  for (const row of moonEphemeris) {
-    const datetimeStr = `${row.at.toPlainDateTime().toString({ smallestUnit: 'minute' }).replace('T', ' ')} ${row.flags.join('')}`.padEnd(25);
+  for (const { row, events } of displayRows) {
+    const datetimeStr = `${formatDateTime(row.at)} ${row.flags.join('')}`.padEnd(20);
     const altitudeStr = row.altitudeDeg.toFixed(1).padStart(6);
     const azimuthStr = row.azimuthDeg.toFixed(1).padStart(6);
     const illuminationStr = row.illuminatedFraction.toFixed(3).padStart(6);
     const distanceStr = Math.round(row.distanceKm).toLocaleString('en-US').padStart(7);
     const tiltStr = row.tiltDeg.toFixed(1).padStart(6);
     console.log(
-      `${datetimeStr}| ${altitudeStr} | ${azimuthStr} | ${illuminationStr} | ${distanceStr} | ${tiltStr}`,
+      `${datetimeStr}| ${altitudeStr} | ${azimuthStr} | ${illuminationStr} | ${distanceStr} | ${tiltStr} | ${formatEvents(events)}`.trimEnd(),
     );
   }
 }
@@ -37,15 +147,16 @@ export function printTable(moonEphemeris: MoonEphemeris[]): void {
 /**
  * The same rows and columns as `printTable` in CSV for piping elsewhere.
  *
- * No commas in field values so no quoting is needed: the distance columns drops
- * the thousands separator. Unlike the other printers this one emits no title or
- * rule line, which would not survive a CSV parser.
+ * No commas in field values so no quoting is needed: the distance column drops
+ * the thousands separator, and the events column separates with semicolons.
+ * Unlike the other printers this one emits no title or rule line, which would
+ * not survive a CSV parser.
  */
-export function printCsv(moonEphemeris: MoonEphemeris[]): void {
-  console.log('datetime,flags,altitudeDeg,azimuthDeg,illuminatedFraction,distanceKm,tiltDeg');
-  for (const row of moonEphemeris) {
+export function printCsv(displayRows: EphemerisDisplayRow[]): void {
+  console.log('Datetime,Flags,Altitude Deg,Azimuth Deg,Illuminated Frac,Distance Km,Tilt Deg,Events');
+  for (const { row, events } of displayRows) {
     console.log([
-      row.at.toPlainDateTime().toString({ smallestUnit: 'minute' }).replace('T', ' '),
+      formatDateTime(row.at),
       // The table mashes these onto the end of the datetime cell; a column of
       // their own is what makes them readable to whatever consumes this.
       row.flags.join(''),
@@ -54,6 +165,7 @@ export function printCsv(moonEphemeris: MoonEphemeris[]): void {
       (row.illuminatedFraction / 100).toFixed(3),
       Math.round(row.distanceKm),
       row.tiltDeg.toFixed(1),
+      formatEvents(events),
     ].join(','));
   }
 }
@@ -86,7 +198,7 @@ export function printSummary(
   console.log(`  Date:         ${observer.date}`);
   console.log(`  Time Zone:    ${observer.timeZone} (${offsetStr})`);
   console.log(`  Location:     ${observer.lat}, ${observer.lon}, ${observer.elevationMeter} meters`);
-  console.log('  Step Size:    1 minute');
+  console.log('  Query Step:   1 minute');
   console.log();
   console.log('Noon (Average):');
   console.log(`  Illumination: ${illuminationStr}`);
