@@ -2,7 +2,7 @@
  * Queries the JPL Horizons API for daily Moon position data and summarizes
  * moonrise/moonset times, azimuth, tilt, illumination, and distance.
  *
- * @usage pnpm horizons [YYYY-MM-DD] [--show-table] [--show-raw]
+ * @usage pnpm horizons [YYYY-MM-DD] [--show-table] [--show-raw] [--no-summary] [--no-json]
  */
 import { parseArgs } from 'node:util';
 import { Temporal } from '@js-temporal/polyfill';
@@ -43,14 +43,24 @@ const {
 } = parseArgs({
   args: process.argv.slice(2),
   options: {
-    'show-raw': { type: 'boolean', default: false },
+    'no-json':    { type: 'boolean', default: false },
+    'no-summary': { type: 'boolean', default: false },
+    'show-raw':   { type: 'boolean', default: false },
     'show-table': { type: 'boolean', default: false },
   },
   allowPositionals: true,
 });
 const date = parseDateArg(argPositionals[0]);
+const showJson = !argValues['no-json'];
+const showSummary = !argValues['no-summary'];
 const showRaw = argValues['show-raw'];
 const showTable = argValues['show-table'];
+
+if (!showSummary && !showJson && !showTable && !showRaw) {
+  throw new Error(
+    'Nothing to print: --no-summary and --no-json together need --show-table or --show-raw.',
+  );
+}
 
 const observer: Observer = {
   date,
@@ -86,6 +96,8 @@ const moonSummary = computeMoonSummary(moonEphemeris, observer, day, phaseEvent)
 
 console.log();
 if (showTable) printTable(moonEphemeris);
-printSummary(moonSummary, observer, day);
-console.log();
-printFixtureJson(moonSummary);
+if (showSummary) printSummary(moonSummary, observer, day);
+if (showJson) {
+  if (showTable || showSummary) console.log();
+  printFixtureJson(moonSummary);
+}
