@@ -33,10 +33,10 @@ interface Fixture {
     distanceKm: number;
   };
   events: {
-    moonrise: MoonEvent;
-    moonset: MoonEvent;
-    sunrise: CelestialEvent;
-    sunset: CelestialEvent;
+    moonrise: MoonEvent | null;
+    moonset: MoonEvent | null;
+    sunrise: CelestialEvent | null;
+    sunset: CelestialEvent | null;
   };
 }
 
@@ -137,6 +137,8 @@ for (const fixture of fixtures) {
     for (const name of eventNames) {
       const fixtureEvent = fixture.events[name];
       const resultKey = RESULT_KEY[name];
+
+      if (fixtureEvent == null) continue;
 
       if (fixtureEvent.dateTime != null) {
         it(`${name} time is within ±${TOLERANCE.timeMinutes} minutes`, () => {
