@@ -248,7 +248,7 @@ export function printFixtureJson(summary: MoonSummary): void {
     description: '',
     day: date,
     noon: {
-      illumination: Math.round(summary.noon.illuminatedFraction),
+      illumination: summary.noon.illuminatedFraction,
       distanceKm: Math.round(summary.noon.distanceKm),
     },
     events: {
