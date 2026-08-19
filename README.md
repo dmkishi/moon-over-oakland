@@ -5,7 +5,7 @@ Actions. The posts are targeted towards a general audience.
 
 Features
 --------------------------------------------------------------------------------
-- Posts on **new moon**, **first quarter**, **full moon**, and **third quarter**.
+- Posts on **new moon**, **first quarter**, **full moon**, and **last quarter**.
   - [Posting algorithm](docs/posting-algorithm.md)
 - Moon calculations (esp. rise/set times) are **Oakland specific**.
 - Moon phase-specific **posts are customizable with Liquid templates**.
