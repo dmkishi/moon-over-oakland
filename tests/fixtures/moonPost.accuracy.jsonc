@@ -1,14 +1,50 @@
 /**
- * Derived via `scripts/nasaJplHorizons.ts`.
+ * JPL Horizons reference data for `moonPost.accuracy.test.ts`. See the test
+ * file for more information.
+ *
+ * Coverage includes:
+ * - All four principal phases.
+ * - Degenerate moon positions, i.e. new and full moon, where the tilt angle
+ *   becomes undefined.
+ * - Calendar edge cases: daylight savings and leap year days.
+ *
+ * Keep fixtures to a single calendar year unless you need a specific cross-year
+ * case.
  *
  * Run `pnpm horizons YYYY-MM-DD` to generate additional fixtures.
  */
 [
   {
-    "description": "First day of calendar year",
+    "description": "2024: Leap year day",
+    "day": "2024-02-29",
+    "noon": {
+      "illumination": 77.08431,
+      "distanceKm": 403137
+    },
+    "events": {
+      "moonrise": {
+        "dateTime": "2024-02-29T23:15:00-08:00",
+        "azimuthDeg": 113.696287,
+        "tiltDeg": 158.61175087429274
+      },
+      "moonset": {
+        "dateTime": "2024-02-29T09:00:00-08:00",
+        "azimuthDeg": 250.279589,
+        "tiltDeg": 60.487597079159116
+      },
+      "sunrise": {
+        "dateTime": "2024-02-29T06:41:00-08:00"
+      },
+      "sunset": {
+        "dateTime": "2024-02-29T18:04:00-08:00"
+      }
+    }
+  },
+  {
+    "description": "2026: First day",
     "day": "2026-01-01",
     "noon": {
-      "illumination": 96,
+      "illumination": 96.27023,
       "distanceKm": 362738
     },
     "events": {
@@ -27,6 +63,206 @@
       },
       "sunset": {
         "dateTime": "2026-01-01T17:02:00-08:00"
+      }
+    }
+  },
+  {
+    "description": "2026: Daylight saving time (before spring forward)",
+    "day": "2026-03-07",
+    "noon": {
+      "illumination": 81.76661,
+      "distanceKm": 404122
+    },
+    "events": {
+      "moonrise": {
+        "dateTime": "2026-03-07T22:51:00-08:00",
+        "azimuthDeg": 116.274843,
+        "tiltDeg": 160.41897010835487
+      },
+      "moonset": {
+        "dateTime": "2026-03-07T08:20:00-08:00",
+        "azimuthDeg": 247.324126,
+        "tiltDeg": 64.22437663729596
+      },
+      "sunrise": {
+        "dateTime": "2026-03-07T06:31:00-08:00"
+      },
+      "sunset": {
+        "dateTime": "2026-03-07T18:10:00-08:00"
+      }
+    }
+  },
+  {
+    "description": "2026: Daylight saving time (after spring forward)",
+    "day": "2026-03-08",
+    "noon": {
+      "illumination": 74.25137,
+      "distanceKm": 404977
+    },
+    "events": {
+      "moonrise": null,
+      "moonset": {
+        "dateTime": "2026-03-08T09:50:00-07:00",
+        "azimuthDeg": 241.730656,
+        "tiltDeg": 61.003920834717405
+      },
+      "sunrise": {
+        "dateTime": "2026-03-08T07:30:00-07:00"
+      },
+      "sunset": {
+        "dateTime": "2026-03-08T19:11:00-07:00"
+      }
+    }
+  },
+  {
+    "description": "2026: Standard time (before fall back)",
+    "day": "2026-10-31",
+    "noon": {
+      "illumination": 62.64894,
+      "distanceKm": 367444
+    },
+    "events": {
+      "moonrise": {
+        "dateTime": "2026-10-31T23:30:00-07:00",
+        "azimuthDeg": 61.711341,
+        "tiltDeg": 151.28388074106164
+      },
+      "moonset": {
+        "dateTime": "2026-10-31T13:40:00-07:00",
+        "azimuthDeg": 300.527747,
+        "tiltDeg": 52.390946635428406
+      },
+      "sunrise": {
+        "dateTime": "2026-10-31T07:33:00-07:00"
+      },
+      "sunset": {
+        "dateTime": "2026-10-31T18:12:00-07:00"
+      }
+    }
+  },
+  {
+    "description": "2026: Standard time (after fall back)",
+    "day": "2026-11-01",
+    "noon": {
+      "illumination": 50.8742,
+      "distanceKm": 371007
+    },
+    "events": {
+      "moonrise": {
+        "dateTime": "2026-11-01T23:43:00-08:00",
+        "azimuthDeg": 68.372869,
+        "tiltDeg": 157.62300566500653
+      },
+      "moonset": {
+        "dateTime": "2026-11-01T13:19:00-08:00",
+        "azimuthDeg": 294.722152,
+        "tiltDeg": 56.24247662942241
+      },
+      "sunrise": {
+        "dateTime": "2026-11-01T06:34:00-08:00"
+      },
+      "sunset": {
+        "dateTime": "2026-11-01T17:11:00-08:00"
+      }
+    }
+  },
+  {
+    "description": "2026: Cardinal phase event day (new moon)",
+    "day": "2026-01-18",
+    "noon": {
+      "illumination": 0.13321,
+      "distanceKm": 392404
+    },
+    "events": {
+      "moonrise": {
+        "dateTime": "2026-01-18T07:36:00-08:00",
+        "azimuthDeg": 121.405055,
+        "tiltDeg": 55.80841103551148
+      },
+      "moonset": {
+        "dateTime": "2026-01-18T17:18:00-08:00",
+        "azimuthDeg": 240.657913,
+        "tiltDeg": -87.9383704249222
+      },
+      "sunrise": {
+        "dateTime": "2026-01-18T07:22:00-08:00"
+      },
+      "sunset": {
+        "dateTime": "2026-01-18T17:19:00-08:00"
+      }
+    }
+  },
+  {
+    "description": "2026: Cardinal phase event day (first quarter)",
+    "day": "2026-01-25",
+    "noon": {
+      "illumination": 46.45046,
+      "distanceKm": 371471
+    },
+    "events": {
+      "moonrise": {
+        "dateTime": "2026-01-25T10:47:00-08:00",
+        "azimuthDeg": 70.415505,
+        "tiltDeg": -60.58180040011172
+      },
+      "moonset": null,
+      "sunrise": {
+        "dateTime": "2026-01-25T07:18:00-08:00"
+      },
+      "sunset": {
+        "dateTime": "2026-01-25T17:26:00-08:00"
+      }
+    }
+  },
+  {
+    "description": "2026: Cardinal phase event day (full moon)",
+    "day": "2026-01-03",
+    "noon": {
+      "illumination": 99.68208,
+      "distanceKm": 366323
+    },
+    "events": {
+      "moonrise": {
+        "dateTime": "2026-01-03T17:29:00-08:00",
+        "azimuthDeg": 57.367138,
+        "tiltDeg": 128.8008702113159
+      },
+      "moonset": {
+        "dateTime": "2026-01-03T08:02:00-08:00",
+        "azimuthDeg": 304.395512,
+        "tiltDeg": 0.8015120049815891
+      },
+      "sunrise": {
+        "dateTime": "2026-01-03T07:24:00-08:00"
+      },
+      "sunset": {
+        "dateTime": "2026-01-03T17:04:00-08:00"
+      }
+    }
+  },
+  {
+    "description": "2026: Cardinal phase event day (last quarter)",
+    "day": "2026-01-10",
+    "noon": {
+      "illumination": 48.85477,
+      "distanceKm": 400595
+    },
+    "events": {
+      "moonrise": {
+        "dateTime": "2026-01-10T00:15:00-08:00",
+        "azimuthDeg": 101.798845,
+        "tiltDeg": 164.50933105786157
+      },
+      "moonset": {
+        "dateTime": "2026-01-10T11:28:00-08:00",
+        "azimuthDeg": 255.044787,
+        "tiltDeg": 60.69873062676544
+      },
+      "sunrise": {
+        "dateTime": "2026-01-10T07:24:00-08:00"
+      },
+      "sunset": {
+        "dateTime": "2026-01-10T17:10:00-08:00"
       }
     }
   }

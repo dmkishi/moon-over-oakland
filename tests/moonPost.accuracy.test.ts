@@ -1,6 +1,8 @@
 /**
- * Verifies that calculateMoonPost() returns accurate illumination, distance,
+ * Verifies that `calculateMoonPost()` returns accurate illumination, distance,
  * rise/set times, and azimuth/tilt values against known astronomical data.
+ *
+ * Reference data at `./fixtures/moonPost.accuracy.jsonc`.
  */
 import { describe, it, expect } from 'vitest';
 import { Temporal } from '@js-temporal/polyfill';
