@@ -73,16 +73,15 @@ export function computeMoonSummary(
     Temporal.ZonedDateTime.compare(row.at, day.end) < 0
   );
 
-  for (let i = 0; i < dayRows.length; i++) {
-    const curr = dayRows[i];
-
+  let prev: MoonEphemeris | undefined;
+  for (const curr of dayRows) {
     if (moonrise === null && curr.flags.includes('r')) moonrise = flagEvent(curr);
     if (moonset === null && curr.flags.includes('s')) moonset = flagEvent(curr);
     if (upperCulmination === null && curr.flags.includes('t')) upperCulmination = curr.at;
 
-    // Sun transitions: '*' flag means sun is above the horizon (daytime)
-    if (i > 0) {
-      const prev = dayRows[i - 1];
+    // Sun transitions: '*' flag means sun is above the horizon (daytime). The
+    // first row has nothing to transition from, so it can only set `prev`.
+    if (prev !== undefined) {
       if (sunrise === null && !prev.flags.includes('*') && curr.flags.includes('*')) {
         sunrise = curr.at;
       }
@@ -90,6 +89,8 @@ export function computeMoonSummary(
         sunset = curr.at;
       }
     }
+
+    prev = curr;
   }
 
   const noonRow = findRowNearestToNoon(dayRows, day);

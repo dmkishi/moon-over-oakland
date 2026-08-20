@@ -35,11 +35,13 @@ export function findLowerCulmination(
   // closing day hands it off below), but it leaves no pair to bracket it here:
   // Horizons prints the azimuth as 0.0000 on that first row, so no later pair
   // rolls over. Claim it directly.
-  if (rows[0].azimuthDeg === 0) return rows[0].at;
+  const firstRow = rows[0];
+  if (firstRow === undefined) return null;
+  if (firstRow.azimuthDeg === 0) return firstRow.at;
 
   for (let i = 1; i < rows.length; i++) {
-    const before = rows[i - 1];
-    const after = rows[i];
+    const before = rows[i - 1]!;
+    const after = rows[i]!;
 
     // Unwrap the 360°→0° rollover so the pair stays ascending. Apparent azimuth
     // only ever advances here — the Moon is not circumpolar at this latitude —

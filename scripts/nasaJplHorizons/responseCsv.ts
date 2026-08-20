@@ -19,23 +19,48 @@ export function parseCsvBlock(raw: string): { headers: string[]; rows: string[][
   // Extract the CSV header: the last comma-bearing line before the data block.
   const preSOE = raw.slice(0, soeIndex);
   const preLines = preSOE.split('\n').filter((line) => line.trim().length > 0);
-  let headerLine = '';
-  for (let i = preLines.length - 1; i >= 0; i--) {
-    if (preLines[i].includes(',')) {
-      headerLine = preLines[i];
-      break;
-    }
-  }
+  const headerLine = preLines.findLast((line) => line.includes(',')) ?? '';
   const headers = headerLine.split(',').map((h) => h.trim());
 
-  // Extract the CSV data rows: the lines between `$$SOE` and `$$EOE`.
+  // Extract the CSV data rows: the lines between `$$SOE` and `$$EOE`. Throw if
+  // row count deviates from the header count.
   const dataBlock = raw.slice(soeIndex + 5, eoeIndex).trim();
   const rows = dataBlock
     .split('\n')
     .filter((line) => line.trim().length > 0)
-    .map((line) => line.split(',').map((c) => c.trim()));
+    .map((line) => {
+      const cells = line.split(',').map((c) => c.trim());
+      if (cells.length !== headers.length) {
+        throw new Error(
+          `Horizons row has ${cells.length} columns, expected ${headers.length}: ${line.trim()}`,
+        );
+      }
+      return cells;
+    });
 
   return { headers, rows };
+}
+
+/**
+ * Read one cell of a row returned by `parseCsvBlock`.
+ */
+export function cell(cols: string[], index: number): string {
+  const value = cols[index];
+  if (value === undefined) {
+    throw new Error(`Horizons row has no column ${index}: ${cols.join(',')}`);
+  }
+  return value;
+}
+
+/**
+ * Read one cell as a number, rejecting the row rather than passing `NaN` on.
+ */
+export function numericCell(cols: string[], index: number): number {
+  const value = parseFloat(cell(cols, index));
+  if (Number.isNaN(value)) {
+    throw new Error(`Horizons column ${index} is not a number: ${cols.join(',')}`);
+  }
+  return value;
 }
 
 /**
@@ -60,6 +85,9 @@ const HORIZONS_MONTHS = [
  */
 export function parseHorizonsDatetime(datetime: string, timeZone: string): Temporal.ZonedDateTime {
   const [datePart, timePart] = datetime.split(' ');
+  if (datePart === undefined || timePart === undefined) {
+    throw new Error(`Unrecognized Horizons datetime: ${datetime}`);
+  }
   const monthIndex = HORIZONS_MONTHS.indexOf(datePart.slice(5, 8));
   if (monthIndex === -1) {
     throw new Error(`Unrecognized month in Horizons datetime: ${datetime}`);

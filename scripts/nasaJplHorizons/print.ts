@@ -39,8 +39,8 @@ function ephemerisEvents(
   prev: MoonEphemeris | undefined,
 ): string[] {
   const names = row.flags
-    .filter((flag) => flag in EVENT_FLAG_NAMES)
-    .map((flag) => EVENT_FLAG_NAMES[flag]);
+    .map((flag) => EVENT_FLAG_NAMES[flag])
+    .filter((name) => name !== undefined);
 
   const isDay = row.flags.includes('*');
   if (prev !== undefined && prev.flags.includes('*') !== isDay) {

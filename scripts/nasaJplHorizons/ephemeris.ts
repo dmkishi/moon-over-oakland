@@ -1,6 +1,8 @@
 import { Temporal } from '@js-temporal/polyfill';
 import type { Observer } from './observer.ts';
-import { columnIndex, parseCsvBlock, parseHorizonsDatetime } from './responseCsv.ts';
+import {
+  cell, columnIndex, numericCell, parseCsvBlock, parseHorizonsDatetime,
+} from './responseCsv.ts';
 import { moonTilt } from './tilt.ts';
 
 /**
@@ -57,19 +59,20 @@ export function parseMoonEphemeris(raw: string, observer: Observer): MoonEphemer
   const iPsAng = columnIndex(headers, /PsAng/); // Position angle of the Sun w/r/t to the Moon
 
   return rows.map((cols) => {
+    const num = (index: number) => numericCell(cols, index);
     return {
-      at: parseHorizonsDatetime(cols[0], observer.timeZone),
-      flags: flagIndices.map(i => cols[i]).filter(f => f !== ''),
-      azimuthDeg: parseFloat(cols[iAZ]),
-      altitudeDeg: parseFloat(cols[iEL]),
-      illuminatedFraction: parseFloat(cols[iIllum]),
-      distanceKm: parseFloat(cols[iDelta]) * AU_TO_KM,
+      at: parseHorizonsDatetime(cell(cols, 0), observer.timeZone),
+      flags: flagIndices.map(i => cell(cols, i)).filter(f => f !== ''),
+      azimuthDeg: num(iAZ),
+      altitudeDeg: num(iEL),
+      illuminatedFraction: num(iIllum),
+      distanceKm: num(iDelta) * AU_TO_KM,
       tiltDeg: moonTilt(
-        parseFloat(cols[iLST]),
-        parseFloat(cols[iRA]),
-        parseFloat(cols[iDEC]),
+        num(iLST),
+        num(iRA),
+        num(iDEC),
         observer.lat,
-        parseFloat(cols[iPsAng]),
+        num(iPsAng),
       ),
     };
   });

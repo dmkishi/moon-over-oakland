@@ -43,7 +43,7 @@ export interface MoonPost {
   day: Date;
   doPost: boolean;
   phase: MoonPhase;
-  eventTime?: Date;
+  eventTime?: Date | undefined;
   average: {
     illumination: number;
     age: number;
@@ -154,7 +154,8 @@ function celestialEvent(
 ): CelestialEvent {
   const azimuthDeg = getPosition(day, latitude, longitude).azimuth * RAD_TO_DEG;
   const compassDeg = (azimuthDeg + 180 + 360) % 360;
-  const compassDirection = COMPASS_DIRECTIONS[Math.round(compassDeg / 22.5) % 16];
+  // Taken modulo 16 against a 16-element table, so always in range.
+  const compassDirection = COMPASS_DIRECTIONS[Math.round(compassDeg / 22.5) % 16]!;
   return { date: day, compassDeg, compassDirection };
 }
 

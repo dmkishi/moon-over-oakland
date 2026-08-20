@@ -2,7 +2,9 @@ import { Temporal } from '@js-temporal/polyfill';
 import type { MoonPhase } from '../../src/moonPost.ts';
 import { queryEclipticLongitude } from './api.ts';
 import type { Observer, ObservingDay } from './observer.ts';
-import { columnIndex, parseCsvBlock, parseHorizonsDatetime } from './responseCsv.ts';
+import {
+  cell, columnIndex, numericCell, parseCsvBlock, parseHorizonsDatetime,
+} from './responseCsv.ts';
 
 export type PhaseEventName = Extract<MoonPhase, 'new' | 'first-quarter' | 'full' | 'third-quarter'>;
 
@@ -36,9 +38,9 @@ function parseEclipticLongitudes(
 
   return rows.map((cols) => ({
     minutesFromDayStart:
-      (parseHorizonsDatetime(cols[0], observer.timeZone).epochMilliseconds -
+      (parseHorizonsDatetime(cell(cols, 0), observer.timeZone).epochMilliseconds -
         dayStart.epochMilliseconds) / 60_000,
-    lonDeg: parseFloat(cols[iLon]),
+    lonDeg: numericCell(cols, iLon),
   }));
 }
 
@@ -81,12 +83,12 @@ function findPhaseEvent(
 
   const series = moonLons.map((moon, i) => ({
     minutes: moon.minutesFromDayStart,
-    deltaLonDeg: ((moon.lonDeg - sunLons[i].lonDeg) % 360 + 360) % 360,
+    deltaLonDeg: ((moon.lonDeg - sunLons[i]!.lonDeg) % 360 + 360) % 360,
   }));
 
   for (let i = 1; i < series.length; i++) {
-    const prev = series[i - 1];
-    const curr = series[i];
+    const prev = series[i - 1]!;
+    const curr = series[i]!;
     for (const { targetDeg, name } of PHASE_CROSSINGS) {
       const prevOffset = signedOffsetDeg(prev.deltaLonDeg, targetDeg);
       const currOffset = signedOffsetDeg(curr.deltaLonDeg, targetDeg);

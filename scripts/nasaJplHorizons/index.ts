@@ -36,7 +36,7 @@ function parseDateArg(arg: string | undefined): string {
 
   // `PlainDate.from` only parses the padded ISO form, so pad before handing it
   // over. `reject` so out-of-range days fail instead of being clamped.
-  const iso = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  const iso = `${year}-${month!.padStart(2, '0')}-${day!.padStart(2, '0')}`;
   try {
     return Temporal.PlainDate.from(iso, { overflow: 'reject' }).toString();
   } catch {
