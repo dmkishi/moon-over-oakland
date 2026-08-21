@@ -29,5 +29,8 @@ export interface ObservingDay {
 export function civilDayBounds(observer: Observer): ObservingDay {
   const start = Temporal.PlainDate.from(observer.date)
     .toZonedDateTime({ timeZone: observer.timeZone });
-  return { start, end: start.add({ days: 1 }) };
+  return {
+    start,
+    end: start.add({ days: 1 }),
+  };
 }
