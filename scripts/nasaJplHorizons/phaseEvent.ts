@@ -9,7 +9,7 @@ import {
 export type PhaseEventName = Extract<MoonPhase, 'new' | 'first-quarter' | 'full' | 'third-quarter'>;
 
 /**
- * The cardinal phase instant falling on the observing day.
+ * The principal phase instant falling on the observing day.
  */
 export interface PhaseEvent {
   at: Temporal.ZonedDateTime;
@@ -61,9 +61,9 @@ function signedOffsetDeg(deltaLonDeg: number, targetDeg: number): number {
 }
 
 /**
- * Find the cardinal phase instant, if any, that falls on the observing day.
+ * Find the principal phase instant, if any, that falls on the observing day.
  *
- * At most one can: cardinal events are ~7.4 days apart. Returns `null` when the
+ * At most one can: principal events are ~7.4 days apart. Returns `null` when the
  * day holds none, including when the interpolated crossing falls at midnight or
  * later — that instant belongs to the next civil day.
  */
@@ -118,7 +118,7 @@ function findPhaseEvent(
 }
 
 /**
- * Resolve the observing day's cardinal phase event, fetching the ecliptic
+ * Resolve the observing day's principal phase event, fetching the ecliptic
  * longitude tables only when the day could plausibly hold one.
  *
  * @param illuminatedFractions - Every row's illuminated fraction, 0–100. Taken
@@ -130,11 +130,11 @@ export async function resolvePhaseEvent(
   day: ObservingDay,
   illuminatedFractions: number[],
 ): Promise<PhaseEvent | null> {
-  // A cardinal phase falls on roughly one day in seven, and the illumination
+  // A principal phase falls on roughly one day in seven, and the illumination
   // already parsed for every row is enough to prove most days barren — so skip
   // the two extra requests unless the day's range reaches a band that could
   // hold an event. Each bound is the worst-case topocentric illumination *at*
-  // a cardinal instant, so a day holding one always trips its band:
+  // a principal instant, so a day holding one always trips its band:
   //
   // - Full:    phase angle ≥ 6.3° with parallax, so illumination ≥ 99.70%
   // - New:     phase angle ≤ 173.7°,             so illumination ≤  0.30%

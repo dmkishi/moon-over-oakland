@@ -167,7 +167,7 @@
     }
   },
   {
-    "description": "2026: Cardinal phase event day (new moon)",
+    "description": "2026: Principal phase event day (new moon)",
     "day": "2026-01-18",
     "noon": {
       "illumination": 0.13321,
@@ -193,7 +193,7 @@
     }
   },
   {
-    "description": "2026: Cardinal phase event day (first quarter)",
+    "description": "2026: Principal phase event day (first quarter)",
     "day": "2026-01-25",
     "noon": {
       "illumination": 46.45046,
@@ -215,7 +215,7 @@
     }
   },
   {
-    "description": "2026: Cardinal phase event day (full moon)",
+    "description": "2026: Principal phase event day (full moon)",
     "day": "2026-01-03",
     "noon": {
       "illumination": 99.68208,
@@ -241,7 +241,7 @@
     }
   },
   {
-    "description": "2026: Cardinal phase event day (last quarter)",
+    "description": "2026: Principal phase event day (last quarter)",
     "day": "2026-01-10",
     "noon": {
       "illumination": 48.85477,
