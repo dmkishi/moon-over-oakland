@@ -1,5 +1,5 @@
 import { Temporal } from '@js-temporal/polyfill';
-import type { MoonEphemeris } from './ephemeris.ts';
+import type { MoonEphemeris } from './client.ts';
 import type { ObservingDay } from './observer.ts';
 
 /**

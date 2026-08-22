@@ -1,10 +1,7 @@
-import { Temporal } from '@js-temporal/polyfill';
+import type { Temporal } from '@js-temporal/polyfill';
 import type { MoonPhase } from '../../src/moonPost.ts';
-import { queryEclipticLongitude } from './api.ts';
-import type { Observer, ObservingDay } from './observer.ts';
-import {
-  cell, columnIndex, numericCell, parseCsvBlock, parseHorizonsDatetime,
-} from './responseCsv.ts';
+import { fetchEclipticLongitudes, type EclipticLongitude } from './client.ts';
+import type { ObservingDay } from './observer.ts';
 
 export type PhaseEventName = Extract<MoonPhase, 'new' | 'first-quarter' | 'full' | 'third-quarter'>;
 
@@ -14,34 +11,6 @@ export type PhaseEventName = Extract<MoonPhase, 'new' | 'first-quarter' | 'full'
 export interface PhaseEvent {
   at: Temporal.ZonedDateTime;
   name: PhaseEventName;
-}
-
-/**
- * One sample of a body's ecliptic longitude, timed as real elapsed minutes from
- * the start of the observing day.
- *
- * Measuring from the instant rather than from a wall-clock label keeps the
- * series monotonic through a DST transition.
- */
-interface EclipticLongitude {
-  minutesFromDayStart: number;
-  lonDeg: number;
-}
-
-function parseEclipticLongitudes(
-  raw: string,
-  observer: Observer,
-  dayStart: Temporal.ZonedDateTime,
-): EclipticLongitude[] {
-  const { headers, rows } = parseCsvBlock(raw);
-  const iLon = columnIndex(headers, /ObsEcLon/);
-
-  return rows.map((cols) => ({
-    minutesFromDayStart:
-      (parseHorizonsDatetime(cell(cols, 0), observer.timeZone).epochMilliseconds -
-        dayStart.epochMilliseconds) / 60_000,
-    lonDeg: numericCell(cols, iLon),
-  }));
 }
 
 const PHASE_CROSSINGS: { targetDeg: number; name: PhaseEventName }[] = [
@@ -81,8 +50,11 @@ function findPhaseEvent(
 
   const dayLengthMinutes = (day.end.epochMilliseconds - day.start.epochMilliseconds) / 60_000;
 
+  // Each sample is timed as real elapsed minutes from the start of the day
+  // rather than by its wall-clock label, which is what keeps the series
+  // monotonic across a DST transition.
   const series = moonLons.map((moon, i) => ({
-    minutes: moon.minutesFromDayStart,
+    minutes: (moon.at.epochMilliseconds - day.start.epochMilliseconds) / 60_000,
     deltaLonDeg: ((moon.lonDeg - sunLons[i]!.lonDeg) % 360 + 360) % 360,
   }));
 
@@ -126,7 +98,6 @@ function findPhaseEvent(
  *   the gate below inspects.
  */
 export async function resolvePhaseEvent(
-  observer: Observer,
   day: ObservingDay,
   illuminatedFractions: number[],
 ): Promise<PhaseEvent | null> {
@@ -152,14 +123,10 @@ export async function resolvePhaseEvent(
 
   // Stop at the next day's midnight rather than 23:59, which would leave a
   // one-minute blind spot.
-  const [moonRaw, sunRaw] = await Promise.all([
-    queryEclipticLongitude('moon', day.start, day.end),
-    queryEclipticLongitude('sun', day.start, day.end),
+  const [moonLons, sunLons] = await Promise.all([
+    fetchEclipticLongitudes('moon', day.start, day.end),
+    fetchEclipticLongitudes('sun', day.start, day.end),
   ]);
 
-  return findPhaseEvent(
-    parseEclipticLongitudes(moonRaw, observer, day.start),
-    parseEclipticLongitudes(sunRaw, observer, day.start),
-    day,
-  );
+  return findPhaseEvent(moonLons, sunLons, day);
 }

@@ -1,6 +1,6 @@
 import { Temporal } from '@js-temporal/polyfill';
+import type { MoonEphemeris } from './client.ts';
 import { findLowerCulmination } from './culmination.ts';
-import type { MoonEphemeris } from './ephemeris.ts';
 import type { Observer, ObservingDay } from './observer.ts';
 import type { PhaseEvent } from './phaseEvent.ts';
 

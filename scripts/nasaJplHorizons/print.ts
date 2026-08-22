@@ -1,6 +1,6 @@
 import { Temporal } from '@js-temporal/polyfill';
 import pc from 'picocolors';
-import type { MoonEphemeris } from './ephemeris.ts';
+import type { MoonEphemeris } from './client.ts';
 import type { Observer, ObservingDay } from './observer.ts';
 import type { PhaseEventName } from './phaseEvent.ts';
 import type { MoonSummary } from './summary.ts';

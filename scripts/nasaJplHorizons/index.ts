@@ -8,8 +8,7 @@ import { parseArgs } from 'node:util';
 import { Temporal } from '@js-temporal/polyfill';
 import pc from 'picocolors';
 import { location } from '../../src/constants.ts';
-import { queryMoonEphemeris } from './api.ts';
-import { parseMoonEphemeris } from './ephemeris.ts';
+import { fetchMoonEphemeris } from './client.ts';
 import { civilDayBounds, type Observer } from './observer.ts';
 import { resolvePhaseEvent } from './phaseEvent.ts';
 import { printCsv, printFixtureJson, printSummary, printTable, thinEphemeris } from './print.ts';
@@ -115,20 +114,17 @@ try {
 
   const day = civilDayBounds(observer);
 
-  const response = await queryMoonEphemeris(
+  const moonEphemeris = await fetchMoonEphemeris(
     observer,
     day.start,
     // Stop at the next day's midnight rather than 23:59: that extra row is what
     // lets `findLowerCulmination` bracket a crossing in the day's final minute.
     // `computeMoonSummary` confines every other reading to the day's own rows.
     day.end,
+    showRaw ? (raw) => console.log(raw) : undefined,
   );
-  if (showRaw) console.log(response);
-
-  const moonEphemeris = parseMoonEphemeris(response, observer);
 
   const phaseEvent = await resolvePhaseEvent(
-    observer,
     // This stops at midnight as the last sample, which is needed for the
     // interpolation to find the phase event.
     day,
