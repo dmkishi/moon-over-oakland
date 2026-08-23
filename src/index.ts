@@ -18,7 +18,7 @@ function parseArgs(): { date: Date; isDryRun: boolean } {
     console.error(pc.red(`Invalid date: "${dateArg}"`));
     process.exit(1);
   }
-  const isDryRun = process.env.DRY_RUN === 'true' || !!dateArg;
+  const isDryRun = env.dryRun || !!dateArg;
   return { date, isDryRun };
 }
 
