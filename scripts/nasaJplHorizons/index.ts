@@ -116,11 +116,8 @@ try {
 
   const moonEphemeris = await fetchMoonEphemeris(
     observer,
-    day.start,
-    // Stop at the next day's midnight rather than 23:59: that extra row is what
-    // lets `findLowerCulmination` bracket a crossing in the day's final minute.
-    // `computeMoonSummary` confines every other reading to the day's own rows.
-    day.end,
+    day.start, // Starts at midnight
+    day.end.subtract({ minutes: 1 }), // Stop one step short of next day's midnight
     showRaw ? (raw) => console.log(raw) : undefined,
   );
 

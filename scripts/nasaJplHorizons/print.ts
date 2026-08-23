@@ -226,8 +226,7 @@ export function printSummary(
         NONE_STR
     )
   );
-  console.log(`  Upper Culm:  ${s.events.upperCulmination ? formatTime12h(s.events.upperCulmination) : NONE_STR}`);
-  console.log(`  Lower Culm:  ${s.events.lowerCulmination ? formatTime12h(s.events.lowerCulmination) : NONE_STR}`);
+  console.log(`  Transit:     ${s.events.transit ? formatTime12h(s.events.transit) : NONE_STR}`);
   console.log(`  Sunrise:     ${s.events.sunrise ? formatTime12h(s.events.sunrise) : NONE_STR}`);
   console.log(`  Sunset:      ${s.events.sunset  ? formatTime12h(s.events.sunset)  : NONE_STR}`);
 }
@@ -266,10 +265,7 @@ export function printFixtureJson(summary: MoonSummary): void {
         azimuthDeg: e.azimuthDeg,
         tiltDeg: e.tiltDeg,
       })),
-      upperCulmination: orNull(summary.events.upperCulmination, (at) => ({
-        dateTime: toDateTime(at),
-      })),
-      lowerCulmination: orNull(summary.events.lowerCulmination, (at) => ({
+      transit: orNull(summary.events.transit, (at) => ({
         dateTime: toDateTime(at),
       })),
       sunrise: orNull(summary.events.sunrise, (at) => ({

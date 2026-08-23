@@ -1,6 +1,5 @@
-import { Temporal } from '@js-temporal/polyfill';
+import type { Temporal } from '@js-temporal/polyfill';
 import type { MoonEphemeris } from './client.ts';
-import { findLowerCulmination } from './culmination.ts';
 import type { Observer, ObservingDay } from './observer.ts';
 import type { PhaseEvent } from './phaseEvent.ts';
 
@@ -27,8 +26,7 @@ export interface MoonSummary {
     phaseEvent: PhaseEvent | null;
     moonrise: { at: Temporal.ZonedDateTime; azimuthDeg: number; tiltDeg: number } | null;
     moonset: { at: Temporal.ZonedDateTime; azimuthDeg: number; tiltDeg: number } | null;
-    upperCulmination: Temporal.ZonedDateTime | null;
-    lowerCulmination: Temporal.ZonedDateTime | null;
+    transit: Temporal.ZonedDateTime | null;
     sunrise: Temporal.ZonedDateTime | null;
     sunset: Temporal.ZonedDateTime | null;
   };
@@ -61,23 +59,15 @@ export function computeMoonSummary(
 
   let moonrise: MoonSummary['events']['moonrise'] = null;
   let moonset: MoonSummary['events']['moonset'] = null;
-  let upperCulmination: MoonSummary['events']['upperCulmination'] = null;
+  let transit: MoonSummary['events']['transit'] = null;
   let sunrise: MoonSummary['events']['sunrise'] = null;
   let sunset: MoonSummary['events']['sunset'] = null;
 
-  // `rows` runs one step past the day's end so `findLowerCulmination` has a pair
-  // to bracket the final minute with. Every other reading here is taken off a
-  // single row, where that trailing one would speak for the next day — a
-  // midnight transit is a real occurrence — so they see the day's rows only.
-  const dayRows = rows.filter((row) =>
-    Temporal.ZonedDateTime.compare(row.at, day.end) < 0
-  );
-
   let prev: MoonEphemeris | undefined;
-  for (const curr of dayRows) {
+  for (const curr of rows) {
     if (moonrise === null && curr.flags.includes('r')) moonrise = flagEvent(curr);
     if (moonset === null && curr.flags.includes('s')) moonset = flagEvent(curr);
-    if (upperCulmination === null && curr.flags.includes('t')) upperCulmination = curr.at;
+    if (transit === null && curr.flags.includes('t')) transit = curr.at;
 
     // Sun transitions: '*' flag means sun is above the horizon (daytime). The
     // first row has nothing to transition from, so it can only set `prev`.
@@ -93,7 +83,7 @@ export function computeMoonSummary(
     prev = curr;
   }
 
-  const noonRow = findRowNearestToNoon(dayRows, day);
+  const noonRow = findRowNearestToNoon(rows, day);
 
   return {
     metadata: {
@@ -107,8 +97,7 @@ export function computeMoonSummary(
     events: {
       moonrise,
       moonset,
-      upperCulmination,
-      lowerCulmination: findLowerCulmination(rows, day),
+      transit,
       sunrise,
       sunset,
       phaseEvent,
