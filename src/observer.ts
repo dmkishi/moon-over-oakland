@@ -1,4 +1,4 @@
-export const location = {
+export const observer = {
   timezone: 'America/Los_Angeles',
 
   /**

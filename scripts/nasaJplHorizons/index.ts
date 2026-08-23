@@ -7,7 +7,7 @@
 import { parseArgs } from 'node:util';
 import { Temporal } from '@js-temporal/polyfill';
 import pc from 'picocolors';
-import { location } from '../../src/constants.ts';
+import { observer as site } from '../../src/observer.ts';
 import { fetchMoonEphemeris } from './client.ts';
 import { civilDayBounds, type Observer } from './observer.ts';
 import { resolvePhaseEvent } from './phaseEvent.ts';
@@ -106,9 +106,9 @@ try {
 
   const observer: Observer = {
     date,
-    timeZone: location.timezone,
-    lat: location.latitude,
-    lon: location.longitude,
+    timeZone: site.timezone,
+    lat: site.latitude,
+    lon: site.longitude,
     elevationMeter: 20, // Elevation is hardcoded for now
   };
 

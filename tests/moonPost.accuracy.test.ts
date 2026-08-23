@@ -7,7 +7,7 @@
 import { describe, it, expect } from 'vitest';
 import { Temporal } from '@js-temporal/polyfill';
 import { calculateMoonPost } from '../src/moonPost.ts';
-import { location } from '../src/constants.ts';
+import { observer } from '../src/observer.ts';
 import { loadFixture } from './loadFixture.ts';
 
 const TOLERANCE = {
@@ -51,7 +51,7 @@ const COMPASS_DIRECTIONS = new Set([
   'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW',
 ]);
 
-const { timezone, latitude, longitude } = location;
+const { timezone, latitude, longitude } = observer;
 
 /** Maps fixture event names to MoonPost field names. */
 const RESULT_KEY = {

@@ -99,8 +99,8 @@ sampled row, so the step size *is* the event resolution. The phase event is
 unaffected: it is sampled on its own schedule and interpolated between samples
 rather than snapped to one.
 
-**Note**: The location and timezone are sourced from [`src/constants.ts`](
-src/constants.ts)
+**Note**: The location and timezone are sourced from [`src/observer.ts`](
+src/observer.ts)
 
 See Also
 --------------------------------------------------------------------------------

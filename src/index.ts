@@ -1,8 +1,8 @@
 import { Temporal } from '@js-temporal/polyfill';
 import pc from 'picocolors';
-import { config } from './config.ts';
-import { location } from './constants.ts';
+import { env } from './env.ts';
 import { calculateMoonPost } from './moonPost.ts';
+import { observer } from './observer.ts';
 import { renderReport, renderPost } from './templates.ts';
 import { createBlueskyClient } from './social/bluesky.ts';
 
@@ -12,7 +12,7 @@ import { createBlueskyClient } from './social/bluesky.ts';
 function parseArgs(): { date: Date; isDryRun: boolean } {
   const dateArg = process.argv[2];
   const date = dateArg
-    ? new Date(Temporal.PlainDate.from(dateArg).toZonedDateTime(location.timezone).epochMilliseconds)
+    ? new Date(Temporal.PlainDate.from(dateArg).toZonedDateTime(observer.timezone).epochMilliseconds)
     : new Date();
   if (isNaN(date.getTime())) {
     console.error(pc.red(`Invalid date: "${dateArg}"`));
@@ -26,14 +26,14 @@ async function main(): Promise<void> {
   const { date, isDryRun } = parseArgs();
   const moonPost = calculateMoonPost(
     date,
-    location.timezone,
-    location.latitude,
-    location.longitude,
+    observer.timezone,
+    observer.latitude,
+    observer.longitude,
   );
 
   console.log('Moon Over Oakland');
   console.log('================================================================================');
-  console.log(await renderReport(moonPost, location.timezone));
+  console.log(await renderReport(moonPost, observer.timezone));
   console.log();
 
   if (!moonPost.doPost) {
@@ -42,7 +42,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  const content = await renderPost(moonPost, location.timezone);
+  const content = await renderPost(moonPost, observer.timezone);
   console.log('Content of post:');
   console.log('--------------------------------------------------------------------------------');
   console.log(content);
@@ -57,8 +57,8 @@ async function main(): Promise<void> {
   console.log('Posting to Bluesky...');
   try {
     const client = await createBlueskyClient(
-      config.bluesky.handle,
-      config.bluesky.appPassword
+      env.bluesky.handle,
+      env.bluesky.appPassword
     );
     const result = await client.post(content);
     console.log(pc.green('Posted successfully!'));

@@ -1,17 +1,17 @@
 import { z } from 'zod';
 import 'dotenv/config';
 
-const configSchema = z.object({
+const envSchema = z.object({
   bluesky: z.object({
     handle: z.string().min(1, 'BLUESKY_HANDLE is required'),
     appPassword: z.string().min(1, 'BLUESKY_APP_PASSWORD is required'),
   }),
 });
 
-export type Config = z.infer<typeof configSchema>;
+export type Env = z.infer<typeof envSchema>;
 
-function loadConfig(): Config {
-  const result = configSchema.safeParse({
+function loadEnv(): Env {
+  const result = envSchema.safeParse({
     bluesky: {
       handle: process.env.BLUESKY_HANDLE,
       appPassword: process.env.BLUESKY_APP_PASSWORD,
@@ -28,4 +28,4 @@ function loadConfig(): Config {
   return result.data;
 }
 
-export const config = loadConfig();
+export const env = loadEnv();

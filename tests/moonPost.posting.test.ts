@@ -5,7 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import { Temporal } from '@js-temporal/polyfill';
 import { calculateMoonPost } from '../src/moonPost.ts';
-import { location } from '../src/constants.ts';
+import { observer } from '../src/observer.ts';
 import { loadFixture } from './loadFixture.ts';
 
 type PostDay = 'same' | 'next' | 'prev';
@@ -20,7 +20,7 @@ const fixtures = loadFixture<Fixture[]>(
   new URL('./fixtures/moonPost.posting.jsonc', import.meta.url)
 );
 
-const { timezone, latitude, longitude } = location;
+const { timezone, latitude, longitude } = observer;
 
 const postDayOffset: Record<PostDay, number> = {
   prev: -1,
@@ -29,7 +29,7 @@ const postDayOffset: Record<PostDay, number> = {
 };
 
 /**
- * "2026-12-31" → Date in the location's timezone at the start of that day.
+ * "2026-12-31" → Date in the observer's timezone at the start of that day.
  */
 function dateFromString(dateStr: string): Date {
   return new Date(
