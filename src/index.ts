@@ -58,9 +58,14 @@ async function main(): Promise<void> {
   try {
     const client = await createBlueskyClient(
       env.bluesky.handle,
-      env.bluesky.appPassword
+      env.bluesky.appPassword,
+      observer.timezone,
     );
     const result = await client.post(content);
+    if (result.status === 'skipped') {
+      console.log(pc.yellow('Already posted today: skipping.'));
+      return;
+    }
     console.log(pc.green('Posted successfully!'));
     console.log(`URI: ${result.uri}`);
   } catch (error) {

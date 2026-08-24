@@ -1,29 +1,85 @@
-import { AtpAgent } from '@atproto/api';
+/**
+ * Bluesky adapter
+ */
+import { AtpAgent, RichText } from '@atproto/api';
+import { Temporal } from '@js-temporal/polyfill';
+
+const RECORDS_CHECKED = 10;
+
+// Magic number is documented but not exported by `@atproto/api`
+export const MAX_GRAPHEMES = 300;
+
+export type PostResult =
+  | { status: 'posted'; uri: string; cid: string }
+  | { status: 'skipped' };
 
 export interface BlueskyClient {
-  post(text: string): Promise<{ uri: string; cid: string }>;
+  post(text: string): Promise<PostResult>;
+}
+
+export function graphemeLength(text: string): number {
+  return new RichText({ text }).graphemeLength;
+}
+
+function localDateOf(value: unknown, timezone: string): Temporal.PlainDate | null {
+  const createdAt = (value as { createdAt?: unknown }).createdAt;
+
+  // A record whose `createdAt` is missing or unparseable cannot be dated, and
+  // so cannot be today's post.
+  if (typeof createdAt !== 'string') return null;
+
+  try {
+    return Temporal.Instant.from(createdAt).toZonedDateTimeISO(timezone).toPlainDate();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Reads the repo rather than the app view, which lags behind a write by an
+ * indeterminate amount.
+ */
+async function hasPostedToday(
+  agent: AtpAgent,
+  did: string,
+  timezone: string,
+): Promise<boolean> {
+  const today = Temporal.Now.zonedDateTimeISO(timezone).toPlainDate();
+  const { data } = await agent.com.atproto.repo.listRecords({
+    repo: did,
+    collection: 'app.bsky.feed.post',
+    limit: RECORDS_CHECKED,
+  });
+
+  return data.records.some((record) => localDateOf(record.value, timezone)?.equals(today));
 }
 
 export async function createBlueskyClient(
   handle: string,
-  appPassword: string
+  appPassword: string,
+  timezone: string,
 ): Promise<BlueskyClient> {
   const agent = new AtpAgent({
     service: 'https://bsky.social',
   });
 
-  await agent.login({
+  const { data: session } = await agent.login({
     identifier: handle,
     password: appPassword,
   });
 
   return {
-    async post(text: string) {
-      const response = await agent.post({
-        text,
-        createdAt: new Date().toISOString(),
-      });
-      return response;
+    async post(text) {
+      if (await hasPostedToday(agent, session.did, timezone)) return {
+        status: 'skipped',
+      };
+
+      const { uri, cid } = await agent.post({ text });
+      return {
+        status: 'posted',
+        uri,
+        cid,
+      };
     },
   };
 }
