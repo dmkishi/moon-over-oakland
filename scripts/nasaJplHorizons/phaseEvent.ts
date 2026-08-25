@@ -1,9 +1,8 @@
 import type { Temporal } from '@js-temporal/polyfill';
-import type { MoonPhase } from '../../src/moonPost.ts';
 import { fetchEclipticLongitudes, type EclipticLongitude } from './client.ts';
 import type { ObservingDay } from './observer.ts';
 
-export type PhaseEventName = Extract<MoonPhase, 'new' | 'first-quarter' | 'full' | 'third-quarter'>;
+export type PhaseEventName = 'new' | 'first-quarter' | 'full' | 'third-quarter';
 
 /**
  * The principal phase instant falling on the observing day.

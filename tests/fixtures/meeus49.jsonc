@@ -1,0 +1,68 @@
+/**
+ * JPL Horizons principal phase instants for `meeus49.test.ts`. See the test
+ * file for more information.
+ *
+ * These live apart from `moonPost.accuracy.jsonc` because a phase instant is
+ * geocentric — no observer, no rise/set, no tilt — and because the eras below
+ * are chosen for what they do to the T-polynomial and ΔT terms rather than for
+ * anything about Oakland. Several are full moons, where tilt is degenerate, so
+ * they would only add noise to the accuracy suite.
+ *
+ * `k` is the lunation index the instant is expected in, counting new moons from
+ * the one of 2000-01-06, and `phase` the event within it. Both stated
+ * explicitly so a transposed phase fails loudly instead of quietly matching a
+ * neighbour.
+ *
+ * Run `pnpm horizons YYYY-MM-DD` to generate more. Only a day that actually
+ * holds a principal event reports one.
+ */
+[
+  /* 2026 — the span the chapter 49 transcription was validated against, one
+   * event per phase. Agreement here is a few seconds. */
+  {
+    "description": "2026: New moon",
+    "k": 322,
+    "phase": "new",
+    "dateTime": "2026-01-18T11:51:58-08:00"
+  },
+  {
+    "description": "2026: First quarter",
+    "k": 322,
+    "phase": "first-quarter",
+    "dateTime": "2026-01-25T20:47:23-08:00"
+  },
+  {
+    "description": "2026: Full moon",
+    "k": 321,
+    "phase": "full",
+    "dateTime": "2026-01-03T02:02:54-08:00"
+  },
+  {
+    "description": "2026: Last quarter",
+    "k": 321,
+    "phase": "last-quarter",
+    "dateTime": "2026-01-10T07:48:23-08:00"
+  },
+
+  /* Far eras. The T-polynomial and ΔT terms only bite over decades, so this is
+   * the coverage that says whether they were transcribed correctly. 2060 sits
+   * past 2050, the last branch point in `deltaTSeconds()`. */
+  {
+    "description": "1990: Full moon, 36 years before the validated span",
+    "k": -124,
+    "phase": "full",
+    "dateTime": "1990-01-10T20:56:49-08:00"
+  },
+  {
+    "description": "2010: Full moon",
+    "k": 124,
+    "phase": "full",
+    "dateTime": "2010-01-29T22:17:34-08:00"
+  },
+  {
+    "description": "2060: Full moon, past the last ΔT branch point",
+    "k": 742,
+    "phase": "full",
+    "dateTime": "2060-01-17T09:14:25-08:00"
+  }
+]

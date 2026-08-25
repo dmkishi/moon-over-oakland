@@ -1,0 +1,76 @@
+{%- comment -%}
+  All date params are JS `Date`s; the engine renders them in the observer's
+  timezone. Rise and set are the day's first of their kind, or null when the
+  civil day holds none.
+
+  @param {string} phaseType - 'new' | 'first-quarter' | 'full' | 'last-quarter'
+  @param {string} eventDay - 'today' | 'tomorrow'
+  @param {date} moonrise
+  @param {date} moonset
+  @param {date} sunrise
+  @param {date} sunset
+  @param {date} nextNew
+  @param {date} nextFirstQuarter
+  @param {date} nextFull
+  @param {date} nextLastQuarter
+{%- endcomment -%}
+
+{%- liquid
+  # E.g. "Thursday, September 18 at 8:22 PM"
+  assign DATE_TIME_FORMAT = "%A, %B %-d at %-l:%M %p"
+
+  # E.g. "1:30 PM"
+  assign TIME_FORMAT = "%-l:%M %p"
+
+  # The phase instant falls on this civil day or in the small hours of the next,
+  # which reads as tonight.
+  if eventDay == "today"
+    assign timing = "today"
+  else
+    assign timing = "tonight"
+  endif
+-%}
+
+{%- capture rise_set -%}
+Moonrise: {% if moonrise %}{{ moonrise | date: TIME_FORMAT }}{% else %}—{% endif %}
+Moonset: {% if moonset %}{{ moonset | date: TIME_FORMAT }}{% else %}—{% endif %}
+{%- endcapture -%}
+
+{%- case phaseType -%}
+{%- when 'new' -%}
+  🌑 New Moon
+
+  It is a New Moon {{ timing }}. The moon rises and sets nearly in tandem with the sun: you can't see it, but it is up there all day.
+
+  {{ rise_set }}
+
+  Next Half Moon: {{ nextFirstQuarter | date: DATE_TIME_FORMAT }}
+  Next Full Moon: {{ nextFull | date: DATE_TIME_FORMAT }}
+{%- when 'first-quarter' -%}
+  🌓 Half Moon (First Quarter)
+
+  The moon is half lit {{ timing }}, rising around noon and setting around midnight. Look for it high in the southern sky at dusk.
+
+  {{ rise_set }}
+
+  Next Full Moon: {{ nextFull | date: DATE_TIME_FORMAT }}
+  Next Half Moon: {{ nextLastQuarter | date: DATE_TIME_FORMAT }}
+{%- when 'full' -%}
+  🌕 Full Moon
+
+  It is a Full Moon {{ timing }}. The moon will rise around sunset and set tomorrow around sunrise.
+
+  {{ rise_set }}
+
+  Next Half Moon: {{ nextLastQuarter | date: DATE_TIME_FORMAT }}
+  Next New Moon: {{ nextNew | date: DATE_TIME_FORMAT }}
+{%- when 'last-quarter' -%}
+  🌗 Half Moon (Last Quarter)
+
+  The moon is half lit {{ timing }}, rising around midnight and setting around noon. Look for it in the southern sky at dawn.
+
+  {{ rise_set }}
+
+  Next Half Moon: {{ nextFirstQuarter | date: DATE_TIME_FORMAT }}
+  Next Full Moon: {{ nextFull | date: DATE_TIME_FORMAT }}
+{%- endcase -%}
