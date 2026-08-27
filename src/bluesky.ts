@@ -74,7 +74,7 @@ export async function createBlueskyClient(
         status: 'skipped',
       };
 
-      const { uri, cid } = await agent.post({ text });
+      const { uri, cid } = await agent.post({ text, langs: ['en-US'] });
       return {
         status: 'posted',
         uri,
