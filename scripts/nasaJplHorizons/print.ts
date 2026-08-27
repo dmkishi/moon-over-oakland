@@ -1,6 +1,6 @@
 import { Temporal } from '@js-temporal/polyfill';
 import pc from 'picocolors';
-import type { MoonEphemeris } from './client.ts';
+import { eventsAt, type MoonEphemeris, type MoonEventName } from './client.ts';
 import type { Observer, ObservingDay } from './observer.ts';
 import type { PhaseEventName } from './phase-event.ts';
 import type { MoonSummary } from './summary.ts';
@@ -24,35 +24,9 @@ function isIntervalStart(row: MoonEphemeris, intervalMinutes: number): boolean {
   return (row.at.hour * 60 + row.at.minute) % intervalMinutes === 0;
 }
 
-const EVENT_FLAG_NAMES: Record<string, string> = {
-  'r': 'moonrise',
-  's': 'moonset',
-  't': 'transit',
-};
-
-/**
- * The events occurring during the row's minute, e.g. ['moonrise'] or
- * ['transit', 'sunset'].
- */
-function ephemerisEvents(
-  row: MoonEphemeris,
-  prev: MoonEphemeris | undefined,
-): string[] {
-  const names = row.flags
-    .map((flag) => EVENT_FLAG_NAMES[flag])
-    .filter((name) => name !== undefined);
-
-  const isDay = row.flags.includes('*');
-  if (prev !== undefined && prev.flags.includes('*') !== isDay) {
-    names.push(isDay ? 'sunrise' : 'sunset');
-  }
-
-  return names;
-}
-
 interface EphemerisDisplayRow {
   row: MoonEphemeris;
-  events: { name: string; at: Temporal.ZonedDateTime }[];
+  events: { name: MoonEventName; at: Temporal.ZonedDateTime }[];
 }
 
 /**
@@ -90,7 +64,7 @@ export function thinEphemeris(
     const current = displayRows.at(-1);
     if (current === undefined) continue;
 
-    for (const name of ephemerisEvents(row, moonEphemeris[i - 1])) {
+    for (const name of eventsAt(row, moonEphemeris[i - 1])) {
       current.events.push({ name, at: row.at });
     }
   }

@@ -1,5 +1,5 @@
 import type { Temporal } from '@js-temporal/polyfill';
-import type { MoonEphemeris } from './client.ts';
+import { eventsAt, type MoonEphemeris } from './client.ts';
 import type { Observer, ObservingDay } from './observer.ts';
 import type { PhaseEvent } from './phase-event.ts';
 
@@ -63,24 +63,19 @@ export function computeMoonSummary(
   let sunrise: MoonSummary['events']['sunrise'] = null;
   let sunset: MoonSummary['events']['sunset'] = null;
 
-  let prev: MoonEphemeris | undefined;
-  for (const curr of rows) {
-    if (moonrise === null && curr.flags.includes('r')) moonrise = flagEvent(curr);
-    if (moonset === null && curr.flags.includes('s')) moonset = flagEvent(curr);
-    if (transit === null && curr.flags.includes('t')) transit = curr.at;
-
-    // Sun transitions: '*' flag means sun is above the horizon (daytime). The
-    // first row has nothing to transition from, so it can only set `prev`.
-    if (prev !== undefined) {
-      if (sunrise === null && !prev.flags.includes('*') && curr.flags.includes('*')) {
-        sunrise = curr.at;
-      }
-      if (sunset === null && prev.flags.includes('*') && !curr.flags.includes('*')) {
-        sunset = curr.at;
+  // The summary reports one of each, so the first occurrence wins and any later
+  // one is dropped.
+  for (const [i, row] of rows.entries()) {
+    for (const name of eventsAt(row, rows[i - 1])) {
+      switch (name) {
+        case 'moonrise': moonrise ??= flagEvent(row); break;
+        case 'moonset': moonset ??= flagEvent(row); break;
+        case 'transit': transit ??= row.at; break;
+        case 'sunrise': sunrise ??= row.at; break;
+        case 'sunset': sunset ??= row.at; break;
+        default: name satisfies never;
       }
     }
-
-    prev = curr;
   }
 
   const noonRow = findRowNearestToNoon(rows, day);

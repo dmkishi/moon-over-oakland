@@ -308,6 +308,43 @@ export interface MoonEphemeris {
   tiltDeg: number; // Tilt of the moon (relative to the local vertical)
 }
 
+export type MoonEventName = 'moonrise' | 'moonset' | 'transit' | 'sunrise' | 'sunset';
+
+/**
+ * The flags standing for an event on their own row. The twilight flags (`C`,
+ * `N`, `A`) and the `m`/`e` states describe the row rather than mark an
+ * occurrence, so they decode to nothing.
+ */
+const EVENT_FLAGS: Record<string, MoonEventName> = {
+  'r': 'moonrise',
+  's': 'moonset',
+  't': 'transit',
+};
+
+/**
+ * The events occurring during `row`'s step, e.g. `['transit', 'sunset']`.
+ *
+ * Sunrise and sunset have no flag of their own: `*` marks daytime, so the
+ * crossing is a change between consecutive rows.
+ *
+ * @param prev - `undefined` for the first row
+ */
+export function eventsAt(
+  row: MoonEphemeris,
+  prev: MoonEphemeris | undefined,
+): MoonEventName[] {
+  const names = row.flags
+    .map((flag) => EVENT_FLAGS[flag])
+    .filter((name) => name !== undefined);
+
+  const isDay = row.flags.includes('*');
+  if (prev !== undefined && prev.flags.includes('*') !== isDay) {
+    names.push(isDay ? 'sunrise' : 'sunset');
+  }
+
+  return names;
+}
+
 /**
  * Fetch the Moon's topocentric, observer-centric ephemeris as one
  * `MoonEphemeris` per step.
