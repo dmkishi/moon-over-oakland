@@ -13,8 +13,8 @@
   "scripts": {
     "post": "node src/main.ts",
     "preview": "pnpm post --dry-run",
-    "check": "pnpm typecheck && pnpm test",
     "horizons": "node scripts/nasaJplHorizons/main.ts",
+    "check": "pnpm typecheck && vitest run && TZ=UTC vitest run",
     "typecheck": "tsc",
     "test": "vitest",
     "prepare": "husky"
