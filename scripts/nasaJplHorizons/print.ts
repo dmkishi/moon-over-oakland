@@ -174,7 +174,7 @@ const PHASE_EVENT_LABEL: Record<PhaseEventName, string> = {
   'new': 'New Moon',
   'first-quarter': 'First Quarter',
   'full': 'Full Moon',
-  'third-quarter': 'Last Quarter',
+  'last-quarter': 'Last Quarter',
 };
 
 export function printSummary(

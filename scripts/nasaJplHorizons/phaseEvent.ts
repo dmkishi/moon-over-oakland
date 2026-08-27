@@ -2,7 +2,7 @@ import type { Temporal } from '@js-temporal/polyfill';
 import { fetchEclipticLongitudes, type EclipticLongitude } from './client.ts';
 import type { ObservingDay } from './observer.ts';
 
-export type PhaseEventName = 'new' | 'first-quarter' | 'full' | 'third-quarter';
+export type PhaseEventName = 'new' | 'first-quarter' | 'full' | 'last-quarter';
 
 /**
  * The principal phase instant falling on the observing day.
@@ -16,7 +16,7 @@ const PHASE_CROSSINGS: { targetDeg: number; name: PhaseEventName }[] = [
   { targetDeg: 0,   name: 'new' },
   { targetDeg: 90,  name: 'first-quarter' },
   { targetDeg: 180, name: 'full' },
-  { targetDeg: 270, name: 'third-quarter' },
+  { targetDeg: 270, name: 'last-quarter' },
 ];
 
 /**
