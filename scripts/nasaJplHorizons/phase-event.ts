@@ -1,5 +1,5 @@
 import type { Temporal } from '@js-temporal/polyfill';
-import { fetchEclipticLongitudes, type EclipticLongitude } from './client.ts';
+import { fetchEclipticLongitudes, type EclipticLongitude } from './horizons.ts';
 import type { ObservingDay } from './observer.ts';
 
 export type PhaseEventName = 'new' | 'first-quarter' | 'full' | 'last-quarter';
