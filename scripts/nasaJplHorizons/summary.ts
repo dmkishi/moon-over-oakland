@@ -1,7 +1,7 @@
 import type { Temporal } from '@js-temporal/polyfill';
 import type { MoonEphemeris } from './client.ts';
 import type { Observer, ObservingDay } from './observer.ts';
-import type { PhaseEvent } from './phaseEvent.ts';
+import type { PhaseEvent } from './phase-event.ts';
 
 /**
  * A single observing day distilled from the full `MoonEphemeris` run.

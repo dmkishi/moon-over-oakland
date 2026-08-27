@@ -10,7 +10,7 @@ import pc from 'picocolors';
 import { observer as site } from '../../src/observer.ts';
 import { fetchMoonEphemeris } from './client.ts';
 import { civilDayBounds, type Observer } from './observer.ts';
-import { resolvePhaseEvent } from './phaseEvent.ts';
+import { resolvePhaseEvent } from './phase-event.ts';
 import { printCsv, printFixtureJson, printSummary, printTable, thinEphemeris } from './print.ts';
 import { computeMoonSummary } from './summary.ts';
 

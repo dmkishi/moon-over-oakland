@@ -2,7 +2,7 @@ import { Temporal } from '@js-temporal/polyfill';
 import pc from 'picocolors';
 import type { MoonEphemeris } from './client.ts';
 import type { Observer, ObservingDay } from './observer.ts';
-import type { PhaseEventName } from './phaseEvent.ts';
+import type { PhaseEventName } from './phase-event.ts';
 import type { MoonSummary } from './summary.ts';
 
 /**
