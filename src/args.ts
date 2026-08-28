@@ -2,8 +2,18 @@ import { parseArgs } from 'node:util';
 import { Temporal } from '@js-temporal/polyfill';
 
 function parseDate(value: string): Temporal.PlainDate {
+  // `PlainDate.from` alone would accept times, offsets, and calendar
+  // annotations, so require the bare calendar date first. Month and day may
+  // omit their leading zero (`2000-1-31`).
+  const match = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(value);
+  if (!match) {
+    throw new Error(`Invalid date: "${value}"`);
+  }
+
+  const [, year, month, day] = match;
+  const iso = `${year}-${month!.padStart(2, '0')}-${day!.padStart(2, '0')}`;
   try {
-    return Temporal.PlainDate.from(value, { overflow: 'reject' });
+    return Temporal.PlainDate.from(iso, { overflow: 'reject' });
   } catch {
     throw new Error(`Invalid date: "${value}"`);
   }

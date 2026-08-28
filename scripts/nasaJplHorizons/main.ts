@@ -25,7 +25,7 @@ function parseDateArg(arg: string | undefined): string {
 
   // `PlainDate.from` alone would accept times, offsets, and calendar
   // annotations, so require the bare calendar date first. Month and day may
-  // omit their leading zero (`2000-1-2`).
+  // omit their leading zero (`2000-1-31`).
   const match = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(arg);
   if (!match) {
     throw new UsageError(`Expected a YYYY-MM-DD date (leading zero optional), got: ${arg}`);
