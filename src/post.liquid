@@ -1,10 +1,7 @@
-{%- comment -%}
-  All date params are JS `Date`s; the engine renders them in the observer's
-  timezone. Rise and set are the day's first of their kind, or null when the
-  civil day holds none.
-
+{% comment %}
   @param {string} phaseType - 'new' | 'first-quarter' | 'full' | 'last-quarter'
   @param {string} eventDay - 'today' | 'tomorrow'
+  @param {date} eventTime
   @param {date} moonrise
   @param {date} moonset
   @param {date} sunrise
@@ -15,64 +12,83 @@
   @param {date} nextFirstQuarter
   @param {date} nextFull
   @param {date} nextLastQuarter
-{%- endcomment -%}
+{% endcomment %}
 
-{%- liquid
-  # E.g. "Thursday, September 18 at 8:22 PM"
-  assign DATE_TIME_FORMAT = "%A, %B %-d at %-l:%M %p"
+{% liquid
+  # E.g. "September 18 (Thu)"
+  assign DATE_FORMAT = "%B %-d (%a)"
+  assign nextNewDate = nextNew | date: DATE_FORMAT
+  assign nextFirstQuarterDate = nextFirstQuarter | date: DATE_FORMAT
+  assign nextFullDate = nextFull | date: DATE_FORMAT
+  assign nextLastQuarterDate = nextLastQuarter | date: DATE_FORMAT
 
   # E.g. "1:30 PM"
   assign TIME_FORMAT = "%-l:%M %p"
+  assign moonrise_time = moonrise | date: TIME_FORMAT
+  assign moonset_time = moonset | date: TIME_FORMAT
 
-  # The phase instant falls on this civil day or in the small hours of the next,
-  # which reads as tonight.
-  if eventDay == "today"
-    assign timing = "today"
+  if deltaRiseMinutes < -45
+    assign rise_verb = 'before'
+  elsif deltaRiseMinutes < -20
+    assign rise_verb = 'shortly before'
+  elsif deltaRiseMinutes < 15
+    assign rise_verb = 'together with'
+  elsif deltaRiseMinutes > 15
+    assign rise_verb = 'shortly after'
   else
-    assign timing = "tonight"
+    assign rise_verb = 'after'
   endif
--%}
 
-{%- capture rise_set -%}
-Moonrise: {% if moonrise %}{{ moonrise | date: TIME_FORMAT }}{% else %}—{% endif %}
-Moonset: {% if moonset %}{{ moonset | date: TIME_FORMAT }}{% else %}—{% endif %}
-{%- endcapture -%}
+  if deltaSetMinutes < -45
+    assign set_verb = 'after'
+  elsif deltaSetMinutes < -20
+    assign set_verb = 'shortly after'
+  elsif deltaSetMinutes < 15
+    assign set_verb = 'together'
+  elsif deltaSetMinutes > 15
+    assign set_verb = 'shortly before'
+  else
+    assign set_verb = 'before'
+  endif
+%}
 
-{%- case phaseType -%}
-{%- when 'new' -%}
-  🌑 New Moon
+{% case phaseType %}
+  {% when 'new' %}
+    🌑 New Moon
 
-  It is a New Moon {{ timing }}. The moon rises and sets nearly in tandem with the sun: you can't see it, but it is up there all day.
+    It is a new moon today. It will rise {{ rise_verb }} the sun at {{ moonrise_time }} and set {{ set_verb }} at {{ moonset_time }}. You can't see it but the Moon will be in the sky all day.
 
-  {{ rise_set }}
+    Next Phases:
+    - Half Moon: {{ nextFirstQuarterDate }}
+    - Full Moon: {{ nextFullDate }}
 
-  Next Half Moon: {{ nextFirstQuarter | date: DATE_TIME_FORMAT }}
-  Next Full Moon: {{ nextFull | date: DATE_TIME_FORMAT }}
-{%- when 'first-quarter' -%}
-  🌓 Half Moon (First Quarter)
+  {% when 'first-quarter' %}
+    🌓 Half Moon (First Quarter)
 
-  The moon is half lit {{ timing }}, rising around noon and setting around midnight. Look for it high in the southern sky at dusk.
+    It is a half moon today. The Moon will rise near noon at {{ moonrise_time }} and set near midnight at {{ moonset_time }}. Look for it high in the southern sky at dusk.
 
-  {{ rise_set }}
+    Next Phases:
+    - Full Moon: {{ nextFullDate }}
+    - Half Moon: {{ nextLastQuarterDate }}
 
-  Next Full Moon: {{ nextFull | date: DATE_TIME_FORMAT }}
-  Next Half Moon: {{ nextLastQuarter | date: DATE_TIME_FORMAT }}
-{%- when 'full' -%}
-  🌕 Full Moon
+  {% when 'full' %}
+    🌕 Full Moon
 
-  It is a Full Moon {{ timing }}. The moon will rise around sunset and set tomorrow around sunrise.
+    It is a full moon today. It will rise around sunset at {{ moonrise_time }} and set tomorrow morning around sunrise at {{ moonset_time }}.
 
-  {{ rise_set }}
+    Coming soon:
+    - Half moon: {{ nextLastQuarterDate }}
+    - New moon: {{ nextNewDate }}
+    - Full moon: {{ nextFullDate }}
 
-  Next Half Moon: {{ nextLastQuarter | date: DATE_TIME_FORMAT }}
-  Next New Moon: {{ nextNew | date: DATE_TIME_FORMAT }}
-{%- when 'last-quarter' -%}
-  🌗 Half Moon (Last Quarter)
+  {% when 'last-quarter' %}
+    🌗 Half Moon (Last Quarter)
 
-  The moon is half lit {{ timing }}, rising around midnight and setting around noon. Look for it in the southern sky at dawn.
+    It is a half moon today. Rising around midnight and setting tomorrow around noon. Look for it in the southern sky at dawn.
 
-  {{ rise_set }}
+    Next Phases:
+    - New Moon: {{ nextNewDate }}
+    - Half Moon: {{ nextFirstQuarterDate }}
+    - Full Moon: {{ nextFullDate }}
 
-  Next Half Moon: {{ nextFirstQuarter | date: DATE_TIME_FORMAT }}
-  Next Full Moon: {{ nextFull | date: DATE_TIME_FORMAT }}
-{%- endcase -%}
+{% endcase %}
