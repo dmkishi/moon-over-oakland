@@ -23,6 +23,7 @@ export async function renderPost(phaseEvent: PhaseEvent, timezone: string): Prom
   const data = {
     phaseType: phaseEvent.phaseType,
     eventDay: phaseEvent.eventDay,
+    eventTime: toDate(phaseEvent.events.phase),
     moonrise: toDate(phaseEvent.events.moonRise),
     moonset: toDate(phaseEvent.events.moonSet),
     sunrise: toDate(phaseEvent.events.sunRise),
