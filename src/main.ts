@@ -7,6 +7,23 @@ import { observer } from './observer.ts';
 import { calculatePhaseEvent } from './phase-event.ts';
 import { renderPost } from './render.ts';
 
+/**
+ * Format a zoned instant's date in its own time zone, e.g. "2020-1-31".
+ */
+function formatLocalDate(zoned: Temporal.ZonedDateTime): string {
+  return `${zoned.year}-${zoned.month}-${zoned.day}`;
+}
+
+/**
+ * Format a zoned instant in its own time zone, e.g. "2020-1-31 2:30 AM".
+ */
+function formatLocal(zoned: Temporal.ZonedDateTime): string {
+  const hour = zoned.hour % 12 || 12;
+  const minute = String(zoned.minute).padStart(2, '0');
+  const meridiem = zoned.hour < 12 ? 'AM' : 'PM';
+  return `${formatLocalDate(zoned)} ${hour}:${minute} ${meridiem}`;
+}
+
 function parseCliArgsOrExit(): ReturnType<typeof parseCliArgs> {
   try {
     return parseCliArgs();
@@ -25,7 +42,6 @@ async function main(): Promise<void> {
   console.log('================================================================================');
   console.log(`Date:    ${observerDate} (${observer.timezone})`);
   console.log(`Dry run: ${isDryRun}`);
-  console.log(); // Empty line break
 
   const phaseEvent = calculatePhaseEvent(
     observerDate,
@@ -35,9 +51,26 @@ async function main(): Promise<void> {
   );
 
   if (phaseEvent === null) {
+    console.log(); // Empty line break
     console.log(pc.red('No principal phase event. Nothing to post.'));
     return;
   }
+
+  console.log('Data:');
+  console.log(`  Phase Type: "${phaseEvent.phaseType}"`);
+  console.log(`  Event Day:  "${phaseEvent.eventDay}"`);
+  console.log('  Events:');
+  console.log(`    Phase Instant: ${formatLocal(phaseEvent.events.phase)}`);
+  console.log(`    Moonrise:      ${formatLocal(phaseEvent.events.moonRise)}`);
+  console.log(`    Moonset:       ${formatLocal(phaseEvent.events.moonSet)}`);
+  console.log(`    Sunrise:       ${formatLocal(phaseEvent.events.sunRise)}`);
+  console.log(`    Sunset:        ${formatLocal(phaseEvent.events.sunSet)}`);
+  console.log('  Next Phases:');
+  console.log(`    New:           ${formatLocalDate(phaseEvent.nextPhases.new)}`);
+  console.log(`    First Quarter: ${formatLocalDate(phaseEvent.nextPhases.firstQuarter)}`);
+  console.log(`    Full:          ${formatLocalDate(phaseEvent.nextPhases.full)}`);
+  console.log(`    Last Quarter:  ${formatLocalDate(phaseEvent.nextPhases.lastQuarter)}`);
+  console.log(); // Empty line break
 
   const content = await renderPost(phaseEvent, observer.timezone);
   const graphemes = graphemeLength(content);
