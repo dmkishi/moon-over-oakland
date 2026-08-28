@@ -7,21 +7,32 @@ import { observer } from './observer.ts';
 import { calculatePhaseEvent } from './phase-event.ts';
 import { renderPost } from './render.ts';
 
+const GRAPHEME_COUNT_MARGIN = 15;
+
 /**
- * Format a zoned instant's date in its own time zone, e.g. "2020-1-31".
+ * Format a date in its own time zone, e.g. "2020-1-31". The date is dimmed when
+ * it falls on `reference`, so only the dates that differ stand out.
  */
-function formatLocalDate(zoned: Temporal.ZonedDateTime): string {
-  return `${zoned.year}-${zoned.month}-${zoned.day}`;
+function formatLocalDate(
+  date: Temporal.PlainDate | Temporal.ZonedDateTime,
+  reference?: Temporal.PlainDate,
+): string {
+  const formatted = `${date.year}-${date.month}-${date.day}`;
+  const isReference = reference !== undefined
+    && date.year === reference.year
+    && date.month === reference.month
+    && date.day === reference.day;
+  return isReference ? pc.dim(formatted) : formatted;
 }
 
 /**
  * Format a zoned instant in its own time zone, e.g. "2020-1-31 2:30 AM".
  */
-function formatLocal(zoned: Temporal.ZonedDateTime): string {
+function formatLocal(zoned: Temporal.ZonedDateTime, reference?: Temporal.PlainDate): string {
   const hour = zoned.hour % 12 || 12;
   const minute = String(zoned.minute).padStart(2, '0');
   const meridiem = zoned.hour < 12 ? 'AM' : 'PM';
-  return `${formatLocalDate(zoned)} ${hour}:${minute} ${meridiem}`;
+  return `${formatLocalDate(zoned, reference)} ${hour}:${minute} ${meridiem}`;
 }
 
 function parseCliArgsOrExit(): ReturnType<typeof parseCliArgs> {
@@ -38,10 +49,11 @@ async function main(): Promise<void> {
   const { date, isDryRun } = parseCliArgsOrExit();
   const observerDate = date ?? Temporal.Now.plainDateISO(observer.timezone);
 
+  console.log(); // Empty line break
   console.log('Moon Over Oakland');
   console.log('================================================================================');
-  console.log(`Date:    ${observerDate} (${observer.timezone})`);
-  console.log(`Dry run: ${isDryRun}`);
+  console.log(`Date:    ${formatLocalDate(observerDate)} (${observer.timezone})`);
+  console.log(`Dry run: ${isDryRun ? pc.yellow('true') : 'false'}`);
 
   const phaseEvent = calculatePhaseEvent(
     observerDate,
@@ -57,14 +69,14 @@ async function main(): Promise<void> {
   }
 
   console.log('Data:');
-  console.log(`  Phase Type: "${phaseEvent.phaseType}"`);
-  console.log(`  Event Day:  "${phaseEvent.eventDay}"`);
+  console.log(`  Phase Type:      "${phaseEvent.phaseType}"`);
+  console.log(`  Event Day:       "${phaseEvent.eventDay}"`);
   console.log('  Events:');
-  console.log(`    Phase Instant: ${formatLocal(phaseEvent.events.phase)}`);
-  console.log(`    Moonrise:      ${formatLocal(phaseEvent.events.moonRise)}`);
-  console.log(`    Moonset:       ${formatLocal(phaseEvent.events.moonSet)}`);
-  console.log(`    Sunrise:       ${formatLocal(phaseEvent.events.sunRise)}`);
-  console.log(`    Sunset:        ${formatLocal(phaseEvent.events.sunSet)}`);
+  console.log(`    Phase Instant: ${formatLocal(phaseEvent.events.phase, observerDate)}`);
+  console.log(`    Moonrise:      ${formatLocal(phaseEvent.events.moonRise, observerDate)}`);
+  console.log(`    Moonset:       ${formatLocal(phaseEvent.events.moonSet, observerDate)}`);
+  console.log(`    Sunrise:       ${formatLocal(phaseEvent.events.sunRise, observerDate)}`);
+  console.log(`    Sunset:        ${formatLocal(phaseEvent.events.sunSet, observerDate)}`);
   console.log('  Next Phases:');
   console.log(`    New:           ${formatLocalDate(phaseEvent.nextPhases.new)}`);
   console.log(`    First Quarter: ${formatLocalDate(phaseEvent.nextPhases.firstQuarter)}`);
@@ -74,9 +86,13 @@ async function main(): Promise<void> {
 
   const content = await renderPost(phaseEvent, observer.timezone);
   const graphemes = graphemeLength(content);
-  console.log(`Post (${graphemes}/${MAX_GRAPHEMES} graphemes):`);
+  const graphemeCount = MAX_GRAPHEMES - graphemes < GRAPHEME_COUNT_MARGIN
+    ? pc.yellow(String(graphemes))
+    : String(graphemes);
+
+  console.log(`Post (${graphemeCount}/${MAX_GRAPHEMES} graphemes):`);
   console.log('--------------------------------------------------------------------------------');
-  console.log(content);
+  console.log(pc.blue(content));
   console.log('--------------------------------------------------------------------------------');
   console.log(); // Empty line break
 
