@@ -10,6 +10,17 @@ import { renderPost } from './render.ts';
 const GRAPHEME_COUNT_MARGIN = 15;
 
 /**
+ * Format a value alongside the alternatives it was chosen from, e.g.
+ * `"today" | "tomorrow"`. The alternatives are dimmed, emphasizing the given
+ * value.
+ */
+function formatChoice<T extends string>(value: T, options: readonly T[]): string {
+  return options
+    .map((option) => (option === value ? `"${option}"` : pc.dim(`"${option}"`)))
+    .join(pc.dim(' | '));
+}
+
+/**
  * Format a date in its own time zone, e.g. "2020-1-31". The date is dimmed when
  * it falls on `reference`, so only the dates that differ stand out.
  */
@@ -69,8 +80,8 @@ async function main(): Promise<void> {
   }
 
   console.log('Data:');
-  console.log(`  Phase Type:      "${phaseEvent.phaseType}"`);
-  console.log(`  Event Day:       "${phaseEvent.eventDay}"`);
+  console.log(`  Phase Type:      ${formatChoice(phaseEvent.phaseType, ['new', 'first-quarter', 'full', 'last-quarter'])}`);
+  console.log(`  Event Day:       ${formatChoice(phaseEvent.eventDay, ['today', 'tomorrow'])}`);
   console.log('  Events:');
   console.log(`    Phase Instant: ${formatLocal(phaseEvent.events.phase, observerDate)}`);
   console.log(`    Moonrise:      ${formatLocal(phaseEvent.events.moonRise, observerDate)}`);
