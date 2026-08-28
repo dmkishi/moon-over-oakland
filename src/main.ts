@@ -46,6 +46,13 @@ function formatLocal(zoned: Temporal.ZonedDateTime, reference?: Temporal.PlainDa
   return `${formatLocalDate(zoned, reference)} ${hour}:${minute} ${meridiem}`;
 }
 
+/**
+ * Format a delta with an explicit sign, e.g. "+42" or "-42".
+ */
+function formatSigned(minutes: number): string {
+  return minutes > 0 ? `+${minutes}` : String(minutes);
+}
+
 function parseCliArgsOrExit(): ReturnType<typeof parseCliArgs> {
   try {
     return parseCliArgs();
@@ -88,6 +95,9 @@ async function main(): Promise<void> {
   console.log(`    Moonset:       ${formatLocal(phaseEvent.events.moonSet, observerDate)}`);
   console.log(`    Sunrise:       ${formatLocal(phaseEvent.events.sunRise, observerDate)}`);
   console.log(`    Sunset:        ${formatLocal(phaseEvent.events.sunSet, observerDate)}`);
+  console.log('  Deltas (minutes):');
+  console.log(`    Moonrise:      ${formatSigned(phaseEvent.eventDeltas.riseMinutes)}`);
+  console.log(`    Moonset:       ${formatSigned(phaseEvent.eventDeltas.setMinutes)}`);
   console.log('  Next Phases:');
   console.log(`    New:           ${formatLocalDate(phaseEvent.nextPhases.new)}`);
   console.log(`    First Quarter: ${formatLocalDate(phaseEvent.nextPhases.firstQuarter)}`);

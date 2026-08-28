@@ -14,6 +14,10 @@ export interface PhaseEvent {
     sunRise: Temporal.ZonedDateTime;
     sunSet: Temporal.ZonedDateTime;
   }
+  eventDeltas: {
+    riseMinutes: number;
+    setMinutes: number;
+  }
   nextPhases: {
     new: Temporal.ZonedDateTime;
     firstQuarter: Temporal.ZonedDateTime;
@@ -43,6 +47,7 @@ const PHASE_FUNCTIONS: ReadonlyArray<readonly [PhaseEvent['phaseType'], PhaseFun
 
 const LUNATION_YEARS = 1 / 12.3685;
 const DAY_MS = 86_400_000;
+const MINUTE_MS = 60_000;
 
 function toZoned(date: Date, timezone: string): Temporal.ZonedDateTime {
   return Temporal.Instant.fromEpochMilliseconds(date.getTime()).toZonedDateTimeISO(timezone);
@@ -149,6 +154,18 @@ export function calculateDayEvents(
   };
 }
 
+export function calculateEventDeltas(
+  events: Omit<PhaseEvent['events'], 'phase'>,
+): PhaseEvent['eventDeltas'] {
+  const minutesDelta = (a: Temporal.ZonedDateTime, b: Temporal.ZonedDateTime): number =>
+    Math.round((a.epochMilliseconds - b.epochMilliseconds) / MINUTE_MS);
+
+  return {
+    riseMinutes: minutesDelta(events.moonRise, events.sunRise),
+    setMinutes: minutesDelta(events.moonSet, events.sunSet),
+  };
+}
+
 /**
  * Find nearest phase of given type.
  *
@@ -199,13 +216,16 @@ export function calculatePhaseEvent(
       Temporal.ZonedDateTime.compare(phase, windowEnd) >= 0
     ) continue;
 
+    const dayEvents = calculateDayEvents(date, timezone, latitude, longitude);
+
     return {
       phaseType,
       eventDay: phase.toPlainDate().equals(date) ? 'today' : 'tomorrow',
       events: {
         phase,
-        ...calculateDayEvents(date, timezone, latitude, longitude),
+        ...dayEvents,
       },
+      eventDeltas: calculateEventDeltas(dayEvents),
       nextPhases: {
         new: findNextPhase(newMoon, windowEnd, timezone),
         firstQuarter: findNextPhase(first, windowEnd, timezone),

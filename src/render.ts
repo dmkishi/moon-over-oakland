@@ -28,6 +28,8 @@ export async function renderPost(phaseEvent: PhaseEvent, timezone: string): Prom
     moonset: toDate(phaseEvent.events.moonSet),
     sunrise: toDate(phaseEvent.events.sunRise),
     sunset: toDate(phaseEvent.events.sunSet),
+    deltaRiseMinutes: phaseEvent.eventDeltas.riseMinutes,
+    deltaSetMinutes: phaseEvent.eventDeltas.setMinutes,
     nextNew: toDate(phaseEvent.nextPhases.new),
     nextFirstQuarter: toDate(phaseEvent.nextPhases.firstQuarter),
     nextFull: toDate(phaseEvent.nextPhases.full),
