@@ -87,17 +87,19 @@ async function main(): Promise<void> {
   }
 
   console.log('Data:');
-  console.log(`  Phase Type:      ${formatChoice(phaseEvent.phaseType, ['new', 'first-quarter', 'full', 'last-quarter'])}`);
   console.log(`  Event Day:       ${formatChoice(phaseEvent.eventDay, ['today', 'tomorrow'])}`);
+  console.log(`  Phase Type:      ${formatChoice(phaseEvent.phaseType, ['new', 'first-quarter', 'full', 'last-quarter'])}`);
+  console.log(`  Phase Instant:   ${formatLocal(phaseEvent.events.phase, observerDate)}`);
   console.log('  Events:');
-  console.log(`    Phase Instant: ${formatLocal(phaseEvent.events.phase, observerDate)}`);
-  console.log(`    Moonrise:      ${formatLocal(phaseEvent.events.moonRise, observerDate)}`);
-  console.log(`    Moonset:       ${formatLocal(phaseEvent.events.moonSet, observerDate)}`);
-  console.log(`    Sunrise:       ${formatLocal(phaseEvent.events.sunRise, observerDate)}`);
-  console.log(`    Sunset:        ${formatLocal(phaseEvent.events.sunSet, observerDate)}`);
-  console.log('  Deltas (minutes):');
-  console.log(`    Moonrise:      ${formatSigned(phaseEvent.eventDeltas.riseMinutes)}`);
-  console.log(`    Moonset:       ${formatSigned(phaseEvent.eventDeltas.setMinutes)}`);
+  console.log('    Moon:');
+  console.log(`      Rise:        ${formatLocal(phaseEvent.events.moonRise, observerDate)}`);
+  console.log(`      Set:         ${formatLocal(phaseEvent.events.moonSet, observerDate)}`);
+  console.log('    Sun:');
+  console.log(`      Rise:        ${formatLocal(phaseEvent.events.sunRise, observerDate)}`);
+  console.log(`      Set:         ${formatLocal(phaseEvent.events.sunSet, observerDate)}`);
+  console.log('    Deltas (minutes):');
+  console.log(`      Moonrise:   ${formatSigned(phaseEvent.eventDeltas.riseMinutes)}`); // Hanging sign
+  console.log(`      Moonset:    ${formatSigned(phaseEvent.eventDeltas.setMinutes)}`); // Hanging sign
   console.log('  Next Phases:');
   console.log(`    New:           ${formatLocalDate(phaseEvent.nextPhases.new)}`);
   console.log(`    First Quarter: ${formatLocalDate(phaseEvent.nextPhases.firstQuarter)}`);
