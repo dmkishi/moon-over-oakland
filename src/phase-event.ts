@@ -9,10 +9,10 @@ export interface PhaseEvent {
   eventDay: 'today' | 'tomorrow';
   events: {
     phase: Temporal.ZonedDateTime;
-    moonRise: Temporal.ZonedDateTime;
-    moonSet: Temporal.ZonedDateTime;
-    sunRise: Temporal.ZonedDateTime;
-    sunSet: Temporal.ZonedDateTime;
+    moonrise: Temporal.ZonedDateTime;
+    moonset: Temporal.ZonedDateTime;
+    sunrise: Temporal.ZonedDateTime;
+    sunset: Temporal.ZonedDateTime;
   }
   eventDeltas: {
     riseMinutes: number;
@@ -83,7 +83,7 @@ function toJulianYear(epochMilliseconds: number): number {
  * UTC days across a DST shift; an event falls on exactly one UTC day, so
  * nothing double-counts.
  */
-function findMoonRiseSetPair(
+function findMoonriseSetPair(
   startMs: number,
   endMs: number,
   latitude: number,
@@ -134,7 +134,7 @@ export function calculateDayEvents(
   // Calendar arithmetic, not +24h, keeps 23- and 25-hour DST days correct.
   const startMs = date.toZonedDateTime({ timeZone: timezone }).epochMilliseconds;
   const endMs = date.add({ days: 1 }).toZonedDateTime({ timeZone: timezone }).epochMilliseconds;
-  const moon = findMoonRiseSetPair(startMs, endMs, latitude, longitude);
+  const moon = findMoonriseSetPair(startMs, endMs, latitude, longitude);
 
   const localNoon = date.toZonedDateTime({ timeZone: timezone, plainTime: '12:00' });
   const { sunrise, sunset } = SunCalc.getTimes(
@@ -147,10 +147,10 @@ export function calculateDayEvents(
   }
 
   return {
-    moonRise: toZoned(moon.rise, timezone),
-    moonSet: toZoned(moon.set, timezone),
-    sunRise: toZoned(sunrise, timezone),
-    sunSet: toZoned(sunset, timezone),
+    moonrise: toZoned(moon.rise, timezone),
+    moonset: toZoned(moon.set, timezone),
+    sunrise: toZoned(sunrise, timezone),
+    sunset: toZoned(sunset, timezone),
   };
 }
 
@@ -161,8 +161,8 @@ export function calculateEventDeltas(
     Math.round((a.epochMilliseconds - b.epochMilliseconds) / MINUTE_MS);
 
   return {
-    riseMinutes: minutesDelta(events.moonRise, events.sunRise),
-    setMinutes: minutesDelta(events.moonSet, events.sunSet),
+    riseMinutes: minutesDelta(events.moonrise, events.sunrise),
+    setMinutes: minutesDelta(events.moonset, events.sunset),
   };
 }
 

@@ -92,11 +92,11 @@ async function main(): Promise<void> {
   console.log(`  Phase Instant:   ${formatLocal(phaseEvent.events.phase, observerDate)}`);
   console.log('  Events:');
   console.log('    Moon:');
-  console.log(`      Rise:        ${formatLocal(phaseEvent.events.moonRise, observerDate)}`);
-  console.log(`      Set:         ${formatLocal(phaseEvent.events.moonSet, observerDate)}`);
+  console.log(`      Rise:        ${formatLocal(phaseEvent.events.moonrise, observerDate)}`);
+  console.log(`      Set:         ${formatLocal(phaseEvent.events.moonset, observerDate)}`);
   console.log('    Sun:');
-  console.log(`      Rise:        ${formatLocal(phaseEvent.events.sunRise, observerDate)}`);
-  console.log(`      Set:         ${formatLocal(phaseEvent.events.sunSet, observerDate)}`);
+  console.log(`      Rise:        ${formatLocal(phaseEvent.events.sunrise, observerDate)}`);
+  console.log(`      Set:         ${formatLocal(phaseEvent.events.sunset, observerDate)}`);
   console.log('    Deltas (minutes):');
   console.log(`      Moonrise:   ${formatSigned(phaseEvent.eventDeltas.riseMinutes)}`); // Hanging sign
   console.log(`      Moonset:    ${formatSigned(phaseEvent.eventDeltas.setMinutes)}`); // Hanging sign

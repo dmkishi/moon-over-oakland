@@ -55,8 +55,8 @@ const { timezone, latitude, longitude } = observer;
 
 /** Maps fixture event names to MoonPost field names. */
 const RESULT_KEY = {
-  moonrise: 'moonRise',
-  moonset: 'moonSet',
+  moonrise: 'moonrise',
+  moonset: 'moonset',
   sunrise: 'sunrise',
   sunset: 'sunset',
 } as const;
@@ -87,8 +87,8 @@ for (const fixture of fixtures) {
     it('returns all expected fields', () => {
       expect(result.day).toBeInstanceOf(Date);
       expect(result.average).toBeDefined();
-      expect(result.moonRise).toBeDefined();
-      expect(result.moonSet).toBeDefined();
+      expect(result.moonrise).toBeDefined();
+      expect(result.moonset).toBeDefined();
       expect(result.sunrise).toBeDefined();
       expect(result.sunset).toBeDefined();
     });
@@ -99,14 +99,14 @@ for (const fixture of fixtures) {
     });
 
     it('celestial event dates are valid Date objects', () => {
-      for (const event of [result.moonRise, result.moonSet, result.sunrise, result.sunset]) {
+      for (const event of [result.moonrise, result.moonset, result.sunrise, result.sunset]) {
         expect(event.date).toBeInstanceOf(Date);
         expect(isNaN(event.date.getTime())).toBe(false);
       }
     });
 
     it('compass directions are valid 16-point values', () => {
-      for (const event of [result.moonRise, result.moonSet, result.sunrise, result.sunset]) {
+      for (const event of [result.moonrise, result.moonset, result.sunrise, result.sunset]) {
         expect(COMPASS_DIRECTIONS.has(event.compassDirection)).toBe(true);
       }
     });
