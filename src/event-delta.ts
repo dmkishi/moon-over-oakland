@@ -1,20 +1,14 @@
 /**
- * How far a day's moonrise and moonset fall from the reference times their phase
- * is judged against — editorial policy transcribed from
- * `docs/posting-algorithm.md`, not ephemeris.
+ * How far a day's moonrise and moonset fall from the reference times their
+ * phase is judged against: editorial policy transcribed from `docs/posting-algorithm.md`,
+ * not ephemeris.
  */
 import { Temporal } from '@js-temporal/polyfill';
+import type { DayEvents } from './ephemeris/day-events.ts';
+import type { PhaseType } from './ephemeris/phase.ts';
+import { MINUTE_MS } from './time.ts';
 
-export type PhaseType = 'new' | 'first-quarter' | 'full' | 'last-quarter';
-
-export interface DayEvents {
-  moonrise: Temporal.ZonedDateTime;
-  moonset: Temporal.ZonedDateTime;
-  sunrise: Temporal.ZonedDateTime;
-  sunset: Temporal.ZonedDateTime;
-}
-
-type MoonEvent = 'moonrise' | 'moonset';
+export type MoonEvent = 'moonrise' | 'moonset';
 type Reference = 'sunrise' | 'sunset' | 'noon' | 'midnight';
 
 export interface EventDelta {
@@ -22,8 +16,6 @@ export interface EventDelta {
   moonEvent: MoonEvent;
   reference: Reference;
 }
-
-const MINUTE_MS = 60_000;
 
 /**
  * Each principal phase or phase type (e.g. first quarter, full moon, etc.) is

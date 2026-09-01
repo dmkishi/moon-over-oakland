@@ -30,10 +30,10 @@ export async function renderPost(phaseEvent: PhaseEvent, timezone: string): Prom
     sunset: toDate(phaseEvent.events.sunset),
     deltaRiseMinutes: phaseEvent.eventDeltas.moonrise.minutes,
     deltaSetMinutes: phaseEvent.eventDeltas.moonset.minutes,
-    nextNew: toDate(phaseEvent.nextPhases.new),
-    nextFirstQuarter: toDate(phaseEvent.nextPhases.firstQuarter),
-    nextFull: toDate(phaseEvent.nextPhases.full),
-    nextLastQuarter: toDate(phaseEvent.nextPhases.lastQuarter),
+    nextNew: toDate(phaseEvent.nextPhases['new']),
+    nextFirstQuarter: toDate(phaseEvent.nextPhases['first-quarter']),
+    nextFull: toDate(phaseEvent.nextPhases['full']),
+    nextLastQuarter: toDate(phaseEvent.nextPhases['last-quarter']),
   };
   const result: string = await createEngine(timezone).renderFile('post', data);
   const trimmedResult = result.split('\n').map((line) => line.trim()).join('\n').trim();

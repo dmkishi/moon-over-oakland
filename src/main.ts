@@ -101,10 +101,10 @@ async function main(): Promise<void> {
   console.log(`      Moonrise ∆: ${formatSigned(phaseEvent.eventDeltas.moonrise.minutes)} (${formatRelation(phaseEvent.eventDeltas.moonrise)})`);
   console.log(`      Moonset ∆:  ${formatSigned(phaseEvent.eventDeltas.moonset.minutes)} (${formatRelation(phaseEvent.eventDeltas.moonset)})`);
   console.log('  Next Phases:');
-  console.log(`    New:           ${formatLocalDate(phaseEvent.nextPhases.new)}`);
-  console.log(`    First Quarter: ${formatLocalDate(phaseEvent.nextPhases.firstQuarter)}`);
-  console.log(`    Full:          ${formatLocalDate(phaseEvent.nextPhases.full)}`);
-  console.log(`    Last Quarter:  ${formatLocalDate(phaseEvent.nextPhases.lastQuarter)}`);
+  console.log(`    New:           ${formatLocalDate(phaseEvent.nextPhases['new'])}`);
+  console.log(`    First Quarter: ${formatLocalDate(phaseEvent.nextPhases['first-quarter'])}`);
+  console.log(`    Full:          ${formatLocalDate(phaseEvent.nextPhases['full'])}`);
+  console.log(`    Last Quarter:  ${formatLocalDate(phaseEvent.nextPhases['last-quarter'])}`);
   console.log(); // Empty line break
 
   const content = await renderPost(phaseEvent, observer.timezone);
