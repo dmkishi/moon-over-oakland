@@ -16,9 +16,10 @@ import {
 } from './event-delta.ts';
 
 export interface PhaseEvent {
-  phaseType: PhaseType;
-  eventDay: 'today' | 'tomorrow';
-  events: DayEvents & { phase: Temporal.ZonedDateTime };
+  type: PhaseType;
+  time: Temporal.ZonedDateTime;
+  day: 'today' | 'tomorrow';
+  dayEvents: DayEvents;
   eventDeltas: Record<MoonEvent, EventDelta>;
   nextPhases: Record<PhaseType, Temporal.ZonedDateTime>;
 }
@@ -53,12 +54,10 @@ export function calculatePhaseEvent(
     const dayEvents = calculateDayEvents(date, timezone, latitude, longitude);
 
     return {
-      phaseType,
-      eventDay: phase.toPlainDate().equals(date) ? 'today' : 'tomorrow',
-      events: {
-        phase,
-        ...dayEvents,
-      },
+      type: phaseType,
+      time: phase,
+      day: phase.toPlainDate().equals(date) ? 'today' : 'tomorrow',
+      dayEvents,
       eventDeltas: calculateEventDeltas(dayEvents, phaseType),
       nextPhases: findNextPhases(windowEnd, timezone),
     };

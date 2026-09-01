@@ -86,15 +86,15 @@ async function main(): Promise<void> {
   }
 
   console.log('Data:');
-  console.log(`  Phase Type:      ${phaseEvent.phaseType}`);
-  console.log(`  Phase Instant:   ${formatLocal(phaseEvent.events.phase, observerDate)} (${phaseEvent.eventDay})`);
+  console.log(`  Phase Type:      ${phaseEvent.type}`);
+  console.log(`  Phase Instant:   ${formatLocal(phaseEvent.time, observerDate)} (${phaseEvent.day})`);
   console.log('  Events:');
   console.log('    Moon:');
-  console.log(`      Rise:        ${formatLocal(phaseEvent.events.moonrise, observerDate)}`);
-  console.log(`      Set:         ${formatLocal(phaseEvent.events.moonset, observerDate)}`);
+  console.log(`      Rise:        ${formatLocal(phaseEvent.dayEvents.moonrise, observerDate)}`);
+  console.log(`      Set:         ${formatLocal(phaseEvent.dayEvents.moonset, observerDate)}`);
   console.log('    Sun:');
-  console.log(`      Rise:        ${formatLocal(phaseEvent.events.sunrise, observerDate)}`);
-  console.log(`      Set:         ${formatLocal(phaseEvent.events.sunset, observerDate)}`);
+  console.log(`      Rise:        ${formatLocal(phaseEvent.dayEvents.sunrise, observerDate)}`);
+  console.log(`      Set:         ${formatLocal(phaseEvent.dayEvents.sunset, observerDate)}`);
   console.log('    Deltas (minutes):');
   // Two lines below start one column left of all other values so the sign hangs
   // and the digits remain aligned.

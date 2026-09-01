@@ -21,13 +21,13 @@ function toDate(zoned: Temporal.ZonedDateTime): Date {
 
 export async function renderPost(phaseEvent: PhaseEvent, timezone: string): Promise<string> {
   const data = {
-    phaseType: phaseEvent.phaseType,
-    eventDay: phaseEvent.eventDay,
-    eventTime: toDate(phaseEvent.events.phase),
-    moonrise: toDate(phaseEvent.events.moonrise),
-    moonset: toDate(phaseEvent.events.moonset),
-    sunrise: toDate(phaseEvent.events.sunrise),
-    sunset: toDate(phaseEvent.events.sunset),
+    phaseType: phaseEvent.type,
+    eventDay: phaseEvent.day,
+    eventTime: toDate(phaseEvent.time),
+    moonrise: toDate(phaseEvent.dayEvents.moonrise),
+    moonset: toDate(phaseEvent.dayEvents.moonset),
+    sunrise: toDate(phaseEvent.dayEvents.sunrise),
+    sunset: toDate(phaseEvent.dayEvents.sunset),
     deltaRiseMinutes: phaseEvent.eventDeltas.moonrise.minutes,
     deltaSetMinutes: phaseEvent.eventDeltas.moonset.minutes,
     nextNew: toDate(phaseEvent.nextPhases['new']),

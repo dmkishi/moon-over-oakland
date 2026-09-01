@@ -13,7 +13,7 @@ import { loadFixture } from './loadFixture.ts';
 
 interface PostingFixture {
   eventDate: string;
-  phaseType: PhaseEvent['phaseType'];
+  phaseType: PhaseEvent['type'];
   post: 'same' | 'prev';
 }
 
@@ -35,15 +35,15 @@ for (const fixture of postingFixtures) {
     it(`posts on ${postDate}`, () => {
       const result = calculate(postDate);
       expect(result).not.toBeNull();
-      expect(result!.phaseType).toBe(fixture.phaseType);
-      expect(result!.eventDay).toBe(fixture.post === 'same' ? 'today' : 'tomorrow');
-      expect(result!.events.phase.toPlainDate().equals(eventDate)).toBe(true);
+      expect(result!.type).toBe(fixture.phaseType);
+      expect(result!.day).toBe(fixture.post === 'same' ? 'today' : 'tomorrow');
+      expect(result!.time.toPlainDate().equals(eventDate)).toBe(true);
     });
 
     it('does not count its own phase as next', () => {
       const result = calculate(postDate)!;
       const nextOfSameType = result.nextPhases[fixture.phaseType];
-      expect(Temporal.ZonedDateTime.compare(nextOfSameType, result.events.phase)).toBe(1);
+      expect(Temporal.ZonedDateTime.compare(nextOfSameType, result.time)).toBe(1);
     });
 
     it('does not post on adjacent days', () => {
