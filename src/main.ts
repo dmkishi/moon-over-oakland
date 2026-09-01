@@ -10,17 +10,6 @@ import { renderPost } from './render.ts';
 const GRAPHEME_COUNT_MARGIN = 15;
 
 /**
- * Format a value alongside the alternatives it was chosen from, e.g.
- * `"today" | "tomorrow"`. The alternatives are dimmed, emphasizing the given
- * value.
- */
-function formatChoice<T extends string>(value: T, options: readonly T[]): string {
-  return options
-    .map((option) => (option === value ? `"${option}"` : pc.dim(`"${option}"`)))
-    .join(pc.dim(' | '));
-}
-
-/**
  * Format a date in its own time zone, e.g. "2020-1-31". The date is dimmed when
  * it falls on `reference`, so only the dates that differ stand out.
  */
@@ -39,7 +28,7 @@ function formatLocalDate(
 /**
  * Format a zoned instant in its own time zone, e.g. "2020-1-31 2:30 AM".
  */
-function formatLocal(zoned: Temporal.ZonedDateTime, reference?: Temporal.PlainDate): string {
+function formatLocal(zoned: Temporal.ZonedDateTime, reference: Temporal.PlainDate): string {
   const hour = zoned.hour % 12 || 12;
   const minute = String(zoned.minute).padStart(2, '0');
   const meridiem = zoned.hour < 12 ? 'AM' : 'PM';
@@ -87,9 +76,8 @@ async function main(): Promise<void> {
   }
 
   console.log('Data:');
-  console.log(`  Event Day:       ${formatChoice(phaseEvent.eventDay, ['today', 'tomorrow'])}`);
-  console.log(`  Phase Type:      ${formatChoice(phaseEvent.phaseType, ['new', 'first-quarter', 'full', 'last-quarter'])}`);
-  console.log(`  Phase Instant:   ${formatLocal(phaseEvent.events.phase, observerDate)}`);
+  console.log(`  Phase Type:      ${phaseEvent.phaseType}`);
+  console.log(`  Phase Instant:   ${formatLocal(phaseEvent.events.phase, observerDate)} (${phaseEvent.eventDay})`);
   console.log('  Events:');
   console.log('    Moon:');
   console.log(`      Rise:        ${formatLocal(phaseEvent.events.moonrise, observerDate)}`);
