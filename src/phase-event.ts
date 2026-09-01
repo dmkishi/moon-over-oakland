@@ -3,20 +3,20 @@ import { JDEToJulianYear } from 'astronomia/base';
 import { JDEToDate, DateToJDE } from 'astronomia/julian';
 import { newMoon, first, full, last } from 'astronomia/moonphase';
 import * as SunCalc from 'suncalc';
+import {
+  calculateEventDeltas,
+  type DayEvents,
+  type EventDelta,
+  type PhaseType,
+} from './event-delta.ts';
 
 export interface PhaseEvent {
-  phaseType: 'new' | 'first-quarter' | 'full' | 'last-quarter';
+  phaseType: PhaseType;
   eventDay: 'today' | 'tomorrow';
-  events: {
-    phase: Temporal.ZonedDateTime;
-    moonrise: Temporal.ZonedDateTime;
-    moonset: Temporal.ZonedDateTime;
-    sunrise: Temporal.ZonedDateTime;
-    sunset: Temporal.ZonedDateTime;
-  }
+  events: DayEvents & { phase: Temporal.ZonedDateTime };
   eventDeltas: {
-    riseMinutes: number;
-    setMinutes: number;
+    moonrise: EventDelta;
+    moonset: EventDelta;
   }
   nextPhases: {
     new: Temporal.ZonedDateTime;
@@ -38,7 +38,7 @@ export interface PhaseEvent {
  */
 type PhaseFunction = (year: number) => number;
 
-const PHASE_FUNCTIONS: ReadonlyArray<readonly [PhaseEvent['phaseType'], PhaseFunction]> = [
+const PHASE_FUNCTIONS: ReadonlyArray<readonly [PhaseType, PhaseFunction]> = [
   ['new', newMoon],
   ['first-quarter', first],
   ['full', full],
@@ -47,7 +47,6 @@ const PHASE_FUNCTIONS: ReadonlyArray<readonly [PhaseEvent['phaseType'], PhaseFun
 
 const LUNATION_YEARS = 1 / 12.3685;
 const DAY_MS = 86_400_000;
-const MINUTE_MS = 60_000;
 
 function toZoned(date: Date, timezone: string): Temporal.ZonedDateTime {
   return Temporal.Instant.fromEpochMilliseconds(date.getTime()).toZonedDateTimeISO(timezone);
@@ -130,7 +129,7 @@ export function calculateDayEvents(
   timezone: string,
   latitude: number,
   longitude: number,
-): Omit<PhaseEvent['events'], 'phase'> {
+): DayEvents {
   // Calendar arithmetic, not +24h, keeps 23- and 25-hour DST days correct.
   const startMs = date.toZonedDateTime({ timeZone: timezone }).epochMilliseconds;
   const endMs = date.add({ days: 1 }).toZonedDateTime({ timeZone: timezone }).epochMilliseconds;
@@ -151,18 +150,6 @@ export function calculateDayEvents(
     moonset: toZoned(moon.set, timezone),
     sunrise: toZoned(sunrise, timezone),
     sunset: toZoned(sunset, timezone),
-  };
-}
-
-export function calculateEventDeltas(
-  events: Omit<PhaseEvent['events'], 'phase'>,
-): PhaseEvent['eventDeltas'] {
-  const minutesDelta = (a: Temporal.ZonedDateTime, b: Temporal.ZonedDateTime): number =>
-    Math.round((a.epochMilliseconds - b.epochMilliseconds) / MINUTE_MS);
-
-  return {
-    riseMinutes: minutesDelta(events.moonrise, events.sunrise),
-    setMinutes: minutesDelta(events.moonset, events.sunset),
   };
 }
 
@@ -225,7 +212,7 @@ export function calculatePhaseEvent(
         phase,
         ...dayEvents,
       },
-      eventDeltas: calculateEventDeltas(dayEvents),
+      eventDeltas: calculateEventDeltas(dayEvents, phaseType),
       nextPhases: {
         new: findNextPhase(newMoon, windowEnd, timezone),
         firstQuarter: findNextPhase(first, windowEnd, timezone),

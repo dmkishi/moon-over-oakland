@@ -3,6 +3,7 @@ import pc from 'picocolors';
 import { parseCliArgs } from './args.ts';
 import { createBlueskyClient, graphemeLength, MAX_GRAPHEMES } from './bluesky.ts';
 import { env } from './env.ts';
+import type { EventDelta } from './event-delta.ts';
 import { observer } from './observer.ts';
 import { calculatePhaseEvent } from './phase-event.ts';
 import { renderPost } from './render.ts';
@@ -40,6 +41,15 @@ function formatLocal(zoned: Temporal.ZonedDateTime, reference: Temporal.PlainDat
  */
 function formatSigned(minutes: number): string {
   return minutes > 0 ? `+${minutes}` : String(minutes);
+}
+
+/**
+ * Place a delta relative to its reference, e.g. "before sunrise", "after noon",
+ * "at midnight", etc.
+ */
+function formatRelation({ minutes, reference }: EventDelta): string {
+  if (minutes === 0) return `at ${reference}`;
+  return `${minutes > 0 ? 'after' : 'before'} ${reference}`;
 }
 
 function parseCliArgsOrExit(): ReturnType<typeof parseCliArgs> {
@@ -86,8 +96,10 @@ async function main(): Promise<void> {
   console.log(`      Rise:        ${formatLocal(phaseEvent.events.sunrise, observerDate)}`);
   console.log(`      Set:         ${formatLocal(phaseEvent.events.sunset, observerDate)}`);
   console.log('    Deltas (minutes):');
-  console.log(`      Moonrise:   ${formatSigned(phaseEvent.eventDeltas.riseMinutes)}`); // Hanging sign
-  console.log(`      Moonset:    ${formatSigned(phaseEvent.eventDeltas.setMinutes)}`); // Hanging sign
+  // Two lines below start one column left of all other values so the sign hangs
+  // and the digits remain aligned.
+  console.log(`      Moonrise ∆: ${formatSigned(phaseEvent.eventDeltas.moonrise.minutes)} (${formatRelation(phaseEvent.eventDeltas.moonrise)})`);
+  console.log(`      Moonset ∆:  ${formatSigned(phaseEvent.eventDeltas.moonset.minutes)} (${formatRelation(phaseEvent.eventDeltas.moonset)})`);
   console.log('  Next Phases:');
   console.log(`    New:           ${formatLocalDate(phaseEvent.nextPhases.new)}`);
   console.log(`    First Quarter: ${formatLocalDate(phaseEvent.nextPhases.firstQuarter)}`);
