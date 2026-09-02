@@ -1,5 +1,5 @@
 import { parseArgs } from 'node:util';
-import { Temporal } from '@js-temporal/polyfill';
+import { Temporal } from 'temporal-polyfill/implementation';
 
 function parseDate(value: string): Temporal.PlainDate {
   // `PlainDate.from` alone would accept times, offsets, and calendar

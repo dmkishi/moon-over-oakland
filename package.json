@@ -21,12 +21,12 @@
   },
   "dependencies": {
     "@atproto/api": "^0.20.41",
-    "@js-temporal/polyfill": "^0.5.1",
     "astronomia": "^4.2.0",
     "dotenv": "^17.4.2",
     "liquidjs": "^10.29.0",
     "picocolors": "^1.1.1",
     "suncalc": "^2.0.1",
+    "temporal-polyfill": "^1.0.4",
     "zod": "^4.4.3"
   },
   "devDependencies": {

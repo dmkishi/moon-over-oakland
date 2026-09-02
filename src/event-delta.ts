@@ -3,7 +3,7 @@
  * phase is judged against: editorial policy transcribed from `docs/posting-algorithm.md`,
  * not ephemeris.
  */
-import { Temporal } from '@js-temporal/polyfill';
+import { Temporal } from 'temporal-polyfill/implementation';
 import type { DayEvents } from './ephemeris/day-events.ts';
 import type { PhaseType } from './ephemeris/phase.ts';
 import { MINUTE_MS } from './time.ts';

@@ -11,9 +11,6 @@ importers:
       '@atproto/api':
         specifier: ^0.20.41
         version: 0.20.41
-      '@js-temporal/polyfill':
-        specifier: ^0.5.1
-        version: 0.5.1
       astronomia:
         specifier: ^4.2.0
         version: 4.2.0
@@ -29,6 +26,9 @@ importers:
       suncalc:
         specifier: ^2.0.1
         version: 2.0.1
+      temporal-polyfill:
+        specifier: ^1.0.4
+        version: 1.0.4
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -393,10 +393,6 @@ packages:
 
   '@jridgewell/sourcemap-codec@1.5.5':
     resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
-
-  '@js-temporal/polyfill@0.5.1':
-    resolution: {integrity: sha512-hloP58zRVCRSpgDxmqCWJNlizAlUgJFqG2ypq79DCvyv9tHjRYMDOcPFjzfl/A1/YxDvRCZz8wvZvmapQnKwFQ==}
-    engines: {node: '>=12'}
 
   '@rollup/rollup-android-arm-eabi@4.59.0':
     resolution: {integrity: sha512-upnNBkA6ZH2VKGcBj9Fyl9IGNPULcjXRlg0LLeaioQWueH30p6IXtJEbKAgvyv+mJaMxSm1l6xwDXYjpEMiLMg==}
@@ -771,9 +767,6 @@ packages:
   iso-datestring-validator@2.2.2:
     resolution: {integrity: sha512-yLEMkBbLZTlVQqOnQ4FiMujR6T4DEcCb1xizmvXS+OxuhwcbtynoosRzdMA69zZCShCNAbi+gJ71FxZBBXx1SA==}
 
-  jsbi@4.3.2:
-    resolution: {integrity: sha512-9fqMSQbhJykSeii05nxKl4m6Eqn2P6rOlYiS+C5Dr/HPIU/7yZxu5qzbs40tgaFORiw2Amd0mirjxatXYMkIew==}
-
   liquidjs@10.29.0:
     resolution: {integrity: sha512-pCVOhs6FLAR8su3ItJ07diN26t6W5dHQRnmTMy8HPyTFuv1+oSCVJIGp5pGjfQyOZfh50KswvKtMTp6p4JEIdw==}
     engines: {node: '>=16'}
@@ -832,6 +825,15 @@ packages:
 
   suncalc@2.0.1:
     resolution: {integrity: sha512-wjujU+HpsP1TUvN3/9dFkVQQCsMZbk7PkdZsASRJR4jVPHCm9Qy0FVkFTqXfs70Ag2yheN7ZUavzCyOjhJDGxQ==}
+
+  temporal-polyfill@1.0.4:
+    resolution: {integrity: sha512-MLEU0qOD2uXlz24oINNtdLZQl8RgmMxSnRtKEGZGGetTJjlRwQJjk+VsJ4EREaUoiaTb8NJOcUiKtoAiWn9EBg==}
+
+  temporal-spec@1.0.1:
+    resolution: {integrity: sha512-wxVoanmDeavXie1vu2JaQ3WIc3JZnWAOYFBsJyATaVsXsycKYUflGsyBmrRSnoCpZJpwPyr38VpgSUlQ8CbFxg==}
+
+  temporal-utils@1.0.2:
+    resolution: {integrity: sha512-1B8Dl4KzrOvsNUlpoWGno2VLQlxroLjDgc5NBjVC9ax9ymdo+ezfyvhyjEMx+IVfhINr6CIG2gcnlP95iRrybQ==}
 
   tinybench@2.9.0:
     resolution: {integrity: sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==}
@@ -1169,10 +1171,6 @@ snapshots:
 
   '@jridgewell/sourcemap-codec@1.5.5': {}
 
-  '@js-temporal/polyfill@0.5.1':
-    dependencies:
-      jsbi: 4.3.2
-
   '@rollup/rollup-android-arm-eabi@4.59.0':
     optional: true
 
@@ -1458,8 +1456,6 @@ snapshots:
 
   iso-datestring-validator@2.2.2: {}
 
-  jsbi@4.3.2: {}
-
   liquidjs@10.29.0:
     dependencies:
       commander: 10.0.1
@@ -1528,6 +1524,15 @@ snapshots:
   strip-json-comments@5.0.3: {}
 
   suncalc@2.0.1: {}
+
+  temporal-polyfill@1.0.4:
+    dependencies:
+      temporal-spec: 1.0.1
+      temporal-utils: 1.0.2
+
+  temporal-spec@1.0.1: {}
+
+  temporal-utils@1.0.2: {}
 
   tinybench@2.9.0: {}
 

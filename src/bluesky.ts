@@ -2,7 +2,7 @@
  * Bluesky adapter
  */
 import { AtpAgent, RichText } from '@atproto/api';
-import { Temporal } from '@js-temporal/polyfill';
+import { Temporal } from 'temporal-polyfill/implementation';
 
 const RECORDS_CHECKED = 10;
 

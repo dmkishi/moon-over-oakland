@@ -3,7 +3,7 @@
  */
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { Temporal } from '@js-temporal/polyfill';
+import type { Temporal } from 'temporal-polyfill/implementation';
 import { Liquid } from 'liquidjs';
 import type { PhaseEvent } from './phase-event.ts';
 

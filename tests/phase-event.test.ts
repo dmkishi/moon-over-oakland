@@ -6,7 +6,7 @@
  * `docs/posting-algorithm.md`.
  */
 import { describe, it, expect } from 'vitest';
-import { Temporal } from '@js-temporal/polyfill';
+import { Temporal } from 'temporal-polyfill/implementation';
 import { calculatePhaseEvent, type PhaseEvent } from '../src/phase-event.ts';
 import { observer } from '../src/observer.ts';
 import { loadFixture } from './loadFixture.ts';

@@ -1,4 +1,4 @@
-import { Temporal } from '@js-temporal/polyfill';
+import { Temporal } from 'temporal-polyfill/implementation';
 
 export const DAY_MS = 86_400_000;
 export const MINUTE_MS = 60_000;

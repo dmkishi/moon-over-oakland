@@ -1,7 +1,7 @@
 /**
  * A civil day's moon and sun rise/set times from SunCalc.
  */
-import { Temporal } from '@js-temporal/polyfill';
+import { Temporal } from 'temporal-polyfill/implementation';
 import * as SunCalc from 'suncalc';
 import { DAY_MS, toZoned } from '../time.ts';
 

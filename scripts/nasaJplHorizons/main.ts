@@ -5,7 +5,7 @@
  * @usage pnpm horizons [YYYY-MM-DD] [--every=<interval>] [--show-table] [--show-csv] [--show-raw] [--no-summary] [--no-json]
  */
 import { parseArgs } from 'node:util';
-import { Temporal } from '@js-temporal/polyfill';
+import { Temporal } from 'temporal-polyfill/implementation';
 import pc from 'picocolors';
 import { observer as site } from '../../src/observer.ts';
 import { fetchMoonEphemeris } from './horizons.ts';

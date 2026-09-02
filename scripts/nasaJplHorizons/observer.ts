@@ -1,4 +1,4 @@
-import { Temporal } from '@js-temporal/polyfill';
+import { Temporal } from 'temporal-polyfill/implementation';
 
 /**
  * The observing location and date for which the ephemeris is requested, i.e.

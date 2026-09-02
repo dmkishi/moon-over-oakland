@@ -1,4 +1,4 @@
-import type { Temporal } from '@js-temporal/polyfill';
+import type { Temporal } from 'temporal-polyfill/implementation';
 import { eventsAt, type MoonEphemeris } from './horizons.ts';
 import type { Observer, ObservingDay } from './observer.ts';
 import type { PhaseEvent } from './phase-event.ts';

@@ -3,7 +3,7 @@
  * date for each major moon phase, and does not trigger on non-posting dates.
  */
 import { describe, it, expect } from 'vitest';
-import { Temporal } from '@js-temporal/polyfill';
+import { Temporal } from 'temporal-polyfill/implementation';
 import { calculateMoonPost } from '../src-original/moonPost.ts';
 import { observer } from '../src-original/observer.ts';
 import { loadFixture } from './loadFixture.ts';

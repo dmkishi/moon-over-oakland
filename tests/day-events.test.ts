@@ -4,7 +4,7 @@
  * daylight saving transition days of 2026.
  */
 import { describe, it, expect } from 'vitest';
-import { Temporal } from '@js-temporal/polyfill';
+import { Temporal } from 'temporal-polyfill/implementation';
 import { calculateDayEvents } from '../src/ephemeris/day-events.ts';
 import { observer } from '../src/observer.ts';
 import { loadFixture } from './loadFixture.ts';
