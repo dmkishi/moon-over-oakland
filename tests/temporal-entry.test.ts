@@ -13,11 +13,13 @@ import { execFileSync } from 'node:child_process';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
-import { Temporal } from 'temporal-polyfill/implementation';
 
 const EPOCH_DATE = '1970-01-01';
 const ENTRY = 'temporal-polyfill/implementation';
 const ROOT = join(import.meta.dirname, '..');
+
+// Covers `from '…'`, `import('…')`, and the side-effect `import '…'`.
+const BARE_ENTRY = /(?:\bfrom|\bimport\s*\(?)\s*'(?:@js-temporal\/polyfill|temporal-polyfill)'/;
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(join(ROOT, dir), { recursive: true, encoding: 'utf8' })
@@ -26,16 +28,11 @@ function sourceFiles(dir: string): string[] {
 }
 
 describe('temporal polyfill entry point', () => {
-  it('reports the real date, not the epoch', () => {
-    expect(Temporal.Now.plainDateISO().toString()).not.toBe(EPOCH_DATE);
-  });
-
-  // The bare specifier is the hazard: it is the entry that defers to a global.
   it.each(['src', 'scripts', 'tests'].flatMap(sourceFiles))(
     '%s imports the implementation entry',
     (file) => {
       const source = readFileSync(join(ROOT, file), 'utf8');
-      expect(source).not.toMatch(/from '(@js-temporal\/polyfill|temporal-polyfill)'/);
+      expect(source).not.toMatch(BARE_ENTRY);
     },
   );
 

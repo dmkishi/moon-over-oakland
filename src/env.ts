@@ -1,31 +1,37 @@
-import { z } from 'zod';
-import 'dotenv/config';
+/**
+ * Shape the configuration is read from: `process.env`, or a Worker binding.
+ */
+type EnvSource = Record<string, string | undefined>;
 
-const envSchema = z.object({
-  bluesky: z.object({
-    handle: z.string().min(1, 'BLUESKY_HANDLE is required'),
-    appPassword: z.string().min(1, 'BLUESKY_APP_PASSWORD is required'),
-  }),
-});
+export interface Env {
+  bluesky: {
+    handle: string;
+    appPassword: string;
+  };
+}
 
-export type Env = z.infer<typeof envSchema>;
+/**
+ * @pure
+ */
+export function loadEnv(source: EnvSource): Env {
+  const handle = source['BLUESKY_HANDLE'];
+  const appPassword = source['BLUESKY_APP_PASSWORD'];
 
-function loadEnv(): Env {
-  const result = envSchema.safeParse({
-    bluesky: {
-      handle: process.env.BLUESKY_HANDLE,
-      appPassword: process.env.BLUESKY_APP_PASSWORD,
-    },
-  });
-
-  if (!result.success) {
-    const errors = result.error.issues
-      .map((e) => `  - ${e.path.join('.')}: ${e.message}`)
+  // An unset variable and an empty one are the same misconfiguration.
+  if (!handle || !appPassword) {
+    const errors = [
+      ...(handle ? [] : ['BLUESKY_HANDLE']),
+      ...(appPassword ? [] : ['BLUESKY_APP_PASSWORD']),
+    ]
+      .map((name) => `  - ${name} is required`)
       .join('\n');
     throw new Error(`Configuration error:\n${errors}`);
   }
 
-  return result.data;
+  return {
+    bluesky: {
+      handle,
+      appPassword,
+    },
+  };
 }
-
-export const env = loadEnv();

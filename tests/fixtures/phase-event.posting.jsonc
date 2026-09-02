@@ -1,69 +1,71 @@
 /**
- * Every principal phase of 2026, transcribed from the tables in
- * `docs/posting-algorithm.md` for `phase-event.test.ts`.
+ * Every principal phase of 2026, for `phase-event.test.ts`.
  *
- * `eventDate` is the local calendar date of the phase instant and `post` says
- * which day carries the post: `same` for the event's own date, `prev` for the
- * day before (the instant falls in the 00:00–04:00 tail). The doc's Time
- * column is kept as a comment for traceability; the doc is only good to
- * ~±0.6 min, and `pnpm horizons <date>` remains the authority.
+ * - `eventDate` is the local calendar date of the phase instant.
+ *
+ * - `post` says which day carries the post: `same` for the event's own date,
+ *   `prev` for the day before.
+ *
+ * - `dateTime` is the instant itself, from `pnpm horizons <eventDate>`, which
+ *   interpolates the crossing to well under a second. The doc's Time column is
+ *   the same data truncated to the whole minute, so it is not the source here.
  */
 [
   // 🌑 New Moon
-  { "eventDate": "2026-01-18", "phaseType": "new", "post": "same" }, // 11:51
-  { "eventDate": "2026-02-17", "phaseType": "new", "post": "same" }, //  4:01
-  { "eventDate": "2026-03-18", "phaseType": "new", "post": "same" }, // 18:23
-  { "eventDate": "2026-04-17", "phaseType": "new", "post": "same" }, //  4:51
-  { "eventDate": "2026-05-16", "phaseType": "new", "post": "same" }, // 13:01
-  { "eventDate": "2026-06-14", "phaseType": "new", "post": "same" }, // 19:54
-  { "eventDate": "2026-07-14", "phaseType": "new", "post": "prev" }, //  2:43
-  { "eventDate": "2026-08-12", "phaseType": "new", "post": "same" }, // 10:36
-  { "eventDate": "2026-09-10", "phaseType": "new", "post": "same" }, // 20:26
-  { "eventDate": "2026-10-10", "phaseType": "new", "post": "same" }, //  8:50
-  { "eventDate": "2026-11-08", "phaseType": "new", "post": "same" }, // 23:02
-  { "eventDate": "2026-12-08", "phaseType": "new", "post": "same" }, // 16:51
+  { "eventDate": "2026-01-18", "phaseType": "new", "post": "same", "dateTime": "2026-01-18T11:51:58-08:00" },
+  { "eventDate": "2026-02-17", "phaseType": "new", "post": "same", "dateTime": "2026-02-17T04:01:09-08:00" },
+  { "eventDate": "2026-03-18", "phaseType": "new", "post": "same", "dateTime": "2026-03-18T18:23:28-07:00" },
+  { "eventDate": "2026-04-17", "phaseType": "new", "post": "same", "dateTime": "2026-04-17T04:51:48-07:00" },
+  { "eventDate": "2026-05-16", "phaseType": "new", "post": "same", "dateTime": "2026-05-16T13:01:02-07:00" },
+  { "eventDate": "2026-06-14", "phaseType": "new", "post": "same", "dateTime": "2026-06-14T19:54:10-07:00" },
+  { "eventDate": "2026-07-14", "phaseType": "new", "post": "prev", "dateTime": "2026-07-14T02:43:36-07:00" },
+  { "eventDate": "2026-08-12", "phaseType": "new", "post": "same", "dateTime": "2026-08-12T10:36:44-07:00" },
+  { "eventDate": "2026-09-10", "phaseType": "new", "post": "same", "dateTime": "2026-09-10T20:26:59-07:00" },
+  { "eventDate": "2026-10-10", "phaseType": "new", "post": "same", "dateTime": "2026-10-10T08:50:05-07:00" },
+  { "eventDate": "2026-11-08", "phaseType": "new", "post": "same", "dateTime": "2026-11-08T23:02:06-08:00" },
+  { "eventDate": "2026-12-08", "phaseType": "new", "post": "same", "dateTime": "2026-12-08T16:51:51-08:00" },
 
   // 🌓 First Quarter
-  { "eventDate": "2026-01-25", "phaseType": "first-quarter", "post": "same" }, // 20:47
-  { "eventDate": "2026-02-24", "phaseType": "first-quarter", "post": "same" }, //  4:27
-  { "eventDate": "2026-03-25", "phaseType": "first-quarter", "post": "same" }, // 12:17
-  { "eventDate": "2026-04-23", "phaseType": "first-quarter", "post": "same" }, // 19:31
-  { "eventDate": "2026-05-23", "phaseType": "first-quarter", "post": "same" }, //  4:10
-  { "eventDate": "2026-06-21", "phaseType": "first-quarter", "post": "same" }, // 14:55
-  { "eventDate": "2026-07-21", "phaseType": "first-quarter", "post": "same" }, //  4:05
-  { "eventDate": "2026-08-19", "phaseType": "first-quarter", "post": "same" }, // 19:46
-  { "eventDate": "2026-09-18", "phaseType": "first-quarter", "post": "same" }, // 13:43
-  { "eventDate": "2026-10-18", "phaseType": "first-quarter", "post": "same" }, //  9:12
-  { "eventDate": "2026-11-17", "phaseType": "first-quarter", "post": "prev" }, //  3:47
-  { "eventDate": "2026-12-16", "phaseType": "first-quarter", "post": "same" }, // 21:42
+  { "eventDate": "2026-01-25", "phaseType": "first-quarter", "post": "same", "dateTime": "2026-01-25T20:47:23-08:00" },
+  { "eventDate": "2026-02-24", "phaseType": "first-quarter", "post": "same", "dateTime": "2026-02-24T04:27:36-08:00" },
+  { "eventDate": "2026-03-25", "phaseType": "first-quarter", "post": "same", "dateTime": "2026-03-25T12:17:42-07:00" },
+  { "eventDate": "2026-04-23", "phaseType": "first-quarter", "post": "same", "dateTime": "2026-04-23T19:31:45-07:00" },
+  { "eventDate": "2026-05-23", "phaseType": "first-quarter", "post": "same", "dateTime": "2026-05-23T04:10:57-07:00" },
+  { "eventDate": "2026-06-21", "phaseType": "first-quarter", "post": "same", "dateTime": "2026-06-21T14:55:24-07:00" },
+  { "eventDate": "2026-07-21", "phaseType": "first-quarter", "post": "same", "dateTime": "2026-07-21T04:05:36-07:00" },
+  { "eventDate": "2026-08-19", "phaseType": "first-quarter", "post": "same", "dateTime": "2026-08-19T19:46:20-07:00" },
+  { "eventDate": "2026-09-18", "phaseType": "first-quarter", "post": "same", "dateTime": "2026-09-18T13:43:46-07:00" },
+  { "eventDate": "2026-10-18", "phaseType": "first-quarter", "post": "same", "dateTime": "2026-10-18T09:12:41-07:00" },
+  { "eventDate": "2026-11-17", "phaseType": "first-quarter", "post": "prev", "dateTime": "2026-11-17T03:47:49-08:00" },
+  { "eventDate": "2026-12-16", "phaseType": "first-quarter", "post": "same", "dateTime": "2026-12-16T21:42:40-08:00" },
 
   // 🌕 Full Moon
-  { "eventDate": "2026-01-03", "phaseType": "full", "post": "prev" }, //  2:02
-  { "eventDate": "2026-02-01", "phaseType": "full", "post": "same" }, // 14:09
-  { "eventDate": "2026-03-03", "phaseType": "full", "post": "prev" }, //  3:37
-  { "eventDate": "2026-04-01", "phaseType": "full", "post": "same" }, // 19:11
-  { "eventDate": "2026-05-01", "phaseType": "full", "post": "same" }, // 10:23
-  { "eventDate": "2026-05-31", "phaseType": "full", "post": "prev" }, //  1:45
-  { "eventDate": "2026-06-29", "phaseType": "full", "post": "same" }, // 16:56
-  { "eventDate": "2026-07-29", "phaseType": "full", "post": "same" }, //  7:35
-  { "eventDate": "2026-08-27", "phaseType": "full", "post": "same" }, // 21:18
-  { "eventDate": "2026-09-26", "phaseType": "full", "post": "same" }, //  9:49
-  { "eventDate": "2026-10-25", "phaseType": "full", "post": "same" }, // 21:11
-  { "eventDate": "2026-11-24", "phaseType": "full", "post": "same" }, //  6:53
-  { "eventDate": "2026-12-23", "phaseType": "full", "post": "same" }, // 17:28
+  { "eventDate": "2026-01-03", "phaseType": "full", "post": "prev", "dateTime": "2026-01-03T02:02:54-08:00" },
+  { "eventDate": "2026-02-01", "phaseType": "full", "post": "same", "dateTime": "2026-02-01T14:09:14-08:00" },
+  { "eventDate": "2026-03-03", "phaseType": "full", "post": "prev", "dateTime": "2026-03-03T03:37:53-08:00" },
+  { "eventDate": "2026-04-01", "phaseType": "full", "post": "same", "dateTime": "2026-04-01T19:11:57-07:00" },
+  { "eventDate": "2026-05-01", "phaseType": "full", "post": "same", "dateTime": "2026-05-01T10:23:10-07:00" },
+  { "eventDate": "2026-05-31", "phaseType": "full", "post": "prev", "dateTime": "2026-05-31T01:45:12-07:00" },
+  { "eventDate": "2026-06-29", "phaseType": "full", "post": "same", "dateTime": "2026-06-29T16:56:41-07:00" },
+  { "eventDate": "2026-07-29", "phaseType": "full", "post": "same", "dateTime": "2026-07-29T07:35:43-07:00" },
+  { "eventDate": "2026-08-27", "phaseType": "full", "post": "same", "dateTime": "2026-08-27T21:18:32-07:00" },
+  { "eventDate": "2026-09-26", "phaseType": "full", "post": "same", "dateTime": "2026-09-26T09:49:02-07:00" },
+  { "eventDate": "2026-10-25", "phaseType": "full", "post": "same", "dateTime": "2026-10-25T21:11:48-07:00" },
+  { "eventDate": "2026-11-24", "phaseType": "full", "post": "same", "dateTime": "2026-11-24T06:53:33-08:00" },
+  { "eventDate": "2026-12-23", "phaseType": "full", "post": "same", "dateTime": "2026-12-23T17:28:14-08:00" },
 
   // 🌗 Last Quarter
-  { "eventDate": "2026-01-10", "phaseType": "last-quarter", "post": "same" }, //  7:48
-  { "eventDate": "2026-02-09", "phaseType": "last-quarter", "post": "same" }, //  4:43
-  { "eventDate": "2026-03-11", "phaseType": "last-quarter", "post": "prev" }, //  2:38
-  { "eventDate": "2026-04-09", "phaseType": "last-quarter", "post": "same" }, // 21:51
-  { "eventDate": "2026-05-09", "phaseType": "last-quarter", "post": "same" }, // 14:10
-  { "eventDate": "2026-06-08", "phaseType": "last-quarter", "post": "prev" }, //  3:00
-  { "eventDate": "2026-07-07", "phaseType": "last-quarter", "post": "same" }, // 12:28
-  { "eventDate": "2026-08-05", "phaseType": "last-quarter", "post": "same" }, // 19:21
-  { "eventDate": "2026-09-04", "phaseType": "last-quarter", "post": "prev" }, //  0:51
-  { "eventDate": "2026-10-03", "phaseType": "last-quarter", "post": "same" }, //  6:25
-  { "eventDate": "2026-11-01", "phaseType": "last-quarter", "post": "same" }, // 12:28
-  { "eventDate": "2026-11-30", "phaseType": "last-quarter", "post": "same" }, // 22:08
-  { "eventDate": "2026-12-30", "phaseType": "last-quarter", "post": "same" }  // 10:59
+  { "eventDate": "2026-01-10", "phaseType": "last-quarter", "post": "same", "dateTime": "2026-01-10T07:48:23-08:00" },
+  { "eventDate": "2026-02-09", "phaseType": "last-quarter", "post": "same", "dateTime": "2026-02-09T04:43:06-08:00" },
+  { "eventDate": "2026-03-11", "phaseType": "last-quarter", "post": "prev", "dateTime": "2026-03-11T02:38:30-07:00" },
+  { "eventDate": "2026-04-09", "phaseType": "last-quarter", "post": "same", "dateTime": "2026-04-09T21:51:39-07:00" },
+  { "eventDate": "2026-05-09", "phaseType": "last-quarter", "post": "same", "dateTime": "2026-05-09T14:10:27-07:00" },
+  { "eventDate": "2026-06-08", "phaseType": "last-quarter", "post": "prev", "dateTime": "2026-06-08T03:00:31-07:00" },
+  { "eventDate": "2026-07-07", "phaseType": "last-quarter", "post": "same", "dateTime": "2026-07-07T12:28:59-07:00" },
+  { "eventDate": "2026-08-05", "phaseType": "last-quarter", "post": "same", "dateTime": "2026-08-05T19:21:29-07:00" },
+  { "eventDate": "2026-09-04", "phaseType": "last-quarter", "post": "prev", "dateTime": "2026-09-04T00:51:13-07:00" },
+  { "eventDate": "2026-10-03", "phaseType": "last-quarter", "post": "same", "dateTime": "2026-10-03T06:25:03-07:00" },
+  { "eventDate": "2026-11-01", "phaseType": "last-quarter", "post": "same", "dateTime": "2026-11-01T12:28:27-08:00" },
+  { "eventDate": "2026-11-30", "phaseType": "last-quarter", "post": "same", "dateTime": "2026-11-30T22:08:39-08:00" },
+  { "eventDate": "2026-12-30", "phaseType": "last-quarter", "post": "same", "dateTime": "2026-12-30T10:59:29-08:00" }
 ]

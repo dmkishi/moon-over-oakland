@@ -1,8 +1,9 @@
+import 'dotenv/config';
 import { Temporal } from 'temporal-polyfill/implementation';
 import pc from 'picocolors';
 import { parseCliArgs } from './args.ts';
 import { createBlueskyClient, graphemeLength, MAX_GRAPHEMES } from './bluesky.ts';
-import { env } from './env.ts';
+import { loadEnv } from './env.ts';
 import type { EventDelta } from './event-delta.ts';
 import { observer } from './observer.ts';
 import { calculatePhaseEvent } from './phase-event.ts';
@@ -130,6 +131,7 @@ async function main(): Promise<void> {
     return;
   }
 
+  const env = loadEnv(process.env);
   const client = await createBlueskyClient(
     env.bluesky.handle,
     env.bluesky.appPassword,

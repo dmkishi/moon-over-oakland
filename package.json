@@ -14,9 +14,10 @@
     "post": "node src/main.ts",
     "preview": "pnpm post --dry-run",
     "horizons": "node scripts/nasaJplHorizons/main.ts",
-    "check": "pnpm typecheck && vitest run && TZ=UTC vitest run",
+    "check": "pnpm typecheck && vitest run",
     "typecheck": "tsc",
     "test": "vitest",
+    "coverage": "vitest run --coverage",
     "prepare": "husky"
   },
   "dependencies": {
@@ -26,15 +27,16 @@
     "liquidjs": "^10.29.0",
     "picocolors": "^1.1.1",
     "suncalc": "^2.0.1",
-    "temporal-polyfill": "^1.0.4",
-    "zod": "^4.4.3"
+    "temporal-polyfill": "^1.0.4"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",
+    "@vitest/coverage-v8": "^4.1.11",
     "husky": "^9.1.7",
     "strip-json-comments": "^5.0.3",
     "typescript": "^7.0.2",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.11",
+    "zod": "^4.4.3"
   },
   "engines": {
     "node": ">=22.18.0"

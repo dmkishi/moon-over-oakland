@@ -24,5 +24,6 @@
     "scripts/**/*",
     "src/**/*",
     "tests/**/*",
+    "vitest.config.ts",
   ],
 }

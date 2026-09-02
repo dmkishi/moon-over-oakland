@@ -81,7 +81,7 @@ https://ssd.jpl.nasa.gov/horizons/) for debugging or creating test fixtures.
 - **Named Options**
   - `--no-summary` Suppresses the summary. Default `false`.
   - `--no-json` Suppresses the fixture JSON for pasting into files such as
-    [`tests/fixtures/moonPost.accuracy.jsonc`](tests/fixtures/moonPost.accuracy.jsonc).
+    [`tests/fixtures/day-events.accuracy.jsonc`](tests/fixtures/day-events.accuracy.jsonc).
     Default `false`.
   - `--show-table` Prints formatted table with all ephemeris samples. Default
     `false`.

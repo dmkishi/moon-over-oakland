@@ -29,8 +29,9 @@ export function graphemeLength(text: string): number {
 /**
  * Calendar date in a given timezone a record was created on.
  * @pure
+ * @internal Exported for testing.
  */
-function localDateOf(value: unknown, timezone: string): Temporal.PlainDate | null {
+export function localDateOf(value: unknown, timezone: string): Temporal.PlainDate | null {
   const createdAt = (value as { createdAt?: unknown }).createdAt;
 
   // A record whose `createdAt` is missing or unparsable cannot be dated, and
