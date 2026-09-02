@@ -38,6 +38,7 @@ function formatLocal(zoned: Temporal.ZonedDateTime, reference: Temporal.PlainDat
 
 /**
  * Format a delta with an explicit sign, e.g. "+42" or "-42".
+ * @pure
  */
 function formatSigned(minutes: number): string {
   return minutes > 0 ? `+${minutes}` : String(minutes);
@@ -46,6 +47,7 @@ function formatSigned(minutes: number): string {
 /**
  * Place a delta relative to its reference, e.g. "before sunrise", "after noon",
  * "at midnight", etc.
+ * @pure
  */
 function formatRelation({ minutes, reference }: EventDelta): string {
   if (minutes === 0) return `at ${reference}`;

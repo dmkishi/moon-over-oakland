@@ -4,9 +4,10 @@
 import { AtpAgent, RichText } from '@atproto/api';
 import { Temporal } from 'temporal-polyfill/implementation';
 
+/** Number of newest records (i.e. posts) to request */
 const RECORDS_CHECKED = 10;
 
-// Magic number is documented but not exported by `@atproto/api`
+/** Magic number is documented but not exported by `@atproto/api` */
 export const MAX_GRAPHEMES = 300;
 
 export type PostResult =
@@ -17,14 +18,22 @@ export interface BlueskyClient {
   post(text: string): Promise<PostResult>;
 }
 
+/**
+ * Length of `text` in graphemes, the unit Bluesky measures posts against.
+ * @pure
+ */
 export function graphemeLength(text: string): number {
   return new RichText({ text }).graphemeLength;
 }
 
+/**
+ * Calendar date in a given timezone a record was created on.
+ * @pure
+ */
 function localDateOf(value: unknown, timezone: string): Temporal.PlainDate | null {
   const createdAt = (value as { createdAt?: unknown }).createdAt;
 
-  // A record whose `createdAt` is missing or unparseable cannot be dated, and
+  // A record whose `createdAt` is missing or unparsable cannot be dated, and
   // so cannot be today's post.
   if (typeof createdAt !== 'string') return null;
 
@@ -36,6 +45,9 @@ function localDateOf(value: unknown, timezone: string): Temporal.PlainDate | nul
 }
 
 /**
+ * Whether any of the account's newest records was created on today's date in
+ * the given timezone.
+ *
  * Reads the repo rather than the app view, which lags behind a write by an
  * indeterminate amount.
  */

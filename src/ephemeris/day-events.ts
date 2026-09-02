@@ -24,6 +24,8 @@ export interface DayEvents {
  * offsets, not calendar arithmetic, keep the probes on distinct consecutive
  * UTC days across a DST shift; an event falls on exactly one UTC day, so
  * nothing double-counts.
+ *
+ * @pure
  */
 function findMoonriseSetPair(
   startMs: number,
@@ -66,6 +68,8 @@ function findMoonriseSetPair(
  * - moonset
  * - sunrise
  * - sunset
+ *
+ * @pure
  */
 export function calculateDayEvents(
   date: Temporal.PlainDate,

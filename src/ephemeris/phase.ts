@@ -47,12 +47,17 @@ const LUNATION_YEARS = 1 / 12.3685;
  * @example
  * toJulianYear(Date.UTC(2026, 0, 1))  // 2026.0000021…
  * toJulianYear(Date.UTC(2026, 7, 25)) // 2026.6461349…
+ *
+ * @pure
  */
 function toJulianYear(epochMilliseconds: number): number {
   // Epoch milliseconds (JS `Date`) → Julian Ephemeris Day → Julian Year
   return JDEToJulianYear(DateToJDE(new Date(epochMilliseconds)));
 }
 
+/**
+ * @pure
+ */
 function phaseAt(
   phaseType: PhaseType,
   julianYear: number,
@@ -65,6 +70,7 @@ function phaseAt(
 
 /**
  * Find the phase of the given type nearest the given instant.
+ * @pure
  */
 export function findPhaseNear(
   phaseType: PhaseType,
@@ -79,6 +85,8 @@ export function findPhaseNear(
  *
  * Strict inequality excludes day's own phase from counting as its own "next",
  * including when its instant sits in the 00:00–04:00 tail of tomorrow.
+ *
+ * @pure
  */
 function findNextPhase(
   phaseType: PhaseType,
@@ -96,6 +104,7 @@ function findNextPhase(
 
 /**
  * Find the next phase of every type after the given instant.
+ * @pure
  */
 export function findNextPhases(
   after: Temporal.ZonedDateTime,

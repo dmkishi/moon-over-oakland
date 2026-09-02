@@ -1,10 +1,22 @@
 import { parseArgs } from 'node:util';
 import { Temporal } from 'temporal-polyfill/implementation';
 
+/**
+ * Parse a calendar date argument, throwing on anything that is not a real
+ * `YYYY-MM-DD` day.
+ *
+ * @example
+ * parseDate('1999-01-31'); // PlainDate 1999-01-31
+ * parseDate('1999-1-31'); // PlainDate 1999-01-31
+ * parseDate('1999-02-30'); // throws Error: Invalid date: "1999-02-30"
+ * parseDate('1999-01-31T12:00:00Z'); // throws Error
+ *
+ * @pure
+ */
 function parseDate(value: string): Temporal.PlainDate {
   // `PlainDate.from` alone would accept times, offsets, and calendar
   // annotations, so require the bare calendar date first. Month and day may
-  // omit their leading zero (`2000-1-31`).
+  // omit their leading zero (`1999-1-31`).
   const match = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(value);
   if (!match) {
     throw new Error(`Invalid date: "${value}"`);
@@ -19,6 +31,19 @@ function parseDate(value: string): Temporal.PlainDate {
   }
 }
 
+/**
+ * Read the command line:
+ * - an optional date to post for (defaulting to today, signalled by `undefined`)
+ * - an optional `--dry-run` flag.
+ *
+ * @example
+ * parseCliArgs([]); // { date: undefined, isDryRun: false }
+ * parseCliArgs(['--dry-run']); // { date: undefined, isDryRun: true }
+ * parseCliArgs(['1999-01-31']); // { date: PlainDate 1999-01-31, isDryRun: false }
+ * parseCliArgs(['1999-01-31', '--dry-run']); // { date: PlainDate 1999-01-31, isDryRun: true }
+ * parseCliArgs(['1999-01-31', '1999-02-01']); // throws Error: Too many arguments
+ * parseCliArgs(['--nope']); // throws Error (unknown option)
+ */
 export function parseCliArgs(args: string[] = process.argv.slice(2)): {
   date: Temporal.PlainDate | undefined;
   isDryRun: boolean;

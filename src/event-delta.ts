@@ -45,16 +45,25 @@ const REFERENCES: Record<PhaseType, Record<MoonEvent, Reference>> = {
 };
 
 /**
- * Move a reference onto the moon event's own civil day, keeping its local clock
- * time.
+ * Align a reference onto the moon event's own civil day.
  *
- * Only a full moon needs this: it sets the morning *after* it rose, so the day's
- * own sunrise is a day behind it. Calendar arithmetic, not +24 h, holds the
- * clock time fixed across a DST shift. The result stands in for the next day's
- * true sunrise, which differs from the day's own by a minute or two at this
- * latitude — negligible against deltas read in quarter hours.
+ * In this context, this is only meaningful for full moons, whose moonset occurs
+ * on the next day's morning at or near sunrise.
+ *
+ * - Full moon: moonrise @ sunset: offset 0
+ * - Full moon: moonset @ sunrise: offset +1 day
+ * - New moon: moonrise @ sunrise: offset 0
+ * - New moon: moonset @ sunset: offset 0
+ *
+ * Note:
+ * - Adding a whole calendar day, rather than 24 hours, keeps the clock time
+ *   fixed across a DST shift.
+ * - The shifted reference approximates the adjacent day's real one. At this
+ *   latitude the two are only a minute or two apart.
+ *
+ * @pure
  */
-function alignToDay(
+function alignToEventDay(
   reference: Temporal.ZonedDateTime,
   moonEvent: Temporal.ZonedDateTime,
 ): Temporal.ZonedDateTime {
@@ -74,7 +83,9 @@ function alignToDay(
  *   against the start of the *following* day, a 12-minute delta rather than one
  *   of nearly a full day.
  * - SUNRISE and SUNSET are the day's own, carried forward a day when the moon
- *   event lands on the next civil day (see `alignToDay`).
+ *   event lands on the next civil day (see `alignToEventDay`).
+ *
+ * @pure
  */
 function referenceTime(
   reference: Reference,
@@ -83,9 +94,9 @@ function referenceTime(
 ): Temporal.ZonedDateTime {
   switch (reference) {
     case 'sunrise':
-      return alignToDay(events.sunrise, moonEvent);
+      return alignToEventDay(events.sunrise, moonEvent);
     case 'sunset':
-      return alignToDay(events.sunset, moonEvent);
+      return alignToEventDay(events.sunset, moonEvent);
     case 'noon':
       return moonEvent.withPlainTime('12:00');
     case 'midnight':
@@ -95,6 +106,9 @@ function referenceTime(
   }
 }
 
+/**
+ * @pure
+ */
 export function calculateEventDeltas(
   events: DayEvents,
   phaseType: PhaseType,

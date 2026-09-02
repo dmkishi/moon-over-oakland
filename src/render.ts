@@ -15,6 +15,9 @@ function createEngine(timezone: string): Liquid {
   });
 }
 
+/**
+ * @pure
+ */
 function toDate(zoned: Temporal.ZonedDateTime): Date {
   return new Date(zoned.epochMilliseconds);
 }
