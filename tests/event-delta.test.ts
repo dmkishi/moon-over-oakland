@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { Temporal } from 'temporal-polyfill/implementation';
 import { calculateEventDeltas } from '../src/event-delta.ts';
 import type { DayEvents } from '../src/ephemeris/day-events.ts';
-import type { PhaseType } from '../src/ephemeris/phase.ts';
+import { PHASE_TYPES, type PhaseType } from '../src/ephemeris/phase.ts';
 import { observer } from '../src/observer.ts';
 
 const NON_DST_DAY = {
@@ -60,7 +60,7 @@ describe('reference pairing', () => {
     },
   };
 
-  for (const phaseType of Object.keys(REFERENCES) as PhaseType[]) {
+  for (const phaseType of PHASE_TYPES) {
     const { moonrise: riseReference, moonset: setReference } = REFERENCES[phaseType];
 
     it(`a ${phaseType} moon reads its rise against ${riseReference} and its set against ${setReference}`, () => {

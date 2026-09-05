@@ -23,7 +23,7 @@ describe('parseCliArgs', () => {
   });
 
   it('rejects an unknown option', () => {
-    expect(() => parseCliArgs(['--nope'])).toThrow(/ERR_PARSE_ARGS_UNKNOWN_OPTION|--nope/);
+    expect(() => parseCliArgs(['--nope'])).toThrow(/ERR_PARSE_ARGS_UNKNOWN_OPTION|--nope/u);
   });
 });
 

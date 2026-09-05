@@ -14,7 +14,12 @@ import { resolvePhaseEvent } from './phase-event.ts';
 import { printCsv, printFixtureJson, printSummary, printTable, thinEphemeris } from './print.ts';
 import { computeMoonSummary } from './summary.ts';
 
-class UsageError extends Error {}
+class UsageError extends Error {
+  constructor(message?: string) {
+    super(message);
+    this.name = 'UsageError';
+  }
+}
 
 /**
  * The observing day to query, as a `YYYY-MM-DD` string. Defaults to today in
@@ -26,12 +31,12 @@ function parseDateArg(arg: string | undefined): string {
   // `PlainDate.from` alone would accept times, offsets, and calendar
   // annotations, so require the bare calendar date first. Month and day may
   // omit their leading zero (`2000-1-31`).
-  const match = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(arg);
+  const match = /^(?<year>\d{4})-(?<month>\d{1,2})-(?<day>\d{1,2})$/u.exec(arg);
   if (!match) {
     throw new UsageError(`Expected a YYYY-MM-DD date (leading zero optional), got: ${arg}`);
   }
 
-  const [, year, month, day] = match;
+  const { year, month, day } = match.groups!;
 
   // `PlainDate.from` only parses the padded ISO form, so pad before handing it
   // over. `reject` so out-of-range days fail instead of being clamped.
@@ -52,17 +57,17 @@ function parseDateArg(arg: string | undefined): string {
 function parseEveryArg(arg: string | undefined): number {
   if (arg === undefined) return 1;
 
-  const match = /^(\d+)(m|h)?$/.exec(arg);
+  const match = /^(?<count>\d+)(?<unit>m|h)?$/u.exec(arg);
   if (!match) {
     throw new UsageError(`Expected an interval such as 1h, 30m, or 30, got: ${arg}`);
   }
 
-  const [, count, unit] = match;
+  const { count, unit } = match.groups!;
   const minutes = Number(count) * (unit === 'h' ? 60 : 1);
 
   // Zero would select no row at all, and the window is a single day, so nothing
   // beyond 24 hours thins any further than 24 hours already does.
-  if (minutes < 1 || minutes > 1440) {
+  if (minutes < 1 || minutes > 1_440) {
     throw new UsageError(`Interval must fall between 1 minute and 24 hours, got: ${arg}`);
   }
 
@@ -86,7 +91,7 @@ try {
     allowPositionals: true,
   });
   const date = parseDateArg(argPositionals[0]);
-  const everyMinutes = parseEveryArg(argValues['every']);
+  const everyMinutes = parseEveryArg(argValues.every);
   const showJson = !argValues['no-json'];
   const showSummary = !argValues['no-summary'];
   const showCsv = argValues['show-csv'];
@@ -98,7 +103,7 @@ try {
       'Nothing to print: --no-summary and --no-json together need --show-table, --show-csv, or --show-raw.',
     );
   }
-  if (argValues['every'] !== undefined && !showTable && !showCsv) {
+  if (argValues.every !== undefined && !showTable && !showCsv) {
     throw new UsageError(
       '--every thins --show-table and --show-csv, and neither was asked for.',
     );

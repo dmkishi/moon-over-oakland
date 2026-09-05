@@ -61,7 +61,7 @@ function parseCliArgsOrExit(): ReturnType<typeof parseCliArgs> {
   } catch (error) {
     console.error(pc.red(error instanceof Error ? error.message : String(error)));
     console.error('Usage: node src/main.ts [YYYY-MM-DD] [--dry-run]');
-    process.exit(1);
+    return process.exit(1);
   }
 }
 
@@ -146,7 +146,9 @@ async function main(): Promise<void> {
   console.log(`URI: ${result.uri}`);
 }
 
-main().catch((error) => {
+try {
+  await main();
+} catch (error) {
   console.error(pc.red('Fatal error:'), error);
   process.exit(1);
-});
+}

@@ -25,12 +25,12 @@ describe('loadEnv', () => {
       .toBe('moon.example.com');
   });
 
-  it.each([
-    ['BLUESKY_HANDLE'],
-    ['BLUESKY_APP_PASSWORD'],
+  it.each<keyof typeof valid>([
+    'BLUESKY_HANDLE',
+    'BLUESKY_APP_PASSWORD',
   ])('names %s when it is absent', (name) => {
     const source = { ...valid };
-    delete source[name as keyof typeof valid];
+    delete source[name];
 
     expect(() => loadEnv(source)).toThrow(`  - ${name} is required`);
   });

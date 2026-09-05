@@ -3,13 +3,27 @@
   "extends": ["./node_modules/@dmkishi/oxlintrc/.oxlintrc.json"],
   "rules": {
     // Local overrides
-    /* Style */
-    "one-var": "off",
+    /* Pedantic ************************************************************* */
+    "typescript/no-confusing-void-expression": ["error", {
+      "ignoreArrowShorthand": true,
+    }],
+
+    /* Style **************************************************************** */
+    // Capitalized function names imported from the astronomia library.
     "new-cap": ["error", { "capIsNewExceptions": [
       "DateToJDE",
       "JDEToDate",
       "JDEToJulianYear",
-    ] }]
+    ] }],
+
+    "object-shorthand": ["error", "always", { "avoidQuotes": true }],
+
+    // Allow phase names "new" and "full" to be accessed with dot notation for
+    // sake of consistency with the other phase names.
+    "typescript/dot-notation": ["error", { "allowPattern": "^(?:new|full)$" }],
+
+    // Agree, but too noisy.
+    "unicorn/no-null": "off",
   },
   "options": {
     "typeAware": true, // Enable rules that require type information

@@ -1,4 +1,4 @@
-import { Temporal } from 'temporal-polyfill/implementation';
+import type { Temporal } from 'temporal-polyfill/implementation';
 import pc from 'picocolors';
 import { eventsAt, type MoonEphemeris, type MoonEventName } from './horizons.ts';
 import type { Observer, ObservingDay } from './observer.ts';
@@ -205,17 +205,31 @@ export function printSummary(
   console.log(`  Sunset:      ${s.events.sunset  ? formatTime12h(s.events.sunset)  : NONE_STR}`);
 }
 
+/**
+ * Reshapes an event for the fixture or `null` when the day has none.
+ */
+function fixtureEventOrNull<Event, FixtureEvent>(
+  event: Event | null,
+  toFixtureEvent: (event: Event) => FixtureEvent,
+): FixtureEvent | null {
+  if (event === null) return null;
+  return toFixtureEvent(event);
+}
+
+/**
+ * Formats a `ZonedDateTime` as an RFC 3339 timestamp, to the second.
+ *
+ * @example
+ * toDateTime(
+ *   Temporal.ZonedDateTime.from('2026-06-15T20:05:42.5-07:00[America/Los_Angeles]')
+ * ); // "2026-06-15T20:05:42-07:00"
+ */
+function toDateTime(at: Temporal.ZonedDateTime): string {
+  return at.toString({ smallestUnit: 'second', timeZoneName: 'never' });
+}
+
 export function printFixtureJson(summary: MoonSummary): void {
   const { date } = summary.metadata;
-  // Stamped from each event's own instant, so a day with two offsets — and the
-  // repeated hour of a fall-back day — comes out right.
-  const toDateTime = (at: Temporal.ZonedDateTime) =>
-    at.toString({ smallestUnit: 'second', timeZoneName: 'never' });
-
-  // Every event is nullable and every shape is spelled out at its own key, so
-  // the null check is the only part worth sharing.
-  const orNull = <T, R>(event: T | null, shape: (event: T) => R): R | null =>
-    event ? shape(event) : null;
 
   const fixture = {
     description: '',
@@ -225,27 +239,27 @@ export function printFixtureJson(summary: MoonSummary): void {
       distanceKm: Math.round(summary.noon.distanceKm),
     },
     events: {
-      phaseEvent: orNull(summary.events.phaseEvent, (event) => ({
+      phaseEvent: fixtureEventOrNull(summary.events.phaseEvent, (event) => ({
         name: event.name,
         dateTime: toDateTime(event.at),
       })),
-      moonrise: orNull(summary.events.moonrise, (event) => ({
+      moonrise: fixtureEventOrNull(summary.events.moonrise, (event) => ({
         dateTime: toDateTime(event.at),
         azimuthDeg: event.azimuthDeg,
         tiltDeg: event.tiltDeg,
       })),
-      moonset: orNull(summary.events.moonset, (event) => ({
+      moonset: fixtureEventOrNull(summary.events.moonset, (event) => ({
         dateTime: toDateTime(event.at),
         azimuthDeg: event.azimuthDeg,
         tiltDeg: event.tiltDeg,
       })),
-      transit: orNull(summary.events.transit, (at) => ({
+      transit: fixtureEventOrNull(summary.events.transit, (at) => ({
         dateTime: toDateTime(at),
       })),
-      sunrise: orNull(summary.events.sunrise, (at) => ({
+      sunrise: fixtureEventOrNull(summary.events.sunrise, (at) => ({
         dateTime: toDateTime(at),
       })),
-      sunset: orNull(summary.events.sunset, (at) => ({
+      sunset: fixtureEventOrNull(summary.events.sunset, (at) => ({
         dateTime: toDateTime(at),
       })),
     },

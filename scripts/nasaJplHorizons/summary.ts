@@ -32,6 +32,14 @@ export interface MoonSummary {
   };
 }
 
+function flagEvent(row: MoonEphemeris) {
+  return {
+    at: row.at,
+    azimuthDeg: row.azimuthDeg,
+    tiltDeg: row.tiltDeg,
+  };
+}
+
 function findRowNearestToNoon(rows: MoonEphemeris[], day: ObservingDay): MoonEphemeris {
   // `.with()` rather than `.add({ hours: 12 })`: on a DST day the latter lands
   // an hour off the noon wall clock.
@@ -49,14 +57,6 @@ export function computeMoonSummary(
   day: ObservingDay,
   phaseEvent: PhaseEvent | null,
 ): MoonSummary {
-  // Moonrise and moonset are read off the same three fields of whichever row
-  // carries the flag.
-  const flagEvent = (row: MoonEphemeris) => ({
-    at: row.at,
-    azimuthDeg: row.azimuthDeg,
-    tiltDeg: row.tiltDeg,
-  });
-
   let moonrise: MoonSummary['events']['moonrise'] = null;
   let moonset: MoonSummary['events']['moonset'] = null;
   let transit: MoonSummary['events']['transit'] = null;

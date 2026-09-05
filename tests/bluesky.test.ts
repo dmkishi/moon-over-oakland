@@ -84,7 +84,7 @@ describe('localDateOf', () => {
   });
 
   it.each([
-    ['a number', 1773607800000],
+    ['a number', 1_773_607_800_000],
     ['null', null],
     ['undefined', undefined],
     ['an object', { seconds: 0 }],

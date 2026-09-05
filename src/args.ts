@@ -2,32 +2,36 @@ import { parseArgs } from 'node:util';
 import { Temporal } from 'temporal-polyfill/implementation';
 
 /**
- * Parse a calendar date argument, throwing on anything that is not a real
- * `YYYY-MM-DD` day.
+ * Parse the optional date positional, throwing on anything that is not a real
+ * `YYYY-MM-DD` day. A missing or empty argument means "no date given".
  *
  * @example
- * parseDate('1999-01-31'); // PlainDate 1999-01-31
- * parseDate('1999-1-31'); // PlainDate 1999-01-31
- * parseDate('1999-02-30'); // throws Error: Invalid date: "1999-02-30"
- * parseDate('1999-01-31T12:00:00Z'); // throws Error
+ * parseDateArg(undefined); // undefined
+ * parseDateArg(''); // undefined
+ * parseDateArg('1999-01-31'); // PlainDate 1999-01-31
+ * parseDateArg('1999-1-31'); // PlainDate 1999-01-31
+ * parseDateArg('1999-02-30'); // throws Error: Invalid date: "1999-02-30"
+ * parseDateArg('1999-01-31T12:00:00Z'); // throws Error
  *
  * @pure
  */
-function parseDate(value: string): Temporal.PlainDate {
+function parseDateArg(arg: string | undefined): Temporal.PlainDate | undefined {
+  if (arg === undefined || arg === '') return undefined;
+
   // `PlainDate.from` alone would accept times, offsets, and calendar
   // annotations, so require the bare calendar date first. Month and day may
   // omit their leading zero (`1999-1-31`).
-  const match = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(value);
-  if (!match) {
-    throw new Error(`Invalid date: "${value}"`);
+  const match = /^(?<year>\d{4})-(?<month>\d{1,2})-(?<day>\d{1,2})$/u.exec(arg);
+  if (!match?.groups) {
+    throw new Error(`Invalid date: "${arg}"`);
   }
 
-  const [, year, month, day] = match;
+  const { year, month, day } = match.groups;
   const iso = `${year}-${month!.padStart(2, '0')}-${day!.padStart(2, '0')}`;
   try {
     return Temporal.PlainDate.from(iso, { overflow: 'reject' });
   } catch {
-    throw new Error(`Invalid date: "${value}"`);
+    throw new Error(`Invalid date: "${arg}"`);
   }
 }
 
@@ -61,10 +65,8 @@ export function parseCliArgs(args: string[] = process.argv.slice(2)): {
     throw new Error(`Too many arguments`);
   }
 
-  const dateArg = positionals[0];
-
   return {
-    date: dateArg ? parseDate(dateArg) : undefined,
+    date: parseDateArg(positionals[0]),
     isDryRun: values['dry-run'],
   };
 }

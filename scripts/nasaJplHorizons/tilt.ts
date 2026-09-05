@@ -41,6 +41,7 @@ function computeParallacticAngle(
 /**
  * Compute the tilt of the Moon's bright limb relative to the local vertical.
  */
+// oxlint-disable-next-line max-params
 export function moonTilt(
   lstHours: number, // Local apparent sidereal time in decimal hours
   raDeg: number, // Right ascension

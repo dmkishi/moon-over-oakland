@@ -75,7 +75,7 @@ for (const fixture of postingFixtures) {
   const postDate = postDateOf(fixture);
 
   describe(`${fixture.phaseType} on ${fixture.eventDate} (${fixture.post})`, () => {
-    it(`posts on ${postDate}`, () => {
+    it(`posts on ${postDate.toString()}`, () => {
       const result = calculate(postDate);
       expect(result).not.toBeNull();
       expect(result!.type).toBe(fixture.phaseType);

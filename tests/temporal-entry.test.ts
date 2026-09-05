@@ -19,7 +19,7 @@ const ENTRY = 'temporal-polyfill/implementation';
 const ROOT = join(import.meta.dirname, '..');
 
 // Covers `from '…'`, `import('…')`, and the side-effect `import '…'`.
-const BARE_ENTRY = /(?:\bfrom|\bimport\s*\(?)\s*'(?:@js-temporal\/polyfill|temporal-polyfill)'/;
+const BARE_ENTRY = /(?:\bfrom|\bimport\s*\(?)\s*'(?:@js-temporal\/polyfill|temporal-polyfill)'/u;
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(join(ROOT, dir), { recursive: true, encoding: 'utf8' })
@@ -28,7 +28,7 @@ function sourceFiles(dir: string): string[] {
 }
 
 describe('temporal polyfill entry point', () => {
-  it.each(['src', 'scripts', 'tests'].flatMap(sourceFiles))(
+  it.each(['src', 'scripts', 'tests'].flatMap((dir) => sourceFiles(dir)))(
     '%s imports the implementation entry',
     (file) => {
       const source = readFileSync(join(ROOT, file), 'utf8');

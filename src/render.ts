@@ -1,15 +1,13 @@
 /**
  * Renders a `PhaseEvent` into the plain text of a post.
  */
-import { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import type { Temporal } from 'temporal-polyfill/implementation';
 import { Liquid } from 'liquidjs';
 import type { PhaseEvent } from './phase-event.ts';
 
 function createEngine(timezone: string): Liquid {
   return new Liquid({
-    root: dirname(fileURLToPath(import.meta.url)),
+    root: import.meta.dirname,
     extname: '.liquid',
     timezoneOffset: timezone,
   });
@@ -38,7 +36,10 @@ export async function renderPost(phaseEvent: PhaseEvent, timezone: string): Prom
     nextFull: toDate(phaseEvent.nextPhases['full']),
     nextLastQuarter: toDate(phaseEvent.nextPhases['last-quarter']),
   };
-  const result: string = await createEngine(timezone).renderFile('post', data);
+  const result: unknown = await createEngine(timezone).renderFile('post', data);
+  if (typeof result !== 'string') {
+    throw new TypeError('Liquid renderFile did not return a string.');
+  }
   const trimmedResult = result.split('\n').map((line) => line.trim()).join('\n').trim();
   return trimmedResult;
 }

@@ -77,7 +77,7 @@ function parseCsvBlock(raw: string): { headers: string[]; rows: string[][] } {
     throw new Error(
       'Could not find $$SOE/$$EOE markers in Horizons output.\n' +
       'Raw response (first 2000 chars):\n' +
-      raw.slice(0, 2000),
+      raw.slice(0, 2_000),
     );
   }
 
@@ -121,9 +121,10 @@ function cell(cols: string[], index: number): string {
  * Read one cell as a number, rejecting the row rather than passing `NaN` on.
  */
 function numericCell(cols: string[], index: number): number {
-  const value = parseFloat(cell(cols, index));
-  if (Number.isNaN(value)) {
-    throw new Error(`Horizons column ${index} is not a number: ${cols.join(',')}`);
+  const text = cell(cols, index);
+  const value = Number(text);
+  if (text === '' || Number.isNaN(value)) {
+    throw new TypeError(`Horizons column ${index} is not a number: ${cols.join(',')}`);
   }
   return value;
 }
@@ -134,12 +135,12 @@ function numericCell(cols: string[], index: number): number {
  * <https://ssd.jpl.nasa.gov/horizons/manual.html#obsquan>
  *
  * @property quantity - Quantity code to request in order to be sent this column
- * @property header - Matches the column's header name, so that nothing depends
- *   on fixed column positions
+ * @property headerPattern - Matches the column's header name, so that nothing
+ *   depends on fixed column positions
  */
 interface Column {
   quantity: number;
-  header: RegExp;
+  headerPattern: RegExp;
 }
 
 /**
@@ -149,7 +150,7 @@ interface Column {
  */
 function quantitiesFor(columns: Record<string, Column>): string {
   const codes = new Set(Object.values(columns).map(({ quantity }) => quantity));
-  return [...codes].sort((a, b) => a - b).join(',');
+  return [...codes].toSorted((a, b) => a - b).join(',');
 }
 
 /**
@@ -159,18 +160,21 @@ function resolveColumns<K extends string>(
   headers: string[],
   columns: Record<K, Column>,
 ): Record<K, number> {
-  const indices = {} as Record<K, number>;
-  for (const name of Object.keys(columns) as K[]) {
-    const { header } = columns[name];
-    const index = headers.findIndex((h) => header.test(h));
+  const entries: [string, number][] = [];
+  for (const [name, { headerPattern }] of Object.entries<Column>(columns)) {
+    const index = headers.findIndex((h) => headerPattern.test(h));
     if (index === -1) {
       throw new Error(
-        `Column matching ${header} not found. Headers: ${JSON.stringify(headers)}`,
+        `Column matching ${headerPattern} not found. Headers: ${JSON.stringify(headers)}`,
       );
     }
-    indices[name] = index;
+    entries.push([name, index]);
   }
-  return indices;
+
+  // One entry per key of `columns`, so the result really is `Record<K, number>`;
+  // only `Object.fromEntries`'s signature widens the keys back to `string`.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  return Object.fromEntries(entries) as Record<K, number>;
 }
 
 interface ObserverTableQuery {
@@ -214,7 +218,7 @@ async function requestObserverTable({
     } : {
       CENTER: "'coord@399'", // Earth
       COORD_TYPE: "'GEODETIC'", // Geodetic coordinates (lat/lon/elev) for observer location
-      SITE_COORD: `'${site.lon},${site.lat},${site.elevationMeter / 1000}'`,
+      SITE_COORD: `'${site.lon},${site.lat},${site.elevationMeter / 1_000}'`,
     }),
     START_TIME: `'${toHorizonsUtc(start)}'`,
     STOP_TIME: `'${toHorizonsUtc(stop)}'`,
@@ -246,25 +250,25 @@ async function requestObserverTable({
  */
 const MOON_EPHEMERIS_COLUMNS = {
   /** Right ascension of the Moon, in degrees */
-  rightAscensionDeg: { quantity: 1, header: /R.A._\(ICRF\)/ },
+  rightAscensionDeg: { quantity: 1, headerPattern: /R.A._\(ICRF\)/u },
   /** Declination of the Moon, in degrees */
-  declinationDeg: { quantity: 1, header: /DEC_\(ICRF\)/ },
+  declinationDeg: { quantity: 1, headerPattern: /DEC_\(ICRF\)/u },
   /** Apparent azimuth of the Moon, in degrees */
-  azimuthDeg: { quantity: 4, header: /Azi_\(a-app\)/ },
+  azimuthDeg: { quantity: 4, headerPattern: /Azi_\(a-app\)/u },
   /** Apparent elevation (altitude) of the Moon, in degrees */
-  altitudeDeg: { quantity: 4, header: /Elev_\(a-app\)/ },
+  altitudeDeg: { quantity: 4, headerPattern: /Elev_\(a-app\)/u },
   /** Local apparent sidereal time at the observer's location, in hours */
-  siderealTimeHours: { quantity: 7, header: /L_Ap_Sid_Time/ },
+  siderealTimeHours: { quantity: 7, headerPattern: /L_Ap_Sid_Time/u },
   /** Illuminated fraction of the Moon, 0–100 */
-  illuminatedFraction: { quantity: 10, header: /Illu%/ },
+  illuminatedFraction: { quantity: 10, headerPattern: /Illu%/u },
   /** Observer range (distance) to the Moon, in AU */
-  distanceAu: { quantity: 20, header: /^delta$/i },
+  distanceAu: { quantity: 20, headerPattern: /^delta$/ui },
   /**
    * Position angle of the extended Sun-to-Moon radius vector (anti-sun /
    * dark-limb direction), in degrees. Add 180° to get the bright-limb position
    * angle.
    */
-  sunPositionAngleDeg: { quantity: 27, header: /PsAng/ },
+  sunPositionAngleDeg: { quantity: 27, headerPattern: /PsAng/u },
 } satisfies Record<string, Column>;
 
 type MoonColumn = keyof typeof MOON_EPHEMERIS_COLUMNS;
@@ -367,7 +371,7 @@ export async function fetchMoonEphemeris(
     onRawResponse,
   });
 
-  const columns = resolveColumns(headers, MOON_EPHEMERIS_COLUMNS);
+  const columnIndex = resolveColumns(headers, MOON_EPHEMERIS_COLUMNS);
 
   // Collect flag columns, identified by empty headers.
   const flagIndices = headers
@@ -376,7 +380,7 @@ export async function fetchMoonEphemeris(
     .map(({ i }) => i);
 
   return rows.map((cols) => {
-    const num = (name: MoonColumn) => numericCell(cols, columns[name]);
+    const num = (name: MoonColumn) => numericCell(cols, columnIndex[name]);
     return {
       at: parseHorizonsInstant(cell(cols, 0)).toZonedDateTimeISO(observer.timeZone),
       flags: flagIndices.map((i) => cell(cols, i)).filter((f) => f !== ''),
@@ -397,7 +401,7 @@ export async function fetchMoonEphemeris(
 
 const ECLIPTIC_LONGITUDE_COLUMNS = {
   /** Apparent ecliptic longitude, in degrees */
-  lonDeg: { quantity: 31, header: /ObsEcLon/ },
+  lonDeg: { quantity: 31, headerPattern: /ObsEcLon/u },
 } satisfies Record<string, Column>;
 
 /**
@@ -438,10 +442,10 @@ export async function fetchEclipticLongitudes(
     quantities: quantitiesFor(ECLIPTIC_LONGITUDE_COLUMNS),
   });
 
-  const columns = resolveColumns(headers, ECLIPTIC_LONGITUDE_COLUMNS);
+  const columnIndex = resolveColumns(headers, ECLIPTIC_LONGITUDE_COLUMNS);
 
   return rows.map((cols) => ({
     at: parseHorizonsInstant(cell(cols, 0)),
-    lonDeg: numericCell(cols, columns.lonDeg),
+    lonDeg: numericCell(cols, columnIndex.lonDeg),
   }));
 }

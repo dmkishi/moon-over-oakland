@@ -1,7 +1,7 @@
 /**
  * A civil day's moon and sun rise/set times from SunCalc.
  */
-import { Temporal } from 'temporal-polyfill/implementation';
+import type { Temporal } from 'temporal-polyfill/implementation';
 import * as SunCalc from 'suncalc';
 import { DAY_MS, toZoned } from '../time.ts';
 
@@ -45,8 +45,8 @@ function findMoonriseSetPair(
     if (times.set) sets.push(times.set);
   }
 
-  const sortedRises = rises.sort((a, b) => a.getTime() - b.getTime());
-  const sortedSets = sets.sort((a, b) => a.getTime() - b.getTime());
+  const sortedRises = rises.toSorted((a, b) => a.getTime() - b.getTime());
+  const sortedSets = sets.toSorted((a, b) => a.getTime() - b.getTime());
 
   const rise = sortedRises.find((d) => d.getTime() >= startMs && d.getTime() < endMs)
     ?? sortedRises.findLast((d) => d.getTime() < startMs);

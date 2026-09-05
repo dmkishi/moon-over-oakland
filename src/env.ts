@@ -14,18 +14,17 @@ export interface Env {
  * @pure
  */
 export function loadEnv(source: EnvSource): Env {
-  const handle = source['BLUESKY_HANDLE'];
-  const appPassword = source['BLUESKY_APP_PASSWORD'];
+  const handle = source.BLUESKY_HANDLE;
+  const appPassword = source.BLUESKY_APP_PASSWORD;
 
-  // An unset variable and an empty one are the same misconfiguration.
-  if (!handle || !appPassword) {
-    const errors = [
-      ...(handle ? [] : ['BLUESKY_HANDLE']),
-      ...(appPassword ? [] : ['BLUESKY_APP_PASSWORD']),
-    ]
-      .map((name) => `  - ${name} is required`)
-      .join('\n');
-    throw new Error(`Configuration error:\n${errors}`);
+  const hasHandle = handle !== undefined && handle !== '';
+  const hasAppPassword = appPassword !== undefined && appPassword !== '';
+
+  if (!hasHandle || !hasAppPassword) {
+    const errors: string[] = [];
+    if (!hasHandle) errors.push('  - BLUESKY_HANDLE is required');
+    if (!hasAppPassword) errors.push('  - BLUESKY_APP_PASSWORD is required');
+    throw new Error(`Configuration error:\n${errors.join('\n')}`);
   }
 
   return {

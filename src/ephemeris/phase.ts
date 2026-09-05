@@ -110,7 +110,10 @@ export function findNextPhases(
   after: Temporal.ZonedDateTime,
   timezone: string,
 ): Record<PhaseType, Temporal.ZonedDateTime> {
-  return Object.fromEntries(
-    PHASE_TYPES.map((phaseType) => [phaseType, findNextPhase(phaseType, after, timezone)]),
-  ) as Record<PhaseType, Temporal.ZonedDateTime>;
+  return {
+    'new': findNextPhase('new', after, timezone),
+    'first-quarter': findNextPhase('first-quarter', after, timezone),
+    'full': findNextPhase('full', after, timezone),
+    'last-quarter': findNextPhase('last-quarter', after, timezone),
+  };
 }

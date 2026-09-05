@@ -51,7 +51,7 @@ export type AccuracyFixture = z.infer<typeof accuracyFixture>;
 export type PostingFixture = z.infer<typeof postingFixture>;
 
 function load<S extends z.ZodType>(name: string, schema: S): z.infer<S> {
-  const raw = readFileSync(new URL(name, import.meta.url), 'utf-8');
+  const raw = readFileSync(new URL(name, import.meta.url), 'utf8');
   return schema.parse(JSON.parse(stripJsonComments(raw)));
 }
 

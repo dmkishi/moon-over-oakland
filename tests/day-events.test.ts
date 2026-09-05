@@ -27,7 +27,7 @@ function minutesBetween(a: Temporal.ZonedDateTime, isoDateTime: string): number 
 }
 
 for (const fixture of accuracyFixtures) {
-  describe(`calculateDayEvents(${fixture.description || fixture.day})`, () => {
+  describe(`calculateDayEvents(${fixture.description ?? fixture.day})`, () => {
     const date = Temporal.PlainDate.from(fixture.day);
     const { moonrise, moonset, sunrise, sunset } = fixture.events;
 
@@ -41,6 +41,7 @@ for (const fixture of accuracyFixtures) {
       expect(Temporal.ZonedDateTime.compare(result.sunset, result.sunrise)).toBe(1);
     });
 
+    // oxlint-disable-next-line no-negated-condition - Echo shape below
     if (moonrise !== null) {
       it(`moonrise matches within ±${TOLERANCE_MINUTES} minutes`, () => {
         expect(minutesBetween(calculate(date).moonrise, moonrise.dateTime)).toBeLessThanOrEqual(TOLERANCE_MINUTES);

@@ -15,7 +15,7 @@ export type PostResult =
   | { status: 'skipped' };
 
 export interface BlueskyClient {
-  post(text: string): Promise<PostResult>;
+  post: (text: string) => Promise<PostResult>;
 }
 
 /**
@@ -32,11 +32,12 @@ export function graphemeLength(text: string): number {
  * @internal Exported for testing.
  */
 export function localDateOf(value: unknown, timezone: string): Temporal.PlainDate | null {
-  const createdAt = (value as { createdAt?: unknown }).createdAt;
+  const hasCreatedAt = typeof value === 'object' && value !== null && 'createdAt' in value;
+  if (!hasCreatedAt) return null;
 
-  // A record whose `createdAt` is missing or unparsable cannot be dated, and
-  // so cannot be today's post.
-  if (typeof createdAt !== 'string') return null;
+  const createdAt = value.createdAt;
+  const isTimestampString = typeof createdAt === 'string';
+  if (!isTimestampString) return null;
 
   try {
     return Temporal.Instant.from(createdAt).toZonedDateTimeISO(timezone).toPlainDate();
@@ -64,7 +65,9 @@ async function hasPostedToday(
     limit: RECORDS_CHECKED,
   });
 
-  return data.records.some((record) => localDateOf(record.value, timezone)?.equals(today));
+  return data.records.some(
+    (record) => localDateOf(record.value, timezone)?.equals(today) === true,
+  );
 }
 
 export async function createBlueskyClient(
@@ -83,9 +86,11 @@ export async function createBlueskyClient(
 
   return {
     async post(text) {
-      if (await hasPostedToday(agent, session.did, timezone)) return {
-        status: 'skipped',
-      };
+      if (await hasPostedToday(agent, session.did, timezone)) {
+        return {
+          status: 'skipped',
+        };
+      }
 
       const { uri, cid } = await agent.post({ text, langs: ['en-US'] });
       return {

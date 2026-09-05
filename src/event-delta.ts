@@ -3,7 +3,7 @@
  * phase is judged against: editorial policy transcribed from `docs/posting-algorithm.md`,
  * not ephemeris.
  */
-import { Temporal } from 'temporal-polyfill/implementation';
+import type { Temporal } from 'temporal-polyfill/implementation';
 import type { DayEvents } from './ephemeris/day-events.ts';
 import type { PhaseType } from './ephemeris/phase.ts';
 import { MINUTE_MS } from './time.ts';
@@ -103,6 +103,8 @@ function referenceTime(
       // Rounding, not `startOfDay`, splits 23- and 25-hour DST days by their
       // real length rather than at a fixed 12:00.
       return moonEvent.round({ smallestUnit: 'day', roundingMode: 'halfExpand' });
+    default:
+      throw new TypeError(`Unhandled reference: ${String(reference satisfies never)}`);
   }
 }
 
