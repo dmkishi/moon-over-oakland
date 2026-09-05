@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "extends": ["./node_modules/@dmkishi/oxlintrc/.oxlintrc.json"],
+  "rules": {
+    // Local overrides
+    /* Style */
+    "one-var": "off",
+    "new-cap": ["error", { "capIsNewExceptions": [
+      "DateToJDE",
+      "JDEToDate",
+      "JDEToJulianYear",
+    ] }]
+  },
+  "options": {
+    "typeAware": true, // Enable rules that require type information
+    "typeCheck": true // Enable experimental type checking
+  }
+}

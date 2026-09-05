@@ -14,8 +14,9 @@
     "post": "node src/main.ts",
     "preview": "pnpm post --dry-run",
     "horizons": "node scripts/nasaJplHorizons/main.ts",
-    "check": "pnpm typecheck && vitest run",
+    "check": "pnpm typecheck && pnpm lint && vitest run",
     "typecheck": "tsc",
+    "lint": "oxlint",
     "test": "vitest",
     "coverage": "vitest run --coverage",
     "prepare": "husky"
@@ -30,9 +31,12 @@
     "temporal-polyfill": "^1.0.4"
   },
   "devDependencies": {
+    "@dmkishi/oxlintrc": "^0.3.0",
     "@types/node": "^24.13.3",
     "@vitest/coverage-v8": "^4.1.11",
     "husky": "^9.1.7",
+    "oxlint": "^1.81.0",
+    "oxlint-tsgolint": "^7.0.2001",
     "strip-json-comments": "^5.0.3",
     "typescript": "^7.0.2",
     "vitest": "^4.1.11",
