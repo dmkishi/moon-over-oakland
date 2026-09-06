@@ -225,19 +225,19 @@ export function printFixtureJson(summary: MoonSummary): void {
       distanceKm: Math.round(summary.noon.distanceKm),
     },
     events: {
-      phaseEvent: orNull(summary.events.phaseEvent, (e) => ({
-        name: e.name,
-        dateTime: toDateTime(e.at),
+      phaseEvent: orNull(summary.events.phaseEvent, (event) => ({
+        name: event.name,
+        dateTime: toDateTime(event.at),
       })),
-      moonrise: orNull(summary.events.moonrise, (e) => ({
-        dateTime: toDateTime(e.at),
-        azimuthDeg: e.azimuthDeg,
-        tiltDeg: e.tiltDeg,
+      moonrise: orNull(summary.events.moonrise, (event) => ({
+        dateTime: toDateTime(event.at),
+        azimuthDeg: event.azimuthDeg,
+        tiltDeg: event.tiltDeg,
       })),
-      moonset: orNull(summary.events.moonset, (e) => ({
-        dateTime: toDateTime(e.at),
-        azimuthDeg: e.azimuthDeg,
-        tiltDeg: e.tiltDeg,
+      moonset: orNull(summary.events.moonset, (event) => ({
+        dateTime: toDateTime(event.at),
+        azimuthDeg: event.azimuthDeg,
+        tiltDeg: event.tiltDeg,
       })),
       transit: orNull(summary.events.transit, (at) => ({
         dateTime: toDateTime(at),
