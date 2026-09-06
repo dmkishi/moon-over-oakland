@@ -31,7 +31,7 @@
     "temporal-polyfill": "^1.0.4"
   },
   "devDependencies": {
-    "@dmkishi/oxlintrc": "^0.3.0",
+    "@dmkishi/oxlintrc": "^0.4.0",
     "@types/node": "^24.13.3",
     "@vitest/coverage-v8": "^4.1.11",
     "husky": "^9.1.7",

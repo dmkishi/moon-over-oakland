@@ -31,8 +31,8 @@ importers:
         version: 1.0.4
     devDependencies:
       '@dmkishi/oxlintrc':
-        specifier: ^0.3.0
-        version: 0.3.0
+        specifier: ^0.4.0
+        version: 0.4.0
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3
@@ -112,8 +112,8 @@ packages:
     resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
     engines: {node: '>=18'}
 
-  '@dmkishi/oxlintrc@0.3.0':
-    resolution: {integrity: sha512-i53Mkcd5bKNYkChNbBgCSv9PfithBN1LceoLpO3UusFTdzLO7itfYAqrZg4Mn+7geTUx/7dF2KFyMF/mbBjMQA==}
+  '@dmkishi/oxlintrc@0.4.0':
+    resolution: {integrity: sha512-K2Mr4vWKhxfmtzg0zk/W5ILVFKE14DFEjRHFz1g0zIiwQNUISRLO5NYRfgDMNv9J3n2QsLAy96UlvLwIIJfT1Q==}
 
   '@esbuild/aix-ppc64@0.27.3':
     resolution: {integrity: sha512-9fJMTNFTWZMh5qwrBItuziu834eOCUcEqymSH7pY+zoMVEZg3gcPuBNxH1EvfVYe9h0x/Ptw8KBzv7qxb7l8dg==}
@@ -1290,7 +1290,7 @@ snapshots:
 
   '@bcoe/v8-coverage@1.0.2': {}
 
-  '@dmkishi/oxlintrc@0.3.0': {}
+  '@dmkishi/oxlintrc@0.4.0': {}
 
   '@esbuild/aix-ppc64@0.27.3':
     optional: true
