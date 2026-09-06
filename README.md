@@ -3,6 +3,9 @@ Moon Over Oakland
 Automatically post moon phase updates for Oakland, CA to Bluesky using GitHub
 Actions. The posts are targeted towards a general audience.
 
+Moon and sun ephemeris for posts are calculated entirely locally independent of
+external services or APIs.
+
 Features
 --------------------------------------------------------------------------------
 - Posts on **new moon**, **first quarter**, **full moon**, and **last quarter**.
