@@ -1,14 +1,24 @@
 /**
  * Bluesky adapter
  */
-import { AtpAgent, RichText } from '@atproto/api';
+// Side-effect import: registers the `com.atproto.*` endpoint types that
+// `rpc.get`/`rpc.post` are typed against. `@atcute/bluesky` alone registers
+// only `app.bsky.*`.
+// oxlint-disable-next-line unicorn/require-module-specifiers - Type-only side effect
+import type {} from '@atcute/atproto';
+import type { AppBskyFeedPost } from '@atcute/bluesky';
+import { feedPost } from '@atcute/bluesky/limits';
+import { Client, ok } from '@atcute/client';
+import { PasswordSession } from '@atcute/password-session';
+import { getGraphemeLength } from '@atcute/util-text';
 import { Temporal } from 'temporal-polyfill/implementation';
 
 /** Number of newest records (i.e. posts) to request */
 const RECORDS_CHECKED = 10;
 
-/** Magic number is documented but not exported by `@atproto/api` */
-export const MAX_GRAPHEMES = 300;
+const SERVICE = 'https://bsky.social';
+
+export const MAX_GRAPHEMES: number = feedPost.text.maxGraphemes;
 
 export type PostResult =
   | { status: 'posted'; uri: string; cid: string }
@@ -23,7 +33,7 @@ export interface BlueskyClient {
  * @pure
  */
 export function graphemeLength(text: string): number {
-  return new RichText({ text }).graphemeLength;
+  return getGraphemeLength(text);
 }
 
 /**
@@ -54,16 +64,18 @@ export function localDateOf(value: unknown, timezone: string): Temporal.PlainDat
  * indeterminate amount.
  */
 async function hasPostedToday(
-  agent: AtpAgent,
-  did: string,
+  rpc: Client,
+  did: PasswordSession['did'],
   timezone: string,
 ): Promise<boolean> {
   const today = Temporal.Now.zonedDateTimeISO(timezone).toPlainDate();
-  const { data } = await agent.com.atproto.repo.listRecords({
-    repo: did,
-    collection: 'app.bsky.feed.post',
-    limit: RECORDS_CHECKED,
-  });
+  const data = await ok(rpc.get('com.atproto.repo.listRecords', {
+    params: {
+      repo: did,
+      collection: 'app.bsky.feed.post',
+      limit: RECORDS_CHECKED,
+    },
+  }));
 
   return data.records.some(
     (record) => localDateOf(record.value, timezone)?.equals(today) === true,
@@ -75,24 +87,36 @@ export async function createBlueskyClient(
   appPassword: string,
   timezone: string,
 ): Promise<BlueskyClient> {
-  const agent = new AtpAgent({
-    service: 'https://bsky.social',
-  });
-
-  const { data: session } = await agent.login({
+  const session = await PasswordSession.login({
+    service: SERVICE,
     identifier: handle,
     password: appPassword,
   });
+  const rpc = new Client({ handler: session });
 
   return {
     async post(text) {
-      if (await hasPostedToday(agent, session.did, timezone)) {
+      if (await hasPostedToday(rpc, session.did, timezone)) {
         return {
           status: 'skipped',
         };
       }
 
-      const { uri, cid } = await agent.post({ text, langs: ['en-US'] });
+      const record: AppBskyFeedPost.Main = {
+        $type: 'app.bsky.feed.post',
+        text,
+        langs: ['en-US'],
+        createdAt: new Date().toISOString(),
+      };
+
+      const { uri, cid } = await ok(rpc.post('com.atproto.repo.createRecord', {
+        input: {
+          repo: session.did,
+          collection: 'app.bsky.feed.post',
+          record,
+        },
+      }));
+
       return {
         status: 'posted',
         uri,

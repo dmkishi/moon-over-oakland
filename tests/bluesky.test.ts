@@ -18,7 +18,7 @@ describe('graphemeLength', () => {
   });
 
   // Every case below is longer than one grapheme when measured by `.length`,
-  // which is exactly the mismeasurement `RichText` exists to avoid.
+  // which is exactly the mismeasurement `getGraphemeLength` exists to avoid.
   it.each([
     ['letter with a combining accent', 'é'],
     ['emoji', '🌕'],
