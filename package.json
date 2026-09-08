@@ -1,13 +1,8 @@
 {
   "name": "moon-over-oakland",
   "version": "1.0.0",
-  "description": "Automatically post moon phase updates for Oakland, CA to social media sites",
   "author": "DM Kishi <dm.kishi@gmail.com>",
-  "keywords": [
-    "moon",
-    "oakland",
-    "bluesky"
-  ],
+  "private": true,
   "license": "MIT",
   "type": "module",
   "scripts": {
