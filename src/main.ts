@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import pc from 'picocolors';
 import { parseCliArgs } from './args.ts';
 import { createBlueskyClient, graphemeLength, MAX_GRAPHEMES } from './bluesky.ts';
@@ -7,6 +6,14 @@ import type { EventDelta } from './event-delta.ts';
 import { observer } from './observer.ts';
 import { calculatePhaseEvent } from './phase-event.ts';
 import { renderPost } from './render.ts';
+
+// Load `.env` into `process.env` without overriding variables already set, so
+// secrets injected by the host win. Unlike dotenv, a missing file throws.
+try {
+  process.loadEnvFile();
+} catch {
+  // No `.env` file: rely on the ambient environment.
+}
 
 const GRAPHEME_COUNT_MARGIN = 15;
 
