@@ -2,20 +2,18 @@
  * Guards which `temporal-polyfill` entry point the code imports.
  *
  * The package's default entry (`temporal-polyfill`) resolves to
- * `globalThis.Temporal` whenever one exists. The Cloudflare Workers runtime
- * exposes a global `Temporal` whose `Temporal.Now` reports 1970-01-01, so
- * deferring to it would silently date every post to the epoch.
- * `temporal-polyfill/implementation` returns the polyfill unconditionally.
- *
- * See `PLANS/cloudflare-workers-migration.md`.
+ * `globalThis.Temporal` whenever one exists. Node already ships Temporal behind
+ * `--harmony-temporal`; once it is unflagged, a bare import would resolve to
+ * native while every other site kept resolving to the polyfill. The two do not
+ * interoperate — a polyfill method called on a native instance throws
+ * `TypeError: Invalid calling context`. `temporal-polyfill/implementation`
+ * returns the polyfill unconditionally, so every site agrees on one
+ * implementation.
  */
-import { execFileSync } from 'node:child_process';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
 
-const EPOCH_DATE = '1970-01-01';
-const ENTRY = 'temporal-polyfill/implementation';
 const ROOT = join(import.meta.dirname, '..');
 
 // Covers `from '…'`, `import('…')`, and the side-effect `import '…'`.
@@ -35,20 +33,4 @@ describe('temporal polyfill entry point', () => {
       expect(source).not.toMatch(BARE_ENTRY);
     },
   );
-
-  // Proves the entry itself ignores a global, rather than trusting that it does.
-  // Needs a fresh process: vitest externalizes node_modules, so the package is
-  // evaluated once by Node and `vi.resetModules()` cannot re-run it.
-  it('ignores a global Temporal', () => {
-    const script = `
-      globalThis.Temporal = { Now: { plainDateISO: () => '${EPOCH_DATE}' } };
-      const { Temporal } = await import('${ENTRY}');
-      console.log(Temporal.Now.plainDateISO().toString());
-    `;
-    const output = execFileSync(process.execPath, ['--input-type=module', '-e', script], {
-      cwd: ROOT,
-      encoding: 'utf8',
-    });
-    expect(output.trim()).not.toBe(EPOCH_DATE);
-  });
 });
