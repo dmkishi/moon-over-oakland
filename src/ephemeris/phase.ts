@@ -1,7 +1,6 @@
 /**
  * Principal phase instants from `astronomia/moonphase`.
  */
-import { Temporal } from 'temporal-polyfill/implementation';
 import { JDEToJulianYear } from 'astronomia/base';
 import { JDEToDate, DateToJDE } from 'astronomia/julian';
 import { newMoon, first, full, last } from 'astronomia/moonphase';

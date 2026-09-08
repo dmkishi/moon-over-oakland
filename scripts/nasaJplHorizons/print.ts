@@ -1,4 +1,3 @@
-import type { Temporal } from 'temporal-polyfill/implementation';
 import pc from 'picocolors';
 import {
   eventsAt,

@@ -11,7 +11,6 @@ import { feedPost } from '@atcute/bluesky/limits';
 import { Client, ok } from '@atcute/client';
 import { PasswordSession } from '@atcute/password-session';
 import { getGraphemeLength } from '@atcute/util-text';
-import { Temporal } from 'temporal-polyfill/implementation';
 
 /** Number of newest records (i.e. posts) to request */
 const RECORDS_CHECKED = 10;

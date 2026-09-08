@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2024",
-    "lib": ["ES2024", "ES2025.Collection", "ES2025.Iterator"],
+    "lib": ["ES2024", "ES2025.Collection", "ES2025.Iterator", "ESNext.Temporal"],
     "module": "NodeNext",
     "moduleDetection": "force",
     "strict": true,

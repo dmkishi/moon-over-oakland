@@ -7,7 +7,6 @@
  * `./fixtures/phase-event.posting.jsonc`.
  */
 import { describe, it, expect } from 'vitest';
-import { Temporal } from 'temporal-polyfill/implementation';
 import { postingFixtures, type PostingFixture } from './fixtures/helpers.ts';
 import { PHASE_TYPES, type PhaseType } from '../src/ephemeris/phase.ts';
 import type { MoonEvent } from '../src/event-delta.ts';

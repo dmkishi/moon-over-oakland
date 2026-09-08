@@ -1,5 +1,4 @@
 import { parseArgs } from 'node:util';
-import { Temporal } from 'temporal-polyfill/implementation';
 
 /**
  * Parse the optional date positional, throwing on anything that is not a real

@@ -1,7 +1,6 @@
 /**
  * Renders a `PhaseEvent` into the plain text of a post.
  */
-import type { Temporal } from 'temporal-polyfill/implementation';
 import { Liquid } from 'liquidjs';
 import type { PhaseEvent } from './phase-event.ts';
 

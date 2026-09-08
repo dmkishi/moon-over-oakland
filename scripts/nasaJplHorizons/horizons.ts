@@ -7,7 +7,6 @@
  * is the frame the row labels come back in. Both halves are stated here so they
  * cannot drift apart, and everything downstream sees only typed rows.
  */
-import { Temporal } from 'temporal-polyfill/implementation';
 import type { Observer } from './observer.ts';
 import { moonTilt } from './tilt.ts';
 

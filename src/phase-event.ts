@@ -1,4 +1,3 @@
-import { Temporal } from 'temporal-polyfill/implementation';
 import {
   calculateDayEvents,
   type DayEvents,

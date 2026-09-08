@@ -1,4 +1,3 @@
-import type { Temporal } from 'temporal-polyfill/implementation';
 import { fetchEclipticLongitudes, type EclipticLongitude } from './horizons.ts';
 import type { ObservingDay } from './observer.ts';
 

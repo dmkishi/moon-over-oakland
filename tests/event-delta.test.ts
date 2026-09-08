@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { Temporal } from 'temporal-polyfill/implementation';
 import { calculateEventDeltas } from '../src/event-delta.ts';
 import type { DayEvents } from '../src/ephemeris/day-events.ts';
 import { PHASE_TYPES, type PhaseType } from '../src/ephemeris/phase.ts';

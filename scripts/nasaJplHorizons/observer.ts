@@ -1,5 +1,3 @@
-import { Temporal } from 'temporal-polyfill/implementation';
-
 /**
  * The observing location and date for which the ephemeris is requested, i.e.
  * where and when the Moon is being watched from.

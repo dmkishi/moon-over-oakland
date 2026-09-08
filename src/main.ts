@@ -1,5 +1,4 @@
 import 'dotenv/config';
-import { Temporal } from 'temporal-polyfill/implementation';
 import pc from 'picocolors';
 import { parseCliArgs } from './args.ts';
 import { createBlueskyClient, graphemeLength, MAX_GRAPHEMES } from './bluesky.ts';

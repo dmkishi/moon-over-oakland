@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { Temporal } from 'temporal-polyfill/implementation';
 import { parseCliArgs } from '../src/args.ts';
 
 describe('parseCliArgs', () => {
