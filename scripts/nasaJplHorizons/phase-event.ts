@@ -92,13 +92,13 @@ function findPhaseEvent(
  * Resolve the observing day's principal phase event, fetching the ecliptic
  * longitude tables only when the day could plausibly hold one.
  *
- * @param illuminatedFractions - Every row's illuminated fraction, 0–100. Taken
+ * @param illuminatedPercents - Every row's illuminated percentage, 0–100. Taken
  *   bare rather than as `MoonEphemeris[]` because that is the entirety of what
  *   the gate below inspects.
  */
 export async function resolvePhaseEvent(
   day: ObservingDay,
-  illuminatedFractions: number[],
+  illuminatedPercents: number[],
 ): Promise<PhaseEvent | null> {
   // A principal phase falls on roughly one day in seven, and the illumination
   // already parsed for every row is enough to prove most days barren — so skip
@@ -113,8 +113,8 @@ export async function resolvePhaseEvent(
   //
   // The gate errs loose: days flanking an event fetch, find no crossing, and
   // report `null`. It decides only whether to ask, never what the answer is.
-  const minIllum = Math.min(...illuminatedFractions);
-  const maxIllum = Math.max(...illuminatedFractions);
+  const minIllum = Math.min(...illuminatedPercents);
+  const maxIllum = Math.max(...illuminatedPercents);
   const mayHavePhaseEvent =
     maxIllum > 99 || minIllum < 1 || (minIllum <= 52 && maxIllum >= 48);
 

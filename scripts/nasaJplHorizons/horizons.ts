@@ -259,8 +259,8 @@ const MOON_EPHEMERIS_COLUMNS = {
   altitudeDeg: { quantity: 4, headerPattern: /Elev_\(a-app\)/u },
   /** Local apparent sidereal time at the observer's location, in hours */
   siderealTimeHours: { quantity: 7, headerPattern: /L_Ap_Sid_Time/u },
-  /** Illuminated fraction of the Moon, 0–100 */
-  illuminatedFraction: { quantity: 10, headerPattern: /Illu%/u },
+  /** Illuminated fraction of the Moon's disk, as a percentage, 0–100 */
+  illuminatedPercent: { quantity: 10, headerPattern: /Illu%/u },
   /** Observer range (distance) to the Moon, in AU */
   distanceAu: { quantity: 20, headerPattern: /^delta$/ui },
   /**
@@ -282,7 +282,7 @@ type MoonColumn = keyof typeof MOON_EPHEMERIS_COLUMNS;
  * One minute bounds the error to ~0.14° of azimuth and ~0.12° of tilt, two
  * orders of magnitude inside the accuracy suite's tolerances.
  */
-const MOON_EPHEMERIS_STEP_SIZE = '1m';
+export const MOON_EPHEMERIS_STEP_SIZE = '1m';
 
 const AU_TO_KM = 149_597_870.7;
 
@@ -307,7 +307,7 @@ export interface MoonEphemeris {
   flags: string[];
   azimuthDeg: number; // Apparent azimuth of the Moon
   altitudeDeg: number; // Apparent altitude of the Moon
-  illuminatedFraction: number; // Illuminated fraction (0–100)
+  illuminatedPercent: number; // Illuminated fraction of the disk, as a percentage (0–100)
   distanceKm: number;
   tiltDeg: number; // Tilt of the moon (relative to the local vertical)
 }
@@ -386,7 +386,7 @@ export async function fetchMoonEphemeris(
       flags: flagIndices.map((i) => cell(cols, i)).filter((f) => f !== ''),
       azimuthDeg: num('azimuthDeg'),
       altitudeDeg: num('altitudeDeg'),
-      illuminatedFraction: num('illuminatedFraction'),
+      illuminatedPercent: num('illuminatedPercent'),
       distanceKm: num('distanceAu') * AU_TO_KM,
       tiltDeg: moonTilt(
         num('siderealTimeHours'),

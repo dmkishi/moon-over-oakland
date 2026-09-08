@@ -130,7 +130,7 @@ try {
     // This stops at midnight as the last sample, which is needed for the
     // interpolation to find the phase event.
     day,
-    moonEphemeris.map((row) => row.illuminatedFraction),
+    moonEphemeris.map((row) => row.illuminatedPercent),
   );
 
   const moonSummary = computeMoonSummary(moonEphemeris, observer, day, phaseEvent);
@@ -141,7 +141,7 @@ try {
     if (showTable) printTable(displayRows);
     if (showCsv) printCsv(displayRows);
   }
-  if (showSummary) printSummary(moonSummary, observer, day);
+  if (showSummary) printSummary(moonSummary);
   if (showJson) {
     if (showTable || showCsv || showSummary) console.log();
     printFixtureJson(moonSummary);

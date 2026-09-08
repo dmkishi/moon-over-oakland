@@ -1,7 +1,11 @@
 import type { Temporal } from 'temporal-polyfill/implementation';
 import pc from 'picocolors';
-import { eventsAt, type MoonEphemeris, type MoonEventName } from './horizons.ts';
-import type { Observer, ObservingDay } from './observer.ts';
+import {
+  eventsAt,
+  MOON_EPHEMERIS_STEP_SIZE,
+  type MoonEphemeris,
+  type MoonEventName,
+} from './horizons.ts';
 import type { PhaseEventName } from './phase-event.ts';
 import type { MoonSummary } from './summary.ts';
 
@@ -109,7 +113,7 @@ export function printTable(displayRows: EphemerisDisplayRow[]): void {
     const datetimeStr = `${formatDateTime(row.at)} ${row.flags.join('')}`.padEnd(20);
     const altitudeStr = row.altitudeDeg.toFixed(1).padStart(6);
     const azimuthStr = row.azimuthDeg.toFixed(1).padStart(6);
-    const illuminationStr = row.illuminatedFraction.toFixed(3).padStart(6);
+    const illuminationStr = row.illuminatedPercent.toFixed(3).padStart(6);
     const distanceStr = Math.round(row.distanceKm).toLocaleString('en-US').padStart(7);
     const tiltStr = row.tiltDeg.toFixed(1).padStart(6);
     console.log(
@@ -127,7 +131,7 @@ export function printTable(displayRows: EphemerisDisplayRow[]): void {
  * not survive a CSV parser.
  */
 export function printCsv(displayRows: EphemerisDisplayRow[]): void {
-  console.log('Datetime,Flags,Altitude Deg,Azimuth Deg,Illuminated Frac,Distance Km,Tilt Deg,Events');
+  console.log('Datetime,Flags,Altitude Deg,Azimuth Deg,Illuminated Pct,Distance Km,Tilt Deg,Events');
   for (const { row, events } of displayRows) {
     console.log([
       formatDateTime(row.at),
@@ -136,7 +140,7 @@ export function printCsv(displayRows: EphemerisDisplayRow[]): void {
       row.flags.join(''),
       row.altitudeDeg.toFixed(1),
       row.azimuthDeg.toFixed(1),
-      (row.illuminatedFraction / 100).toFixed(3),
+      row.illuminatedPercent.toFixed(3),
       Math.round(row.distanceKm),
       row.tiltDeg.toFixed(1),
       formatEvents(events),
@@ -151,12 +155,9 @@ const PHASE_EVENT_LABEL: Record<PhaseEventName, string> = {
   'last-quarter': 'Last Quarter',
 };
 
-export function printSummary(
-  s: MoonSummary,
-  observer: Observer,
-  day: ObservingDay,
-): void {
-  const illuminationStr = s.noon.illuminatedFraction.toFixed(1) + '%';
+export function printSummary(s: MoonSummary): void {
+  const { observer, day } = s;
+  const illuminationStr = s.noon.illuminatedPercent.toFixed(1) + '%';
   const distanceStr = Math.round(s.noon.distanceKm).toLocaleString('en-US') + ' km';
   const NONE_STR = pc.red('NONE');
 
@@ -172,7 +173,7 @@ export function printSummary(
   console.log(`  Date:         ${observer.date}`);
   console.log(`  Time Zone:    ${observer.timeZone} (${offsetStr})`);
   console.log(`  Location:     ${observer.lat}, ${observer.lon}, ${observer.elevationMeter} meters`);
-  console.log('  Query Step:   1 minute');
+  console.log(`  Query Step:   ${MOON_EPHEMERIS_STEP_SIZE}`);
   console.log();
   console.log('Noon (Average):');
   console.log(`  Illumination: ${illuminationStr}`);
@@ -229,13 +230,11 @@ function toDateTime(at: Temporal.ZonedDateTime): string {
 }
 
 export function printFixtureJson(summary: MoonSummary): void {
-  const { date } = summary.metadata;
-
   const fixture = {
     description: '',
-    day: date,
+    day: summary.observer.date,
     noon: {
-      illumination: summary.noon.illuminatedFraction,
+      illuminationPercent: summary.noon.illuminatedPercent,
       distanceKm: Math.round(summary.noon.distanceKm),
     },
     events: {

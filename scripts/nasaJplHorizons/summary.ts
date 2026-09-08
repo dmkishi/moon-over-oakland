@@ -7,16 +7,14 @@ import type { PhaseEvent } from './phase-event.ts';
  * A single observing day distilled from the full `MoonEphemeris` run.
  */
 export interface MoonSummary {
-  metadata: {
-    date: string; // "YYYY-MM-DD"
-    timeZone: string; // IANA, e.g. "America/Los_Angeles"
-  };
+  observer: Observer;
+  day: ObservingDay;
   /**
    * The noon values represent an average of the Moon's illumination and
    * distance of the day.
    */
   noon: {
-    illuminatedFraction: number;
+    illuminatedPercent: number;
     distanceKm: number;
   };
   /**
@@ -81,12 +79,10 @@ export function computeMoonSummary(
   const noonRow = findRowNearestToNoon(rows, day);
 
   return {
-    metadata: {
-      date: observer.date,
-      timeZone: observer.timeZone,
-    },
+    observer,
+    day,
     noon: {
-      illuminatedFraction: noonRow.illuminatedFraction,
+      illuminatedPercent: noonRow.illuminatedPercent,
       distanceKm: noonRow.distanceKm,
     },
     events: {
