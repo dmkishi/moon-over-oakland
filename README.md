@@ -9,6 +9,7 @@ The posts are written for a general audience.
   - Templated with [LiquidJS](https://liquidjs.com/).
 - Moon and sun ephemeris for posts are **calculated locally** and does not
   depend on any external services or APIs.
+- Deployable **anywhere as a Docker image**.
 
 Setup
 --------------------------------------------------------------------------------
@@ -44,17 +45,6 @@ AKA plus ("+") sign addressing. All these go to the same inbox:
 1. Go to **Settings** → **Privacy and Security** → **App Passwords**
 2. Create a new app password
 3. Copy-and-paste it into the `.env` file
-
-### 3. Configure GitHub Actions
-#### 1. Add repository secrets
-Go to your repo → Settings → Secrets and variables → Actions → Secrets:
-
-- `BLUESKY_HANDLE`: Your Bluesky handle (e.g., `your-handle.bsky.social`)
-- `BLUESKY_APP_PASSWORD`: Your app password
-
-#### 2. Enable the workflow
-The workflow runs daily at 6 AM PST / 7 AM PDT (1 PM UTC). You can also trigger
-it manually from the Actions tab.
 
 Usage
 --------------------------------------------------------------------------------
@@ -99,6 +89,37 @@ rather than snapped to one.
 
 **Note**: The location and timezone are sourced from [`src/observer.ts`](
 src/observer.ts)
+
+Docker
+--------------------------------------------------------------------------------
+The production run is packaged as a single image. Tests, lint and typecheck stay
+on the host.
+
+```sh
+pnpm docker:build
+pnpm docker:preview  # Same as `pnpm preview` (see § Usage above)
+pnpm docker:post     # Same as `pnpm post` (see § Usage above)
+```
+
+Arguments after the image name reach the CLI, so `pnpm docker:preview 2026-01-01`
+works the same as `pnpm preview`.
+
+Pass secrets at runtime through `--env-file` or the host's secret store. Never
+through `ENV` or `--build-arg`, both of which persist in the image layers where
+anyone with `docker history` can read them.
+
+### Building for another architecture
+An arm64 image fails on an x86 host with an exec format error. Build for the
+host the image is destined for:
+
+```sh
+docker buildx build --platform linux/amd64 --tag dmkishi/moon-over-oakland .
+```
+
+A cross-built image cannot be smoke tested on an arm64 machine. Under QEMU
+emulation `Math.sin` returns `0`, which turns the ephemeris into `NaN` and
+crashes the run on an image that is perfectly healthy on real hardware. Build it
+here, verify it there.
 
 See Also
 --------------------------------------------------------------------------------

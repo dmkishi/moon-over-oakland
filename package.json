@@ -5,10 +5,17 @@
   "private": true,
   "license": "MIT",
   "type": "module",
+  "packageManager": "pnpm@12.3.4",
+  "config": {
+    "image": "dmkishi/moon-over-oakland"
+  },
   "scripts": {
     "post": "node src/main.ts",
     "preview": "pnpm post --dry-run",
     "horizons": "node scripts/nasaJplHorizons/main.ts",
+    "docker:build": "docker build --tag $npm_package_config_image .",
+    "docker:post": "docker run --rm --env-file .env $npm_package_config_image",
+    "docker:preview": "docker run --rm $npm_package_config_image --dry-run",
     "check": "pnpm typecheck && pnpm lint && vitest run",
     "typecheck": "tsc",
     "lint": "oxlint",
