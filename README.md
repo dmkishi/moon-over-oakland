@@ -1,19 +1,14 @@
 Moon Over Oakland
 ================================================================================
-Automatically post moon phase updates for Oakland, CA to Bluesky using GitHub
-Actions. The posts are targeted towards a general audience.
+Automatically post moon phase updates specifically for Oakland, CA to Bluesky.
+The posts are written for a general audience.
 
-Moon and sun ephemeris for posts are calculated entirely locally independent of
-external services or APIs.
-
-Features
---------------------------------------------------------------------------------
+**Features**:
 - Posts on **new moon**, **first quarter**, **full moon**, and **last quarter**.
-  - [Posting algorithm](docs/posting-algorithm.md)
-- Moon calculations (esp. rise/set times) are **Oakland specific**.
-- Moon phase-specific **posts are customizable with Liquid templates**.
-- Postings are **automated with GitHub Actions**.
-- Secure credential management with GitHub Secrets.
+  - [Posting algorithm](docs/posting-algorithm.md).
+  - Templated with [LiquidJS](https://liquidjs.com/).
+- Moon and sun ephemeris for posts are **calculated locally** and does not
+  depend on any external services or APIs.
 
 Setup
 --------------------------------------------------------------------------------
