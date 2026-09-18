@@ -96,9 +96,11 @@ The production run is packaged as a single image. Tests, lint and typecheck stay
 on the host.
 
 ```sh
-pnpm docker:build
-pnpm docker:preview  # Same as `pnpm preview` (see § Usage above)
-pnpm docker:post     # Same as `pnpm post` (see § Usage above)
+pnpm docker:build       # Builds then smoke tests the image
+pnpm docker:build-only  # Builds only
+pnpm docker:smoke-test  # Smoke tests the image
+pnpm docker:preview     # Same as `pnpm preview` (see § Usage above)
+pnpm docker:post        # Same as `pnpm post` (see § Usage above)
 ```
 
 Arguments after the image name reach the CLI, so `pnpm docker:preview 2026-01-01`
@@ -116,10 +118,11 @@ host the image is destined for:
 docker buildx build --platform linux/amd64 --tag dmkishi/moon-over-oakland .
 ```
 
-A cross-built image cannot be smoke tested on an arm64 machine. Under QEMU
-emulation `Math.sin` returns `0`, which turns the ephemeris into `NaN` and
-crashes the run on an image that is perfectly healthy on real hardware. Build it
-here, verify it there.
+This bypasses `pnpm docker:build`, so nothing smoke tests the result, and that
+is deliberate: a cross-built image cannot be smoke tested on an arm64 machine.
+Under QEMU emulation `Math.sin` returns `0`, which turns the ephemeris into
+`NaN` and crashes the run on an image that is perfectly healthy on real
+hardware. Build it here, then run `pnpm docker:smoke-test` there.
 
 See Also
 --------------------------------------------------------------------------------
