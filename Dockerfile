@@ -1,6 +1,10 @@
 # syntax=docker/dockerfile:1
 
-ARG NODE_VERSION=26.8.1
+# The major-only version declaration enables `docker build --pull` to pull Node
+# images with minor and patch releases. The declaration is required despite
+# `pnpm docker:build-only` reading `.nvmrc` because Docker requires an initial
+# declaration for substitutions with `--build-arg` values.
+ARG NODE_VERSION=26
 ARG NODE_IMAGE=node:${NODE_VERSION}-trixie-slim
 
 # Multiple stage build still produces a single image WITHOUT unnecessary package

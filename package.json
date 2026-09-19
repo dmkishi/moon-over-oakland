@@ -14,7 +14,7 @@
     "preview": "pnpm post --dry-run",
     "horizons": "node scripts/nasaJplHorizons/main.ts",
     "docker:build": "pnpm docker:build-only && pnpm docker:smoke-test",
-    "docker:build-only": "docker build --tag $npm_package_config_image .",
+    "docker:build-only": "docker build --pull --build-arg NODE_VERSION=$(cat .nvmrc) --tag $npm_package_config_image .",
     "docker:smoke-test": "pnpm docker:preview 2026-01-02",
     "docker:post": "docker run --rm --env-file .env $npm_package_config_image",
     "docker:preview": "docker run --rm $npm_package_config_image --dry-run",
