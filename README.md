@@ -110,19 +110,11 @@ Pass secrets at runtime through `--env-file` or the host's secret store. Never
 through `ENV` or `--build-arg`, both of which persist in the image layers where
 anyone with `docker history` can read them.
 
-### Building for another architecture
-An arm64 image fails on an x86 host with an exec format error. Build for the
-host the image is destined for:
-
-```sh
-docker buildx build --platform linux/amd64 --tag dmkishi/moon-over-oakland .
-```
-
-This bypasses `pnpm docker:build`, so nothing smoke tests the result, and that
-is deliberate: a cross-built image cannot be smoke tested on an arm64 machine.
-Under QEMU emulation `Math.sin` returns `0`, which turns the ephemeris into
-`NaN` and crashes the run on an image that is perfectly healthy on real
-hardware. Build it here, then run `pnpm docker:smoke-test` there.
+Production images are built, smoke tested and published to
+`ghcr.io/dmkishi/moon-over-oakland` by [`image.yml`](
+.github/workflows/image.yml). Only `pnpm docker:post` pulls that image, since
+only `pnpm docker:post` is a production run; the other scripts build and run
+whatever is local.
 
 See Also
 --------------------------------------------------------------------------------
