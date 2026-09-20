@@ -10,6 +10,8 @@ The posts are written for a general audience.
 - Moon and sun ephemeris for posts are **calculated locally** and does not
   depend on any external services or APIs.
 - Deployable **anywhere as a Docker image**.
+- Optional **Healthchecks.io dead man's switch** so a silent failure gets
+  noticed.
 
 Setup
 --------------------------------------------------------------------------------
@@ -45,6 +47,16 @@ AKA plus ("+") sign addressing. All these go to the same inbox:
 1. Go to **Settings** → **Privacy and Security** → **App Passwords**
 2. Create a new app password
 3. Copy-and-paste it into the `.env` file
+
+### 3. Configure Healthchecks.io monitoring (optional)
+Add a [healthchecks.io](https://healthchecks.io) ping URL to the `.env` file:
+```sh
+HEALTHCHECKS_URL=https://hc-ping.com/<uuid>
+```
+
+The app must ping Healthchecks.io every day. When Healthchecks.io detects a
+missed pings or a fail, it sends out an alert email. A dry run pings nothing and
+a monitor that is unreachable never fails the post.
 
 Usage
 --------------------------------------------------------------------------------

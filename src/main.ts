@@ -3,6 +3,7 @@ import { parseCliArgs } from './args.ts';
 import { createBlueskyClient, graphemeLength, MAX_GRAPHEMES } from './bluesky.ts';
 import { loadEnv } from './env.ts';
 import type { EventDelta } from './event-delta.ts';
+import { createMonitor } from './monitor.ts';
 import { observer } from './observer.ts';
 import { calculatePhaseEvent } from './phase-event.ts';
 import { renderPost } from './render.ts';
@@ -71,8 +72,7 @@ function parseCliArgsOrExit(): ReturnType<typeof parseCliArgs> {
   }
 }
 
-async function main(): Promise<void> {
-  const { date, isDryRun } = parseCliArgsOrExit();
+async function main({ date, isDryRun }: ReturnType<typeof parseCliArgs>): Promise<void> {
   const observerDate = date ?? Temporal.Now.plainDateISO(observer.timezone);
 
   console.log(); // Empty line break
@@ -152,9 +152,15 @@ async function main(): Promise<void> {
   console.log(`URI: ${result.uri}`);
 }
 
+const args = parseCliArgsOrExit();
+const monitor = createMonitor(args.isDryRun ? undefined : process.env.HEALTHCHECKS_URL);
+await monitor.start();
+
 try {
-  await main();
+  await main(args);
+  await monitor.success();
 } catch (error) {
   console.error(pc.red('Fatal error:'), error);
+  await monitor.fail();
   process.exit(1);
 }
