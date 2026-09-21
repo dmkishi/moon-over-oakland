@@ -37,23 +37,27 @@ function parseDateArg(arg: string | undefined): Temporal.PlainDate | undefined {
 /**
  * Read the command line:
  * - an optional date to post for (defaulting to today, signalled by `undefined`)
- * - an optional `--dry-run` flag.
+ * - an optional `--test` flag, selecting the test account's credentials
+ * - an optional `--dry-run` flag
  *
  * @example
- * parseCliArgs([]); // { date: undefined, isDryRun: false }
- * parseCliArgs(['--dry-run']); // { date: undefined, isDryRun: true }
- * parseCliArgs(['1999-01-31']); // { date: PlainDate 1999-01-31, isDryRun: false }
- * parseCliArgs(['1999-01-31', '--dry-run']); // { date: PlainDate 1999-01-31, isDryRun: true }
+ * parseCliArgs([]); // { date: undefined, isTest: false, isDryRun: false }
+ * parseCliArgs(['--dry-run']); // { date: undefined, isTest: false, isDryRun: true }
+ * parseCliArgs(['--test']); // { date: undefined, isTest: true, isDryRun: false }
+ * parseCliArgs(['1999-01-31']); // { date: PlainDate 1999-01-31, isTest: false, isDryRun: false }
+ * parseCliArgs(['1999-01-31', '--dry-run']); // { date: PlainDate 1999-01-31, isTest: false, isDryRun: true }
  * parseCliArgs(['1999-01-31', '1999-02-01']); // throws Error: Too many arguments
  * parseCliArgs(['--nope']); // throws Error (unknown option)
  */
 export function parseCliArgs(args: string[] = process.argv.slice(2)): {
   date: Temporal.PlainDate | undefined;
+  isTest: boolean;
   isDryRun: boolean;
 } {
   const { positionals, values } = parseArgs({
     args,
     options: {
+      'test': { type: 'boolean', default: false },
       'dry-run': { type: 'boolean', default: false },
     },
     allowPositionals: true,
@@ -66,6 +70,7 @@ export function parseCliArgs(args: string[] = process.argv.slice(2)): {
 
   return {
     date: parseDateArg(positionals[0]),
+    isTest: values.test,
     isDryRun: values['dry-run'],
   };
 }

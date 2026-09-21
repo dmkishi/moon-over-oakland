@@ -67,18 +67,19 @@ function parseCliArgsOrExit(): ReturnType<typeof parseCliArgs> {
     return parseCliArgs();
   } catch (error) {
     console.error(pc.red(error instanceof Error ? error.message : String(error)));
-    console.error('Usage: node src/main.ts [YYYY-MM-DD] [--dry-run]');
+    console.error('Usage: node src/main.ts [YYYY-MM-DD] [--test] [--dry-run]');
     return process.exit(1);
   }
 }
 
-async function main({ date, isDryRun }: ReturnType<typeof parseCliArgs>): Promise<void> {
+async function main({ date, isTest, isDryRun }: ReturnType<typeof parseCliArgs>): Promise<void> {
   const observerDate = date ?? Temporal.Now.plainDateISO(observer.timezone);
 
   console.log(); // Empty line break
   console.log('Moon Over Oakland');
   console.log('================================================================================');
   console.log(`Date:    ${formatLocalDate(observerDate)} (${observer.timezone})`);
+  console.log(`Account: ${isTest ? pc.yellow('test') : 'production'}`);
   console.log(`Dry run: ${isDryRun ? pc.yellow('true') : 'false'}`);
 
   const phaseEvent = calculatePhaseEvent(
@@ -137,7 +138,7 @@ async function main({ date, isDryRun }: ReturnType<typeof parseCliArgs>): Promis
     return;
   }
 
-  const env = loadEnv(process.env);
+  const env = loadEnv(process.env, isTest ? 'test' : 'production');
   const client = await createBlueskyClient(
     env.bluesky.handle,
     env.bluesky.appPassword,
@@ -149,11 +150,14 @@ async function main({ date, isDryRun }: ReturnType<typeof parseCliArgs>): Promis
     return;
   }
   console.log(pc.green('Posted successfully!'));
+  console.log(`Account: @${env.bluesky.handle}`);
   console.log(`URI: ${result.uri}`);
 }
 
 const args = parseCliArgsOrExit();
-const monitor = createMonitor(args.isDryRun ? undefined : process.env.HEALTHCHECKS_URL);
+const monitor = createMonitor(
+  (args.isTest || args.isDryRun) ? undefined : process.env.HEALTHCHECKS_URL,
+);
 await monitor.start();
 
 try {

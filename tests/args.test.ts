@@ -3,11 +3,27 @@ import { parseCliArgs } from '../src/args.ts';
 
 describe('parseCliArgs', () => {
   it('defaults to no date and a live run', () => {
-    expect(parseCliArgs([])).toEqual({ date: undefined, isDryRun: false });
+    expect(parseCliArgs([])).toEqual({ date: undefined, isDryRun: false, isTest: false });
   });
 
   it('reads the dry-run flag', () => {
     expect(parseCliArgs(['--dry-run']).isDryRun).toBe(true);
+  });
+
+  it('defaults to the production account', () => {
+    expect(parseCliArgs([]).isTest).toBe(false);
+  });
+
+  it('reads the test flag', () => {
+    expect(parseCliArgs(['--test']).isTest).toBe(true);
+  });
+
+  it('takes the flag alongside a date and a dry run, in any order', () => {
+    expect(parseCliArgs(['--test', '2000-01-31', '--dry-run'])).toEqual({
+      date: Temporal.PlainDate.from('2000-01-31'),
+      isDryRun: true,
+      isTest: true,
+    });
   });
 
   it('accepts the flag on either side of the date', () => {

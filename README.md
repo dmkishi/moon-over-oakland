@@ -53,6 +53,17 @@ AKA plus ("+") sign addressing. All these go to the same inbox:
 2. Create a new app password
 3. Copy-and-paste it into the `.env` file
 
+#### Test Account (optional)
+`pnpm post:test` posts to a second Bluesky account, so a template change can be
+checked against Bluesky's own renderer without touching the timeline people
+read. Create a second account and app password exactly as above — an email alias
+makes the unique address painless — then fill in the matching pair:
+
+```sh
+TEST_BLUESKY_HANDLE=your-test-handle.bsky.social
+TEST_BLUESKY_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
+```
+
 ### 3. Configure Healthchecks.io monitoring (optional)
 Add a [healthchecks.io](https://healthchecks.io) ping URL to the `.env` file:
 ```sh
@@ -67,9 +78,10 @@ Usage
 --------------------------------------------------------------------------------
 ```sh
 pnpm check
-pnpm post                # Posts online (but only on permitted moon phases)
-pnpm preview             # Preview post with calculated data (NEVER posts)
-pnpm preview 2026-01-01  # Optionally specify a date
+pnpm post                  # Posts online (but only on permitted moon phases)
+pnpm post:test 2026-01-02  # Same, to the test account
+pnpm preview               # Preview post with calculated data (NEVER posts)
+pnpm preview 2026-01-01    # Optionally specify a date
 ```
 
 ### NASA JPL Horizons

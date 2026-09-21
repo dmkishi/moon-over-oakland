@@ -11,6 +11,7 @@
   },
   "scripts": {
     "post": "node src/main.ts",
+    "post:test": "pnpm post --test",
     "preview": "pnpm post --dry-run",
     "horizons": "node scripts/nasaJplHorizons/main.ts",
     "docker:build": "pnpm docker:build-only && pnpm docker:smoke-test",
