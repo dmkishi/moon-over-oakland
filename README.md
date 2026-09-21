@@ -5,12 +5,17 @@ The posts are written for a general audience.
 
 **Features**:
 - Posts on **new moon**, **first quarter**, **full moon**, and **last quarter**.
-  - [Posting algorithm](docs/posting-algorithm.md).
-  - Templated with [LiquidJS](https://liquidjs.com/).
-- Moon and sun ephemeris for posts are **calculated locally** and does not
-  depend on any external services or APIs.
+  - [Posting algorithm](docs/posting-algorithm.md): Post if one of four principal
+    moon phases (new, first quarter, full, last quarter) falls between 4:00 AM
+    on the given date and 4:00 AM the next day. The window is shifted off of
+    midnight so that a phase event in the small hours is posted on the preceding
+    evening — when that phase is most visible. Additionally, 4:00 AM avoids the
+    nonexistent or ambiguous wall-clock times daylight savings creates between
+    1:00 and 3:00 AM.
+- Moon and sun ephemeris for posts are **calculated** and does not depend on any
+  external services or APIs.
 - Deployable **anywhere as a Docker image**.
-- Optional **Healthchecks.io dead man's switch** so a silent failure gets
+- Optional: **Healthchecks.io dead man's switch** so a silent failure gets
   noticed.
 
 Setup
