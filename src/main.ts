@@ -143,6 +143,7 @@ async function main({ date, isTest, isDryRun }: ReturnType<typeof parseCliArgs>)
     env.bluesky.handle,
     env.bluesky.appPassword,
     observer.timezone,
+    { checkPostedToday: !isTest },
   );
   const result = await client.post(content);
   if (result.status === 'skipped') {

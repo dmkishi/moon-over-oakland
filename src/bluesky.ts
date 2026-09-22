@@ -85,6 +85,7 @@ export async function createBlueskyClient(
   handle: string,
   appPassword: string,
   timezone: string,
+  { checkPostedToday = true }: { checkPostedToday?: boolean } = {},
 ): Promise<BlueskyClient> {
   const session = await PasswordSession.login({
     service: SERVICE,
@@ -95,7 +96,7 @@ export async function createBlueskyClient(
 
   return {
     async post(text) {
-      if (await hasPostedToday(rpc, session.did, timezone)) {
+      if (checkPostedToday && await hasPostedToday(rpc, session.did, timezone)) {
         return {
           status: 'skipped',
         };
