@@ -46,8 +46,8 @@ function parseDateArg(arg: string | undefined): Temporal.PlainDate | undefined {
  * parseCliArgs(['--test']); // { date: undefined, isTest: true, isDryRun: false }
  * parseCliArgs(['1999-01-31']); // Throws Error: a date requires --test or --dry-run
  * parseCliArgs(['1999-01-31', '--dry-run']); // { date: PlainDate 1999-01-31, isTest: false, isDryRun: true }
- * parseCliArgs(['1999-01-31', '1999-02-01']); // throws Error: Too many arguments
- * parseCliArgs(['--nope']); // throws Error (unknown option)
+ * parseCliArgs(['1999-01-31', '1999-02-01']); // Throws Error: too many arguments
+ * parseCliArgs(['--nope']); // Throws Error: unknown option
  */
 export function parseCliArgs(args: string[] = process.argv.slice(2)): {
   date: Temporal.PlainDate | undefined;
