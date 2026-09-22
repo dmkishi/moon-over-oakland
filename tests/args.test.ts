@@ -44,17 +44,17 @@ describe('parseCliArgs', () => {
 
 describe('parseCliArgs date parsing', () => {
   it('parses a calendar date', () => {
-    const { date } = parseCliArgs(['2000-01-31']);
+    const { date } = parseCliArgs(['2000-01-31', '--dry-run']);
     expect(date).toBeInstanceOf(Temporal.PlainDate);
     expect(date!.toString()).toBe('2000-01-31');
   });
 
   it('accepts month and day without a leading zero', () => {
-    expect(parseCliArgs(['2000-1-3']).date!.toString()).toBe('2000-01-03');
+    expect(parseCliArgs(['2000-1-3', '--dry-run']).date!.toString()).toBe('2000-01-03');
   });
 
   it('keeps a leap day that exists', () => {
-    expect(parseCliArgs(['2000-02-29']).date!.toString()).toBe('2000-02-29');
+    expect(parseCliArgs(['2000-02-29', '--dry-run']).date!.toString()).toBe('2000-02-29');
   });
 
   // `overflow: 'reject'` is what stops these from being clamped into range.
@@ -81,5 +81,26 @@ describe('parseCliArgs date parsing', () => {
     'tomorrow',
   ])('rejects the non-calendar-date input %s', (value) => {
     expect(() => parseCliArgs([value])).toThrow(`Invalid date: "${value}"`);
+  });
+});
+
+describe('parseCliArgs date rule', () => {
+  it('rejects a date with no flag', () => {
+    expect(() => parseCliArgs(['2000-01-31'])).toThrow('A date requires --test or --dry-run');
+  });
+
+  it.each(['--test', '--dry-run'])('accepts a date with %s', (flag) => {
+    expect(parseCliArgs(['2000-01-31', flag]).date!.toString()).toBe('2000-01-31');
+  });
+
+  // The rule is checked after the date is parsed, so a bad date keeps its own
+  // message instead of being reported as a missing flag.
+  it('reports an invalid date before a missing flag', () => {
+    expect(() => parseCliArgs(['2000-02-30'])).toThrow('Invalid date: "2000-02-30"');
+  });
+
+  // An empty positional means "no date given", so there is nothing to refuse.
+  it('allows an empty positional with no flag', () => {
+    expect(parseCliArgs([''])).toEqual({ date: undefined, isDryRun: false, isTest: false });
   });
 });
