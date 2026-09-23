@@ -39,5 +39,10 @@ COPY --from=dependencies /app/node_modules ./node_modules
 # syntax detection.
 COPY package.json ./
 COPY src/ ./src/
+# For `src/monitor.ts` so that healthchecks.io ping records which commit ran.
+# Declared after the `COPY` lines so that a new commit does not invalidate the
+# `node_modules` layer.
+ARG GIT_REVISION=unknown
+ENV GIT_REVISION=${GIT_REVISION}
 USER node
 ENTRYPOINT ["node", "src/main.ts"]
