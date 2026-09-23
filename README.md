@@ -3,18 +3,18 @@ Moon Over Oakland
 Automatically post moon phase updates specifically for Oakland, CA to Bluesky.
 The posts are written for a general audience.
 
+**Bluesky Accounts**:
+- **Production**: [moon-over-oakland.bsky.social](https://bsky.app/profile/moon-over-oakland.bsky.social)
+- **Test**: [test-moon.bsky.social](https://bsky.app/profile/test-moon.bsky.social)
+
 **Features**:
-- Posts on **new moon**, **first quarter**, **full moon**, and **last quarter**.
-  - [Posting algorithm](docs/posting-algorithm.md): Post if one of four principal
-    moon phases (new, first quarter, full, last quarter) falls between 4:00 AM
-    on the given date and 4:00 AM the next day. The window is shifted off of
-    midnight so that a phase event in the small hours is posted on the preceding
-    evening — when that phase is most visible. Additionally, 4:00 AM avoids the
-    nonexistent or ambiguous wall-clock times daylight savings creates between
-    1:00 and 3:00 AM.
-- Moon and sun ephemeris for posts are **calculated** and does not depend on any
-  external services or APIs.
-- Deployable **anywhere as a Docker image**.
+- **Moon and sun ephemeris are calculated locally** with no dependencies on
+  external services or APIs, and are tested against NASA JPL Horizons.
+- **Posts on the four principal phases**: new moon, first quarter, full moon,
+  and last quarter. See [posting algorithm](docs/posting-algorithm.md).
+- **Ships as an ARM64 Docker image** on GHCR (GitHub Container Registry) that
+  runs on Apple Silicon Macs, 64-bit Raspberry Pis, etc. **Rebuilt weekly** to
+  pick up base image security patches.
 - Optional: **Healthchecks.io dead man's switch** so a silent failure gets
   noticed.
 
@@ -45,7 +45,7 @@ simplest solution is to use a pre-existing Gmail account with an email alias,
 AKA plus ("+") sign addressing. All these go to the same inbox:
 
 - `your.username@gmail.com`
-- `your.username+bksy@gmail.com`
+- `your.username+bsky@gmail.com`
 - `your.username+moon-over-oakland.bksy.social@gmail.com`
 
 #### To Create an App Password on Bluesky
@@ -54,10 +54,11 @@ AKA plus ("+") sign addressing. All these go to the same inbox:
 3. Copy-and-paste it into the `.env` file
 
 #### Test Account (optional)
-`pnpm post:test` posts to a second Bluesky account, so a template change can be
-checked against Bluesky's own renderer without touching the timeline people
-read. Create a second account and app password exactly as above — an email alias
-makes the unique address painless — then fill in the matching pair:
+`pnpm post:test` posts to a second, test Bluesky account, so a template change
+can be checked against Bluesky's own renderer without touching the timeline
+people read. Create a second account and app password exactly as above and then
+fill in the matching pair. Test posts ignore the once-a-day guard, so that every
+`pnpm post:test` posts.
 
 ```sh
 TEST_BLUESKY_HANDLE=your-test-handle.bsky.social
@@ -117,7 +118,7 @@ unaffected: it is sampled on its own schedule and interpolated between samples
 rather than snapped to one.
 
 **Note**: The location and timezone are sourced from [`src/observer.ts`](
-src/observer.ts)
+src/observer.ts).
 
 Docker
 --------------------------------------------------------------------------------
