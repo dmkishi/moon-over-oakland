@@ -18,16 +18,17 @@ The posts are written for a general audience.
 - Optional: **Healthchecks.io dead man's switch** so a silent failure gets
   noticed.
 
-Setup
+Develop
 --------------------------------------------------------------------------------
-### 1. Install
+### Setup
+#### 1. Install
 ```sh
 git clone https://github.com/dmkishi/moon-over-oakland.git
 cd moon-over-oakland
 pnpm install
 ```
 
-### 2. Configure social media credentials
+#### 2. Configure social media credentials
 Make new copy of `.env`:
 ```sh
 cp .env.example .env
@@ -39,7 +40,7 @@ BLUESKY_HANDLE=your-handle.bsky.social
 BLUESKY_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
 ```
 
-#### To Create a New Account on Bluesky
+##### To Create a New Account on Bluesky
 To create a new Bluesky account, **a unique email address is required**. The
 simplest solution is to use a pre-existing Gmail account with an email alias,
 AKA plus ("+") sign addressing. All these go to the same inbox:
@@ -48,12 +49,12 @@ AKA plus ("+") sign addressing. All these go to the same inbox:
 - `your.username+bsky@gmail.com`
 - `your.username+moon-over-oakland.bksy.social@gmail.com`
 
-#### To Create an App Password on Bluesky
+##### To Create an App Password on Bluesky
 1. Go to **Settings** → **Privacy and Security** → **App Passwords**
 2. Create a new app password
 3. Copy-and-paste it into the `.env` file
 
-#### Test Account (optional)
+##### Test Account (optional)
 `pnpm post:test` posts to a second, test Bluesky account, so a template change
 can be checked against Bluesky's own renderer without touching the timeline
 people read. Create a second account and app password exactly as above and then
@@ -65,18 +66,7 @@ TEST_BLUESKY_HANDLE=your-test-handle.bsky.social
 TEST_BLUESKY_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
 ```
 
-### 3. Configure Healthchecks.io monitoring (optional)
-Add a [healthchecks.io](https://healthchecks.io) ping URL to the `.env` file:
-```sh
-HEALTHCHECKS_URL=https://hc-ping.com/<uuid>
-```
-
-The app must ping Healthchecks.io every day. When Healthchecks.io detects a
-missed pings or a fail, it sends out an alert email. A dry run pings nothing and
-a monitor that is unreachable never fails the post.
-
-Usage
---------------------------------------------------------------------------------
+### Usage
 ```sh
 pnpm check
 pnpm post                  # Posts online (but only on permitted moon phases)
@@ -85,7 +75,7 @@ pnpm preview               # Preview post with calculated data (NEVER posts)
 pnpm preview 2026-01-01    # Optionally specify a date
 ```
 
-### NASA JPL Horizons
+#### NASA JPL Horizons
 ```sh
 pnpm horizons [YYYY-MM-DD] [--every=<interval>] [--show-table] [--show-csv] [--show-raw] [--no-summary] [--no-json]
 ```
@@ -120,8 +110,7 @@ rather than snapped to one.
 **Note**: The location and timezone are sourced from [`src/observer.ts`](
 src/observer.ts).
 
-Docker
---------------------------------------------------------------------------------
+### Docker
 The production run is packaged as a single image. Tests, lint and typecheck stay
 on the host.
 
@@ -145,6 +134,102 @@ Production images are built, smoke tested and published to
 .github/workflows/image.yml). Only `pnpm docker:post` pulls that image, since
 only `pnpm docker:post` is a production run; the other scripts build and run
 whatever is local.
+
+Deployment (Raspberry Pi 3+)
+--------------------------------------------------------------------------------
+Once installed, everything lives in `~/moon-over-oakland/`, plus one crontab
+line:
+
+| File     | Purpose                                          |
+|----------|--------------------------------------------------|
+| `run.sh` | **Do not edit**. Written by the install script.  |
+| `env`    | Secrets.                                         |
+| `log`    | Output of each run and each deploy. No rotation. |
+
+`run.sh` pins the Docker image, checks that the clock is synchronized with NTP,
+and tries to post. It makes up to 4 attempts, 5 minutes apart. **A retry never
+double-posts**: the app checks Bluesky for a post from today first.
+
+### Requirements
+- **Model**: Raspberry Pi 3 or newer
+- **OS**: Raspberry Pi OS Lite (64-bit)
+- **Network**: Internet access and SSH
+- **Time zone**: `America/Los_Angeles`
+- **Clock**: NTP on
+- **Cron**: Installed and running, the default on Raspberry Pi OS
+- **Docker**: Installed, with your user in the `docker` group so cron can run it
+
+### Steps
+#### 1. Run the install script and fill in the secrets
+```sh
+curl -fsSL https://raw.githubusercontent.com/dmkishi/moon-over-oakland/main/scripts/install-raspberry-pi.sh | sh
+```
+
+The first run creates `~/moon-over-oakland/env` and stops.
+
+Populate `~/moon-over-oakland/env` **without quotes**. `HEALTHCHECKS_URL` is
+optional, see [step 3](#3-set-up-healthchecksio-optional):
+
+```sh
+BLUESKY_HANDLE=your-handle.bsky.social
+BLUESKY_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
+HEALTHCHECKS_URL=https://hc-ping.com/<uuid>
+```
+
+#### 2. Run the install script again
+On the second run, the script checks the Raspberry Pi against the requirements,
+pulls the newest Docker image built from `main`, and dry-runs a test full moon
+post. If it passes, it writes `run.sh` with that image's tag pinned and adds a
+crontab line. It prints `Live: ghcr.io/dmkishi/moon-over-oakland:sha-<short>`
+when done.
+
+#### 3. Set up Healthchecks.io (optional)
+[Healthchecks.io](https://healthchecks.io) is optional but strongly recommended,
+since it is the only way you'll hear that a run failed or never happened.
+
+Each production run pings `/start` when it begins, then the plain URL on success
+or `/fail` on error. Healthchecks.io sends an alert email when a ping is late or
+a `/fail` arrives. Each ping carries the image's commit, so the check's log
+shows which build ran. **Dry runs and test posts ping nothing, and an
+unreachable monitor never fails the post**.
+
+Create a check with:
+
+- **Schedule**: Cron, `0 6 * * *`
+- **Time zone**: `America/Los_Angeles`
+- **Grace time**: About 1 hour
+
+Set its ping URL as `HEALTHCHECKS_URL` in `~/moon-over-oakland/env`. The next
+run picks it up, so there is no need to rerun the install script.
+
+### Maintenance
+#### Update
+Rerun the install command above. With no argument, it deploys the newest image
+built from `main`.
+
+#### Rollback
+To roll back to a specific build, pass its tag:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/dmkishi/moon-over-oakland/main/scripts/install-raspberry-pi.sh | sh -s -- sha-<short>
+```
+
+#### Dry Run
+Render a post without posting or pinging Healthchecks.io:
+
+```sh
+docker run --rm ghcr.io/dmkishi/moon-over-oakland:sha-<short> --dry-run 2026-01-02
+```
+
+Deployment (Alternatives)
+--------------------------------------------------------------------------------
+- **[Render](https://render.com)**: Native cron jobs run the image directly, but
+  schedules are UTC only, so 6 AM Pacific drifts an hour with DST.
+- **[DigitalOcean](https://www.digitalocean.com)**: A $4/month Droplet is closest
+  to the Pi setup, but it is x86, so the install script's `aarch64` check fails.
+- **[Fly.io](https://fly.io)**: Cheap per-second billing, but scheduled Machines
+  only take `daily`, not an exact time, so a precise run needs a cron process
+  inside.
 
 See Also
 --------------------------------------------------------------------------------
