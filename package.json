@@ -6,19 +6,11 @@
   "license": "MIT",
   "type": "module",
   "packageManager": "pnpm@12.3.4",
-  "config": {
-    "image": "ghcr.io/dmkishi/moon-over-oakland"
-  },
   "scripts": {
     "post": "node src/main.ts",
     "post:test": "pnpm post --test",
     "preview": "pnpm post --dry-run",
     "horizons": "node scripts/nasaJplHorizons/main.ts",
-    "docker:build": "pnpm docker:build-only && pnpm docker:smoke-test",
-    "docker:build-only": "docker build --pull --build-arg NODE_VERSION=$(cat .nvmrc) --tag $npm_package_config_image .",
-    "docker:smoke-test": "pnpm docker:preview 2026-01-02",
-    "docker:post": "docker run --rm --pull=always --env-file .env $npm_package_config_image",
-    "docker:preview": "docker run --rm $npm_package_config_image --dry-run",
     "check": "pnpm typecheck && pnpm lint && vitest run",
     "typecheck": "tsc",
     "lint": "oxlint",

@@ -110,30 +110,12 @@ rather than snapped to one.
 **Note**: The location and timezone are sourced from [`src/observer.ts`](
 src/observer.ts).
 
-### Docker
-The production run is packaged as a single image. Tests, lint and typecheck stay
-on the host.
+### Docker Image
+[`image.yml`](.github/workflows/image.yml) builds and smoke tests the image on
+every pull request. On `main`, it also pushes the image to
+`ghcr.io/dmkishi/moon-over-oakland`.
 
-```sh
-pnpm docker:build       # Builds then smoke tests the image
-pnpm docker:build-only  # Builds only
-pnpm docker:smoke-test  # Smoke tests the image
-pnpm docker:preview     # Same as `pnpm preview` (see § Usage above)
-pnpm docker:post        # Same as `pnpm post` (see § Usage above)
-```
-
-Arguments after the image name reach the CLI, so `pnpm docker:preview 2026-01-01`
-works the same as `pnpm preview`.
-
-Pass secrets at runtime through `--env-file` or the host's secret store. Never
-through `ENV` or `--build-arg`, both of which persist in the image layers where
-anyone with `docker history` can read them.
-
-Production images are built, smoke tested and published to
-`ghcr.io/dmkishi/moon-over-oakland` by [`image.yml`](
-.github/workflows/image.yml). Only `pnpm docker:post` pulls that image, since
-only `pnpm docker:post` is a production run; the other scripts build and run
-whatever is local.
+The image holds no secrets. They're passed at runtime through `--env-file`.
 
 Deployment (Raspberry Pi 3+)
 --------------------------------------------------------------------------------
