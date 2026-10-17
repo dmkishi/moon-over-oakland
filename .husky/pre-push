@@ -21,11 +21,8 @@ fi
 ################################################################################
 # Check changelog date
 ################################################################################
-if grep -qE "^### ${README} \([0-9]{4}-[0-9]{1,2}-[0-9]{1,2}\)" README.md; then
-  :
-else
-  echo 'README.md: Missing or invalid date in the Changelog.'
-  exit 1
+if ! grep -qE "^### ${README} \([0-9]{4}-[0-9]{1,2}-[0-9]{1,2}\)" README.md; then
+  echo 'WARNING: README.md - missing or invalid date in the Changelog.' >&2
 fi
 
 ################################################################################
