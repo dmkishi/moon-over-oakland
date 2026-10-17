@@ -1,0 +1,59 @@
+<svg width="100%" viewBox="0 0 680 420" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Position angle and parallactic angle geometry</title>
+<desc>The Moon with three directions from its center: zenith (straight up, dashed), celestial north (dashed, 24 degrees clockwise of up), and the bright limb midpoint (solid, 46 degrees counterclockwise of up). Arcs run counterclockwise: q from north to zenith, PA from north to the bright limb, and the tilt PA minus q from zenith to the bright limb. A horizon line sits below for context.</desc>
+<style>
+  .bg { fill: #f3f2ee; }
+  .ref { stroke: #898781; fill: none; }
+  .label { fill: #52514e; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 12px; }
+  .moon { fill: #fcfcfb; stroke: rgba(11, 11, 11, 0.2); stroke-width: 0.5; }
+  .horizon { stroke: rgba(11, 11, 11, 0.2); stroke-width: 1; }
+
+  @media (prefers-color-scheme: dark) {
+    .bg { fill: #262624; }
+    .label { fill: #b5b3ad; }
+    .horizon { stroke: rgba(255, 255, 255, 0.25); }
+  }
+</style>
+
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" class="ref" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+
+<rect width="680" height="420" class="bg"/>
+
+<line x1="40" y1="380" x2="640" y2="380" class="horizon"/>
+<text x="48" y="368" class="label">Horizon</text>
+<text x="632" y="368" text-anchor="end" class="label">Sky view: north up, east left · angles positive counterclockwise</text>
+
+<circle cx="360" cy="220" r="18" class="moon"/>
+
+<!-- zenith -->
+<line x1="360" y1="220" x2="360" y2="102" class="ref" stroke-width="0.75" stroke-dasharray="3 3" marker-end="url(#arrow)"/>
+<text x="360" y="90" text-anchor="middle" class="label">Zenith (up)</text>
+
+<!-- celestial north, 24° clockwise of up -->
+<line x1="360" y1="220" x2="408" y2="112.2" class="ref" stroke-width="0.75" stroke-dasharray="3 3" marker-end="url(#arrow)"/>
+<line x1="409.2" y1="109.5" x2="450" y2="92" class="ref" stroke-width="0.5" stroke-dasharray="2 2"/>
+<text x="456" y="95" class="label">Celestial north</text>
+
+<!-- bright limb, 70° counterclockwise of north -->
+<line x1="360" y1="220" x2="270.1" y2="133.2" class="ref" stroke-width="1" marker-end="url(#arrow)"/>
+<line x1="267.9" y1="131.1" x2="222" y2="112" class="ref" stroke-width="0.5" stroke-dasharray="2 2"/>
+<text x="216" y="115" text-anchor="end" class="label">Bright limb</text>
+
+<!-- q: north → zenith -->
+<path d="M373.02,190.77 A32,32 0 0,0 360,188" class="ref" stroke-width="0.5" marker-end="url(#arrow)"/>
+<text x="370" y="181" text-anchor="middle" class="label">q</text>
+
+<!-- PA: north → bright limb -->
+<path d="M397.42,135.95 A92,92 0 0,0 293.82,156.09" class="ref" stroke-width="0.5" marker-end="url(#arrow)"/>
+<text x="340" y="122" text-anchor="middle" class="label">PA</text>
+
+<!-- tilt: zenith → bright limb -->
+<path d="M360,172 A48,48 0 0,0 325.47,186.66" class="ref" stroke-width="0.5" marker-end="url(#arrow)"/>
+<text x="331" y="152" text-anchor="middle" class="label">tilt</text>
+<text x="331" y="166" text-anchor="middle" class="label">PA − q</text>
+
+</svg>
