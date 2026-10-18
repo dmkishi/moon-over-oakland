@@ -10,13 +10,15 @@ The posts are written for a general audience.
 **Features**:
 - **Moon and sun ephemeris are calculated locally** with no dependencies on
   external services or APIs, and are tested against NASA JPL Horizons.
+  - Rise and set times drift up to about 8 minutes per 100 miles from Oakland.
+    See [observer distance](docs/observer-distance.md).
 - **Posts on the four principal phases**: new moon, first quarter, full moon,
   and last quarter. See [posting algorithm](docs/posting-algorithm.md).
 - **Ships as an ARM64 Docker image** on GHCR (GitHub Container Registry) that
   runs on Apple Silicon Macs, 64-bit Raspberry Pis, etc. **Rebuilt weekly** to
   pick up base image security patches.
-- Optional: **Healthchecks.io dead man's switch** so a silent failure gets
-  noticed.
+- Optional: **[Healthchecks.io](https://healthchecks.io) dead man's switch** so
+  a silent failure gets noticed.
 
 Develop
 --------------------------------------------------------------------------------
