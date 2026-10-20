@@ -55,7 +55,7 @@ Date  |  Time | Rise |   Set | Sunrise | Sunset | Rise ∆ | Set ∆ | Post   |
 The moon **rises around noon** and **sets around midnight**.
 
 - Rise ∆ = moonrise - noon
-- Set ∆ = moonset - midnight
+- Set ∆ = moonset - midnight at end of day
 
 Date  |  Time |  Rise |     Set | Sunrise | Sunset | Rise ∆ | Set ∆ | Post   |
 ------|------:|------:|--------:|--------:|-------:|-------:|------:|--------|
@@ -103,7 +103,7 @@ Date  |  Time |  Rise |    Set | Sunrise | Sunset | Rise ∆ | Set ∆ | Post   
 --------------------------------------------------------------------------------
 The moon **rises around midnight** and **sets around noon**.
 
-- Rise ∆ = moonrise - midnight
+- Rise ∆ = moonrise - midnight at start of day
 - Set ∆ = moonset - noon
 
 Date  |  Time |    Rise |     Set | Sunrise | Sunset | Rise ∆ | Set ∆ | Post   |
@@ -115,12 +115,11 @@ Date  |  Time |    Rise |     Set | Sunrise | Sunset | Rise ∆ | Set ∆ | Post
  5-9  | 14:10 |  2:06   | 12:30   |    6:04 |  20:08 |    126 |    30 | Day-of |
  6-8  |  3:00 |  1:25   | 13:30   |    5:47 |  20:31 |     85 |    90 | 6-7    |
  7-7  | 12:28 |  0:16   | 13:31   |    5:54 |  20:35 |     16 |    91 | Day-of |
- 8-5  | 19:21 | 23:14 ‡ | 13:41   |    6:16 |  20:15 |    -12 |   101 | Day-of |
+ 8-5  | 19:21 | 23:14 ‡ | 13:41   |    6:16 |  20:15 |    -46 |   101 | Day-of |
  9-4  |  0:51 | 23:16 ‡ | 15:07   |    6:42 |  19:35 |    -44 |   187 | 9-3    |
 10-3  |  6:25 | 23:14 ‡ | 14:57   |    7:06 |  18:50 |    -46 |   177 | Day-of |
-11-1  | 12:28 | 23:43   | 13:50 † |    6:34 |  17:11 |    -17 |   110 | Day-of |
-11-30 | 22:08 | 23:52   | 12:21 † |    7:05 |  16:52 |     -8 |    21 | Day-of |
-12-30 | 10:59 | 23:53   | 11:38 † |    7:24 |  17:01 |     -7 |   -22 | Day-of |
+11-1  | 12:28 | 23:30 ‡ | 13:19   |    6:34 |  17:11 |    -30 |    79 | Day-of |
+11-30 | 22:08 | 22:44 ‡ | 12:21   |    7:05 |  16:52 |    -76 |    21 | Day-of |
+12-30 | 10:59 | 23:53 ‡ | 11:38   |    7:24 |  17:01 |     -7 |   -22 | Day-of |
 
 ‡ Previous day
-† Next day
