@@ -1,32 +1,18 @@
 {% comment %}
   @param {string} phaseType - 'new' | 'first-quarter' | 'full' | 'last-quarter'
   @param {string} eventDay - 'today' | 'tomorrow'
-  @param {date} eventTime
-  @param {date} moonrise
-  @param {date} moonset
-  @param {date} sunrise
-  @param {date} sunset
+  @param {string} eventTime - E.g. "1:30 pm", "12-noon", "12-midnight"
+  @param {string} moonriseTime - "
+  @param {string} moonsetTime - "
+  @param {string} sunriseTime - "
+  @param {string} sunsetTime - "
   @param {number} deltaRiseMinutes
   @param {number} deltaSetMinutes
-  @param {date} nextNew
-  @param {date} nextFirstQuarter
-  @param {date} nextFull
-  @param {date} nextLastQuarter
+  @param {string} nextNewDate - E.g. "9/18 (Thu)"
+  @param {string} nextFirstQuarterDate - "
+  @param {string} nextFullDate - "
+  @param {string} nextLastQuarterDate - "
 {% endcomment %}
-
-{% liquid
-  # E.g. "1:30 pm", "12-noon", "12-midnight"
-  assign TIME_FORMAT = "%-l:%M %P"
-  assign moonrise_time = moonrise | date: TIME_FORMAT | replace: "12:00 am", "12-midnight" | replace: "12:00 pm", "12-noon"
-  assign moonset_time = moonset | date: TIME_FORMAT | replace: "12:00 am", "12-midnight" | replace: "12:00 pm", "12-noon"
-
-  # E.g. "9/18 (Thu)"
-  assign DATE_FORMAT = "%-m/%-d (%a)"
-  assign nextNewDate = nextNew | date: DATE_FORMAT
-  assign nextFirstQuarterDate = nextFirstQuarter | date: DATE_FORMAT
-  assign nextFullDate = nextFull | date: DATE_FORMAT
-  assign nextLastQuarterDate = nextLastQuarter | date: DATE_FORMAT
-%}
 
 {% case phaseType %}
   {% when 'new' %}
@@ -39,8 +25,8 @@
 
     🌑 The NEW MOON rises with the sun and sets with the sun. It’ll be in the sky all day, though you probably won’t be able to see it.
 
-    • Moonrise: {{ moonrise_time }}
-    • Moonset: {{ moonset_time }}
+    • Moonrise: {{ moonriseTime }}
+    • Moonset: {{ moonsetTime }}
 
     Next phases:
     • Half Moon: {{ nextFirstQuarterDate }}
@@ -60,8 +46,8 @@
 
     🌓 The HALF MOON (FIRST QUARTER) rises around noon and sets around midnight. It is visible in the afternoon and evening.
 
-    • Moonrise: {{ moonrise_time }}
-    • Moonset: {{ moonset_time }} {{ moonset_note }}
+    • Moonrise: {{ moonriseTime }}
+    • Moonset: {{ moonsetTime }} {{ moonset_note }}
 
     Next phases:
     • Full Moon: {{ nextFullDate }}
@@ -78,8 +64,8 @@
 
     🌕 The FULL MOON rises around sunset and sets around sunrise. It’ll be visible all night, given a clear sky.
 
-    • Moonrise: {{ moonrise_time }}
-    • Moonset: {{ moonset_time }} (tomorrow morning)
+    • Moonrise: {{ moonriseTime }}
+    • Moonset: {{ moonsetTime }} (tomorrow morning)
 
     Next phases:
     • Half Moon: {{ nextLastQuarterDate }}
@@ -99,8 +85,8 @@
 
     🌗 The HALF MOON (LAST QUARTER) rises around midnight and sets around noon today. It is visible in the late night and morning.
 
-    • Moonrise: {{ moonrise_time }} {{ moonrise_note }}
-    • Moonset: {{ moonset_time }}
+    • Moonrise: {{ moonriseTime }} {{ moonrise_note }}
+    • Moonset: {{ moonsetTime }}
 
     Next phases:
     • New Moon: {{ nextNewDate }}
