@@ -21,6 +21,10 @@ function calculate(date: Temporal.PlainDate): DayEvents {
   return calculateDayEvents(date, timezone, latitude, longitude);
 }
 
+function calculateNight(date: Temporal.PlainDate): DayEvents {
+  return calculateDayEvents(date, timezone, latitude, longitude, 'night');
+}
+
 function minutesBetween(a: Temporal.ZonedDateTime, isoDateTime: string): number {
   return Math.abs(a.epochMilliseconds - new Date(isoDateTime).getTime()) / 60_000;
 }
@@ -96,5 +100,63 @@ describe('daylight saving time', () => {
     expect(result.moonrise.offset).toBe('-08:00');
     expect(result.moonrise.toPlainDate().toString()).toBe('2026-11-01');
     expect(result.moonset.toPlainDate().toString()).toBe('2026-11-02');
+  });
+});
+
+/**
+ * The `night` window runs from noon on the previous day to noon on the day, so
+ * a last quarter post pairs the moon up at dawn rather than the day's own late
+ * evening rise. Rise and set instants from JPL Horizons.
+ */
+describe('night moonrise window', () => {
+  const cases = [
+    {
+      day: '2026-11-01',
+      description: 'skips the day\'s own 23:43 rise for the previous night\'s',
+      moonrise: '2026-10-31T23:30:00-07:00',
+      moonset: '2026-11-01T13:19:00-08:00',
+    },
+    {
+      day: '2026-08-05',
+      description: 'skips the day\'s own 23:48 rise for the previous night\'s',
+      moonrise: '2026-08-04T23:14:00-07:00',
+      moonset: '2026-08-05T13:41:00-07:00',
+    },
+    {
+      day: '2026-01-10',
+      description: 'keeps an after-midnight rise',
+      moonrise: '2026-01-10T00:15:00-08:00',
+      moonset: '2026-01-10T11:28:00-08:00',
+    },
+  ];
+
+  for (const { day, description, moonrise, moonset } of cases) {
+    describe(`${day} ${description}`, () => {
+      const date = Temporal.PlainDate.from(day);
+
+      it(`moonrise matches within ±${TOLERANCE_MINUTES} minutes`, () => {
+        expect(minutesBetween(calculateNight(date).moonrise, moonrise)).toBeLessThanOrEqual(TOLERANCE_MINUTES);
+      });
+
+      it(`moonset matches within ±${TOLERANCE_MINUTES} minutes`, () => {
+        expect(minutesBetween(calculateNight(date).moonset, moonset)).toBeLessThanOrEqual(TOLERANCE_MINUTES);
+      });
+    });
+  }
+
+  it('2026-03-08, a 23-hour day without a moonrise, finds the previous evening\'s inside the window', () => {
+    const date = Temporal.PlainDate.from('2026-03-08');
+    const night = calculateNight(date);
+    expect(night.moonrise.toPlainDate().toString()).toBe('2026-03-07');
+    expect(night.moonrise.hour).toBe(22);
+    expect(night.moonrise.equals(calculate(date).moonrise)).toBe(true);
+  });
+
+  it('leaves the sun times on the civil day', () => {
+    const date = Temporal.PlainDate.from('2026-11-01');
+    const night = calculateNight(date);
+    const day = calculate(date);
+    expect(night.sunrise.equals(day.sunrise)).toBe(true);
+    expect(night.sunset.equals(day.sunset)).toBe(true);
   });
 });

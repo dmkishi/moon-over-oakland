@@ -50,7 +50,13 @@ export function calculatePhaseEvent(
       Temporal.ZonedDateTime.compare(phase, windowEnd) >= 0
     ) continue;
 
-    const dayEvents = calculateDayEvents(date, timezone, latitude, longitude);
+    const dayEvents = calculateDayEvents(
+      date,
+      timezone,
+      latitude,
+      longitude,
+      phaseType === 'last-quarter' ? 'night' : 'day',
+    );
 
     return {
       type: phaseType,

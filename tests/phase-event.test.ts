@@ -66,6 +66,11 @@ const REFERENCES: Record<PhaseType, Record<MoonEvent, string>> = {
   },
 };
 
+const QUARTER_PAIRINGS: Partial<Record<PhaseType, { moonEvent: MoonEvent; noonOffset: number }>> = {
+  'first-quarter': { moonEvent: 'moonset', noonOffset: 0 },
+  'last-quarter': { moonEvent: 'moonrise', noonOffset: -1 },
+};
+
 /*******************************************************************************
  * Test posting decisions
  ******************************************************************************/
@@ -111,6 +116,22 @@ for (const fixture of postingFixtures) {
       expect(eventDeltas.moonrise.reference).toBe(moonrise);
       expect(eventDeltas.moonset.reference).toBe(moonset);
     });
+
+    // Checks that the near-midnight event (first quarter's moonset, last
+    // quarter's moonrise) comes from the right midnight. The delta can't show
+    // this: it's measured to whichever midnight is closest, so an event from
+    // the wrong night still gets a small delta, e.g. -30 min instead of +20 min.
+    const pairing = QUARTER_PAIRINGS[fixture.phaseType];
+    if (pairing) {
+      it(`pairs the ${pairing.moonEvent} within the noon-to-noon span around its midnight`, () => {
+        const { moonEvent, noonOffset } = pairing;
+        const time = calculate(postDate)!.dayEvents[moonEvent];
+        const start = postDate.add({ days: noonOffset }).toZonedDateTime({ timeZone: timezone, plainTime: '12:00' });
+        const end = start.toPlainDate().add({ days: 1 }).toZonedDateTime({ timeZone: timezone, plainTime: '12:00' });
+        expect(Temporal.ZonedDateTime.compare(time, start)).toBeGreaterThanOrEqual(0);
+        expect(Temporal.ZonedDateTime.compare(time, end)).toBe(-1);
+      });
+    }
   });
 }
 
