@@ -1,20 +1,20 @@
 {% comment %}
-  @param {string} phaseType - 'new' | 'first-quarter' | 'full' | 'last-quarter'
-  @param {string} eventDay - 'today' | 'tomorrow'
-  @param {string} eventTime - E.g. "1:30 pm", "12-noon", "12-midnight"
-  @param {string} moonriseTime - "
-  @param {string} moonsetTime - "
-  @param {string} sunriseTime - "
-  @param {string} sunsetTime - "
-  @param {number} deltaRiseMinutes
-  @param {number} deltaSetMinutes
-  @param {string} nextNewDate - E.g. "9/18 (Thu)"
-  @param {string} nextFirstQuarterDate - "
-  @param {string} nextFullDate - "
-  @param {string} nextLastQuarterDate - "
+  @param {string} phase_type - 'new' | 'first-quarter' | 'full' | 'last-quarter'
+  @param {string} event_day - 'today' | 'tomorrow'
+  @param {string} event_time - E.g. "1:30 pm", "12-noon", "12-midnight"
+  @param {string} moonrise_time - "
+  @param {string} moonset_time - "
+  @param {string} sunrise_time - "
+  @param {string} sunset_time - "
+  @param {number} delta_rise_minutes
+  @param {number} delta_set_minutes
+  @param {string} next_new_date - E.g. "9/18 (Thu)"
+  @param {string} next_first_quarter_date - "
+  @param {string} next_full_date - "
+  @param {string} next_last_quarter_date - "
 {% endcomment %}
 
-{% case phaseType %}
+{% case phase_type %}
   {% when 'new' %}
     {% liquid
       # ------------------------------------------------------------------------
@@ -25,13 +25,13 @@
 
     🌑 The NEW MOON rises with the sun and sets with the sun. It’ll be in the sky all day, though you probably won’t be able to see it.
 
-    • Moonrise: {{ moonriseTime }}
-    • Moonset: {{ moonsetTime }}
+    • Moonrise: {{ moonrise_time }}
+    • Moonset: {{ moonset_time }}
 
     Next phases:
-    • Half Moon: {{ nextFirstQuarterDate }}
-    • Full Moon: {{ nextFullDate }}
-    • New Moon: {{ nextNewDate }}
+    • Half Moon: {{ next_first_quarter_date }}
+    • Full Moon: {{ next_full_date }}
+    • New Moon: {{ next_new_date }}
 
   {% when 'first-quarter' %}
     {% liquid
@@ -39,20 +39,20 @@
       # FIRST QUARTER
       # - MOONRISE around noon.
       # - MOONSET around midnight at end of day (notate if after midnight.)
-      if deltaSetMinutes > 0
+      if delta_set_minutes > 0
         assign moonset_note = "(after midnight)"
       endif
     %}
 
     🌓 The HALF MOON (FIRST QUARTER) rises around noon and sets around midnight. It is visible in the afternoon and evening.
 
-    • Moonrise: {{ moonriseTime }}
-    • Moonset: {{ moonsetTime }} {{ moonset_note }}
+    • Moonrise: {{ moonrise_time }}
+    • Moonset: {{ moonset_time }} {{ moonset_note }}
 
     Next phases:
-    • Full Moon: {{ nextFullDate }}
-    • Half Moon: {{ nextLastQuarterDate }}
-    • New Moon: {{ nextNewDate }}
+    • Full Moon: {{ next_full_date }}
+    • Half Moon: {{ next_last_quarter_date }}
+    • New Moon: {{ next_new_date }}
 
   {% when 'full' %}
     {% liquid
@@ -64,13 +64,13 @@
 
     🌕 The FULL MOON rises around sunset and sets around sunrise. It’ll be visible all night, given a clear sky.
 
-    • Moonrise: {{ moonriseTime }}
-    • Moonset: {{ moonsetTime }} (tomorrow morning)
+    • Moonrise: {{ moonrise_time }}
+    • Moonset: {{ moonset_time }} (tomorrow morning)
 
     Next phases:
-    • Half Moon: {{ nextLastQuarterDate }}
-    • New Moon: {{ nextNewDate }}
-    • Full Moon: {{ nextFullDate }}
+    • Half Moon: {{ next_last_quarter_date }}
+    • New Moon: {{ next_new_date }}
+    • Full Moon: {{ next_full_date }}
 
   {% when 'last-quarter' %}
     {% liquid
@@ -78,19 +78,19 @@
       # LAST QUARTER
       # - MOONRISE around midnight at start of day (notate if before midnight.)
       # - MOONSET around noon.
-      if deltaRiseMinutes < 0
+      if delta_rise_minutes < 0
         assign moonrise_note = "(yesterday)"
       endif
     %}
 
     🌗 The HALF MOON (LAST QUARTER) rises around midnight and sets around noon today. It is visible in the late night and morning.
 
-    • Moonrise: {{ moonriseTime }} {{ moonrise_note }}
-    • Moonset: {{ moonsetTime }}
+    • Moonrise: {{ moonrise_time }} {{ moonrise_note }}
+    • Moonset: {{ moonset_time }}
 
     Next phases:
-    • New Moon: {{ nextNewDate }}
-    • Half Moon: {{ nextFirstQuarterDate }}
-    • Full Moon: {{ nextFullDate }}
+    • New Moon: {{ next_new_date }}
+    • Half Moon: {{ next_first_quarter_date }}
+    • Full Moon: {{ next_full_date }}
 
 {% endcase %}

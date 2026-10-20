@@ -42,19 +42,19 @@ export async function renderPost(phaseEvent: PhaseEvent, timezone: string): Prom
   const local = (zoned: Temporal.ZonedDateTime) => zoned.withTimeZone(timezone);
   const { dayEvents, nextPhases } = phaseEvent;
   const data = {
-    phaseType: phaseEvent.type,
-    eventDay: phaseEvent.day,
-    eventTime: formatTime(local(phaseEvent.time)),
-    moonriseTime: formatTime(local(dayEvents.moonrise)),
-    moonsetTime: formatTime(local(dayEvents.moonset)),
-    sunriseTime: formatTime(local(dayEvents.sunrise)),
-    sunsetTime: formatTime(local(dayEvents.sunset)),
-    deltaRiseMinutes: phaseEvent.eventDeltas.moonrise.minutes,
-    deltaSetMinutes: phaseEvent.eventDeltas.moonset.minutes,
-    nextNewDate: formatDate(local(nextPhases['new'])),
-    nextFirstQuarterDate: formatDate(local(nextPhases['first-quarter'])),
-    nextFullDate: formatDate(local(nextPhases['full'])),
-    nextLastQuarterDate: formatDate(local(nextPhases['last-quarter'])),
+    phase_type: phaseEvent.type,
+    event_day: phaseEvent.day,
+    event_time: formatTime(local(phaseEvent.time)),
+    moonrise_time: formatTime(local(dayEvents.moonrise)),
+    moonset_time: formatTime(local(dayEvents.moonset)),
+    sunrise_time: formatTime(local(dayEvents.sunrise)),
+    sunset_time: formatTime(local(dayEvents.sunset)),
+    delta_rise_minutes: phaseEvent.eventDeltas.moonrise.minutes,
+    delta_set_minutes: phaseEvent.eventDeltas.moonset.minutes,
+    next_new_date: formatDate(local(nextPhases['new'])),
+    next_first_quarter_date: formatDate(local(nextPhases['first-quarter'])),
+    next_full_date: formatDate(local(nextPhases['full'])),
+    next_last_quarter_date: formatDate(local(nextPhases['last-quarter'])),
   };
   const result: unknown = await createEngine().renderFile('post', data);
   if (typeof result !== 'string') {
