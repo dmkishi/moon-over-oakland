@@ -16,10 +16,6 @@ What Depends on Location
   algorithm](posting-algorithm.md)). Anywhere on Pacific time gets the same
   post day and the same "Next phases" list.
 - **Moonrise and moonset times do.** These are the printed clock times.
-- **Rise and set wording barely does.** Words like "around" and "shortly
-  before" compare the moon to the sun at the same place. Moving shifts both, so
-  most of the error cancels. The wording only changes when a delta sits near a
-  bucket boundary in [`src/post.liquid`](../src/post.liquid).
 
 Rule of Thumb
 --------------------------------------------------------------------------------
