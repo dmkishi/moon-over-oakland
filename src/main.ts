@@ -117,7 +117,7 @@ async function main({ date, isTest, isDryRun }: ReturnType<typeof parseCliArgs>)
   console.log(`    Last Quarter:  ${formatLocalDate(phaseEvent.nextPhases['last-quarter'])}`);
   console.log(); // Empty line break
 
-  const content = await renderPost(phaseEvent, observer.timezone);
+  const content = renderPost(phaseEvent, observer.timezone);
   const graphemes = graphemeLength(content);
   const graphemeCount = MAX_GRAPHEMES - graphemes < GRAPHEME_COUNT_MARGIN
     ? pc.yellow(String(graphemes))

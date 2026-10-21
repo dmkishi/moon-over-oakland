@@ -1,20 +1,8 @@
 /**
  * Renders a `PhaseEvent` into the plain text of a post.
  */
-import { Liquid } from 'liquidjs';
 import type { PhaseEvent } from './phase-event.ts';
-
-function createEngine(): Liquid {
-  /**
-   * Dates and times are formatted here rather than with LiquidJS's `date`
-   * filter and `timezoneOffset` option, which get the offset wrong the night
-   * before a DST change when the host observes DST.
-   */
-  return new Liquid({
-    root: import.meta.dirname,
-    extname: '.liquid',
-  });
-}
+import { post, type PostData } from './post.ts';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -38,28 +26,24 @@ function formatTime(zoned: Temporal.ZonedDateTime): string {
   return `${hour}:${minute} ${zoned.hour < 12 ? 'am' : 'pm'}`;
 }
 
-export async function renderPost(phaseEvent: PhaseEvent, timezone: string): Promise<string> {
+export function renderPost(phaseEvent: PhaseEvent, timezone: string): string {
   const local = (zoned: Temporal.ZonedDateTime) => zoned.withTimeZone(timezone);
   const { dayEvents, nextPhases } = phaseEvent;
-  const data = {
-    phase_type: phaseEvent.type,
-    event_day: phaseEvent.day,
-    event_time: formatTime(local(phaseEvent.time)),
-    moonrise_time: formatTime(local(dayEvents.moonrise)),
-    moonset_time: formatTime(local(dayEvents.moonset)),
-    sunrise_time: formatTime(local(dayEvents.sunrise)),
-    sunset_time: formatTime(local(dayEvents.sunset)),
-    delta_rise_minutes: phaseEvent.eventDeltas.moonrise.minutes,
-    delta_set_minutes: phaseEvent.eventDeltas.moonset.minutes,
-    next_new_date: formatDate(local(nextPhases['new'])),
-    next_first_quarter_date: formatDate(local(nextPhases['first-quarter'])),
-    next_full_date: formatDate(local(nextPhases['full'])),
-    next_last_quarter_date: formatDate(local(nextPhases['last-quarter'])),
+  const data: PostData = {
+    phaseType: phaseEvent.type,
+    eventDay: phaseEvent.day,
+    eventTime: formatTime(local(phaseEvent.time)),
+    moonriseTime: formatTime(local(dayEvents.moonrise)),
+    moonsetTime: formatTime(local(dayEvents.moonset)),
+    sunriseTime: formatTime(local(dayEvents.sunrise)),
+    sunsetTime: formatTime(local(dayEvents.sunset)),
+    deltaRiseMinutes: phaseEvent.eventDeltas.moonrise.minutes,
+    deltaSetMinutes: phaseEvent.eventDeltas.moonset.minutes,
+    nextNewDate: formatDate(local(nextPhases['new'])),
+    nextFirstQuarterDate: formatDate(local(nextPhases['first-quarter'])),
+    nextFullDate: formatDate(local(nextPhases['full'])),
+    nextLastQuarterDate: formatDate(local(nextPhases['last-quarter'])),
   };
-  const result: unknown = await createEngine().renderFile('post', data);
-  if (typeof result !== 'string') {
-    throw new TypeError('Liquid renderFile did not return a string.');
-  }
-  const trimmedResult = result.split('\n').map((line) => line.trim()).join('\n').trim();
+  const trimmedResult = post(data).split('\n').map((line) => line.trim()).join('\n').trim();
   return trimmedResult;
 }

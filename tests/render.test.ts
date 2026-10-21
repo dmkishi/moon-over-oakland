@@ -13,10 +13,10 @@ import { renderPost } from '../src/render.ts';
 const { timezone, latitude, longitude } = observer;
 
 /**
- * LiquidJS's `date` filter gets the offset wrong from 7 PM to 2 AM the night
- * before a DST change, but only when the host itself observes DST. Pinned to
- * the production host's zone (see `Dockerfile`) so the suite catches it under
- * both the local and the UTC project.
+ * Times must be formatted in the observer's zone, not the host's. Some bugs
+ * that leak the host's zone only appear when that zone observes DST, so every
+ * test runs in the production host's zone (see `Dockerfile`), even under the
+ * UTC project.
  */
 const HOST_TIMEZONE = 'America/Los_Angeles';
 
@@ -48,9 +48,9 @@ function timeOnLine(post: string, label: string): string | undefined {
   return new RegExp(`^• ${label}: (\\S+(?: [ap]m)?)`, 'mu').exec(post)?.[1];
 }
 
-async function render(postDate: Temporal.PlainDate) {
+function render(postDate: Temporal.PlainDate) {
   const phaseEvent = calculatePhaseEvent(postDate, timezone, latitude, longitude)!;
-  return { phaseEvent, post: await renderPost(phaseEvent, timezone) };
+  return { phaseEvent, post: renderPost(phaseEvent, timezone) };
 }
 
 describe('host timezone', () => {
@@ -61,9 +61,10 @@ describe('host timezone', () => {
 
 describe('renderPost', () => {
   // The last quarter post for 2026-11-01 shows the moonrise from 10-31 at
-  // 23:30 PDT, the night of the DST change. LiquidJS rendered it as 10:30 pm.
-  it('prints the 2026-11-01 moonrise in PDT', async () => {
-    const { post } = await render(Temporal.PlainDate.from('2026-11-01'));
+  // 23:30 PDT, the night of the DST change. LiquidJS once rendered it as
+  // 10:30 pm.
+  it('prints the 2026-11-01 moonrise in PDT', () => {
+    const { post } = render(Temporal.PlainDate.from('2026-11-01'));
     expect(post).toContain('• Moonrise: 11:30 pm (yesterday)');
   });
 
@@ -71,8 +72,8 @@ describe('renderPost', () => {
     const eventDate = Temporal.PlainDate.from(fixture.eventDate);
     const postDate = fixture.post === 'prev' ? eventDate.subtract({ days: 1 }) : eventDate;
     return { postDate: postDate.toString() };
-  }))('prints the moonrise and moonset for $postDate in local time', async ({ postDate }) => {
-    const { phaseEvent, post } = await render(Temporal.PlainDate.from(postDate));
+  }))('prints the moonrise and moonset for $postDate in local time', ({ postDate }) => {
+    const { phaseEvent, post } = render(Temporal.PlainDate.from(postDate));
     expect(timeOnLine(post, 'Moonrise')).toBe(formatTime(phaseEvent.dayEvents.moonrise));
     expect(timeOnLine(post, 'Moonset')).toBe(formatTime(phaseEvent.dayEvents.moonset));
   });
