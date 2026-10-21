@@ -97,7 +97,7 @@ Date  |  Time |  Rise |    Set | Sunrise | Sunset | Rise ∆ | Set ∆ | Post   
 11-24 |  6:53 | 16:46 | 8:34 † |    6:59 |  16:54 |     -8 |    30 | Day-of |
 12-23 | 17:28 | 16:32 | 7:17 † |    7:22 |  16:56 |    -24 |    -5 | Day-of |
 
-† Next day
+† Next day of post
 
 🌗 Last Quarter (Half Moon)
 --------------------------------------------------------------------------------
@@ -122,4 +122,4 @@ Date  |  Time |    Rise |     Set | Sunrise | Sunset | Rise ∆ | Set ∆ | Post
 11-30 | 22:08 | 22:44 ‡ | 12:21   |    7:05 |  16:52 |    -76 |    21 | Day-of |
 12-30 | 10:59 | 23:53 ‡ | 11:38   |    7:24 |  17:01 |     -7 |   -22 | Day-of |
 
-‡ Previous day
+‡ Previous day of post
