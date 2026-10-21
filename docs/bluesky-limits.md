@@ -14,5 +14,8 @@ Jose, even Sacramento if you can tolerate a few minutes of drift.
 Post
 --------------------------------------------------------------------------------
 - **Content**: 300 graphemes
-- **Images**: 4 per post, 2 MB each
+- **Images**:
+  - 4 per post
+  - Max size: 2 MB
+  - Max resolution: 4000 x 4000 px
 - **Video**: 1 per post, 300 MB, 10 minutes
