@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, it, expect, vi } from 'vitest';
 import { postingFixtures } from './fixtures/helpers.ts';
 import { observer } from '../src/observer.ts';
 import { calculatePhaseEvent } from '../src/phase-event.ts';
-import { renderPost } from '../src/render.ts';
+import { renderPost } from '../src/post.ts';
 
 const { timezone, latitude, longitude } = observer;
 

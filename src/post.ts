@@ -1,104 +1,121 @@
 /**
- * The text of a post, by phase.
+ * Renders a `PhaseEvent` into the plain text of a post.
  */
-import type { PhaseType } from './ephemeris/phase.ts';
 import type { PhaseEvent } from './phase-event.ts';
 
-export interface PostData {
-  phaseType: PhaseType;
-  eventDay: PhaseEvent['day'];
-  eventTime: string; // E.g. "1:30 pm", "12-noon", "12-midnight".
-  moonriseTime: string; // Ditto
-  moonsetTime: string; // Ditto
-  sunriseTime: string; // Ditto
-  sunsetTime: string; // Ditto
-  deltaRiseMinutes: number;
-  deltaSetMinutes: number;
-  nextNewDate: string; // E.g. "9/18 (Thu)".
-  nextFirstQuarterDate: string; // Ditto
-  nextFullDate: string; // Ditto
-  nextLastQuarterDate: string; // Ditto
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+/**
+ * E.g. "9/18 (Thu)".
+ * @pure
+ */
+function formatDate(zoned: Temporal.ZonedDateTime): string {
+  return `${zoned.month}/${zoned.day} (${WEEKDAYS[zoned.dayOfWeek - 1]})`;
+}
+
+/**
+ * E.g. "1:30 pm", "12-noon", "12-midnight".
+ * @pure
+ */
+function formatTime(zoned: Temporal.ZonedDateTime): string {
+  if (zoned.minute === 0 && zoned.hour === 0) return '12-midnight';
+  if (zoned.minute === 0 && zoned.hour === 12) return '12-noon';
+  const hour = zoned.hour % 12 || 12;
+  const minute = String(zoned.minute).padStart(2, '0');
+  return `${hour}:${minute} ${zoned.hour < 12 ? 'am' : 'pm'}`;
+}
+
+export function renderPost(phaseEvent: PhaseEvent, timezone: string): string {
+  return text(phaseEvent, timezone).split('\n').map((line) => line.trim()).join('\n').trim();
 }
 
 /**
  * Lines are indented to read as code. `renderPost()` trims every line.
  * @pure
  */
-export function post(data: PostData): string {
-  switch (data.phaseType) {
+function text(phaseEvent: PhaseEvent, timezone: string): string {
+  const date = (zoned: Temporal.ZonedDateTime) => formatDate(zoned.withTimeZone(timezone));
+  const time = (zoned: Temporal.ZonedDateTime) => formatTime(zoned.withTimeZone(timezone));
+  const { type, dayEvents, eventDeltas, nextPhases } = phaseEvent;
+
+  switch (type) {
     case 'new':
-      // -----------------------------------------------------------------------
-      // NEW
-      // - MOONRISE around sunrise.
-      // - MOONSET around sunset.
+      /* -----------------------------------------------------------------------
+       * NEW
+       * - MOONRISE around sunrise.
+       * - MOONSET around sunset.
+       */
       return `
         🌑 The NEW MOON rises with the sun and sets with the sun. It’ll be in the sky all day, though you probably won’t be able to see it.
 
-        • Moonrise: ${data.moonriseTime}
-        • Moonset: ${data.moonsetTime}
+        • Moonrise: ${time(dayEvents.moonrise)}
+        • Moonset: ${time(dayEvents.moonset)}
 
         Next phases:
-        • Half Moon: ${data.nextFirstQuarterDate}
-        • Full Moon: ${data.nextFullDate}
-        • New Moon: ${data.nextNewDate}
+        • Half Moon: ${date(nextPhases['first-quarter'])}
+        • Full Moon: ${date(nextPhases['full'])}
+        • New Moon: ${date(nextPhases['new'])}
       `;
 
     case 'first-quarter': {
-      // -----------------------------------------------------------------------
-      // FIRST QUARTER
-      // - MOONRISE around noon.
-      // - MOONSET around midnight at end of day (notate if after midnight.)
-      const moonsetNote = data.deltaSetMinutes > 0 ? '(after midnight)' : '';
+      /* -----------------------------------------------------------------------
+       * FIRST QUARTER
+       * - MOONRISE around noon.
+       * - MOONSET around midnight at end of day (notate if after midnight.)
+       */
+      const moonsetNote = eventDeltas.moonset.minutes > 0 ? '(after midnight)' : '';
       return `
         🌓 The HALF MOON (FIRST QUARTER) rises around noon and sets around midnight. It is visible in the afternoon and evening.
 
-        • Moonrise: ${data.moonriseTime}
-        • Moonset: ${data.moonsetTime} ${moonsetNote}
+        • Moonrise: ${time(dayEvents.moonrise)}
+        • Moonset: ${time(dayEvents.moonset)} ${moonsetNote}
 
         Next phases:
-        • Full Moon: ${data.nextFullDate}
-        • Half Moon: ${data.nextLastQuarterDate}
-        • New Moon: ${data.nextNewDate}
+        • Full Moon: ${date(nextPhases['full'])}
+        • Half Moon: ${date(nextPhases['last-quarter'])}
+        • New Moon: ${date(nextPhases['new'])}
       `;
     }
 
     case 'full':
-      // -----------------------------------------------------------------------
-      // FULL
-      // - MOONRISE around sunset.
-      // - MOONSET around sunrise (always the next morning.)
+      /* -----------------------------------------------------------------------
+       * FULL
+       * - MOONRISE around sunset.
+       * - MOONSET around sunrise (always the next morning.)
+       */
       return `
         🌕 The FULL MOON rises around sunset and sets around sunrise. It’ll be visible all night, given a clear sky.
 
-        • Moonrise: ${data.moonriseTime}
-        • Moonset: ${data.moonsetTime} (tomorrow morning)
+        • Moonrise: ${time(dayEvents.moonrise)}
+        • Moonset: ${time(dayEvents.moonset)} (tomorrow morning)
 
         Next phases:
-        • Half Moon: ${data.nextLastQuarterDate}
-        • New Moon: ${data.nextNewDate}
-        • Full Moon: ${data.nextFullDate}
+        • Half Moon: ${date(nextPhases['last-quarter'])}
+        • New Moon: ${date(nextPhases['new'])}
+        • Full Moon: ${date(nextPhases['full'])}
       `;
 
     case 'last-quarter': {
-      // -----------------------------------------------------------------------
-      // LAST QUARTER
-      // - MOONRISE around midnight at start of day (notate if before midnight.)
-      // - MOONSET around noon.
-      const moonriseNote = data.deltaRiseMinutes < 0 ? '(yesterday)' : '';
+      /* -----------------------------------------------------------------------
+       * LAST QUARTER
+       * - MOONRISE around midnight at start of day (notate if before midnight.)
+       * - MOONSET around noon.
+       */
+      const moonriseNote = eventDeltas.moonrise.minutes < 0 ? '(yesterday)' : '';
       return `
         🌗 The HALF MOON (LAST QUARTER) rises around midnight and sets around noon today. It is visible in the late night and morning.
 
-        • Moonrise: ${data.moonriseTime} ${moonriseNote}
-        • Moonset: ${data.moonsetTime}
+        • Moonrise: ${time(dayEvents.moonrise)} ${moonriseNote}
+        • Moonset: ${time(dayEvents.moonset)}
 
         Next phases:
-        • New Moon: ${data.nextNewDate}
-        • Half Moon: ${data.nextFirstQuarterDate}
-        • Full Moon: ${data.nextFullDate}
+        • New Moon: ${date(nextPhases['new'])}
+        • Half Moon: ${date(nextPhases['first-quarter'])}
+        • Full Moon: ${date(nextPhases['full'])}
       `;
     }
 
     default:
-      throw new TypeError(`Unhandled phase type: ${String(data.phaseType satisfies never)}`);
+      throw new TypeError(`Unhandled phase type: ${String(type satisfies never)}`);
   }
 }

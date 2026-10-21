@@ -6,7 +6,7 @@ import type { EventDelta } from './event-delta.ts';
 import { createMonitor } from './monitor.ts';
 import { observer } from './observer.ts';
 import { calculatePhaseEvent } from './phase-event.ts';
-import { renderPost } from './render.ts';
+import { renderPost } from './post.ts';
 
 // Load `.env` into `process.env` without overriding variables already set, so
 // secrets injected by the host win. Unlike dotenv, a missing file throws.
