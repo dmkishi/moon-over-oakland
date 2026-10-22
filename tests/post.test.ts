@@ -1,6 +1,7 @@
 /**
  * Verifies that `renderPost()` prints each post's moonrise and moonset in the
- * observer's local time, against every principal phase of 2026.
+ * observer's local time, against every principal phase of 2026, and that
+ * `renderAltText()` describes the image in that time too.
  *
  * Posting rules at `./fixtures/phase-event.posting.jsonc`.
  */
@@ -8,7 +9,7 @@ import { afterAll, beforeAll, describe, it, expect, vi } from 'vitest';
 import { postingFixtures } from './fixtures/helpers.ts';
 import { observer } from '../src/observer.ts';
 import { calculatePhaseEvent } from '../src/phase-event.ts';
-import { renderPost } from '../src/post.ts';
+import { renderAltText, renderPost } from '../src/post.ts';
 
 const { timezone, latitude, longitude } = observer;
 
@@ -76,5 +77,26 @@ describe('renderPost', () => {
     const { phaseEvent, post } = render(Temporal.PlainDate.from(postDate));
     expect(timeOnLine(post, 'Moonrise')).toBe(formatTime(phaseEvent.dayEvents.moonrise));
     expect(timeOnLine(post, 'Moonset')).toBe(formatTime(phaseEvent.dayEvents.moonset));
+  });
+});
+
+describe('renderAltText', () => {
+  it('describes the phase, illumination, and local time of the image', () => {
+    const { phaseEvent } = render(Temporal.PlainDate.from('2026-10-25'));
+    expect(renderAltText(phaseEvent, 0.9984, timezone)).toBe(
+      'Full moon, 99.8% illuminated, as seen from Earth at 9:11 pm on 10/25 (Sun), celestial north up. '
+      + 'Rendered from NASA LRO data (NASA SVS CGI Moon Kit).',
+    );
+  });
+
+  it('says the new moon’s earthshine is exaggerated', () => {
+    const { phaseEvent } = render(Temporal.PlainDate.from('2026-10-10'));
+    expect(phaseEvent.type).toBe('new');
+    expect(renderAltText(phaseEvent, 0.001, timezone)).toMatch(/^New moon, 0\.1% illuminated, .* Earthshine exaggerated\.$/u);
+  });
+
+  it.each(['2026-10-18', '2026-11-01'])('says nothing of earthshine otherwise (%s)', (date) => {
+    const { phaseEvent } = render(Temporal.PlainDate.from(date));
+    expect(renderAltText(phaseEvent, 0.5, timezone)).not.toContain('Earthshine');
   });
 });

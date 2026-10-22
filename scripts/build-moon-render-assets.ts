@@ -1,0 +1,154 @@
+/**
+ * Builds the moon image's textures in `assets/` from NASA's CGI Moon Kit
+ * <https://svs.gsfc.nasa.gov/4720>, and records their provenance in
+ * `assets/manifest.json`.
+ *
+ * - Downloads are cached in the OS temp directory and checked against pinned
+ *   SHA-256 hashes, so a cleared cache just downloads again.
+ * - The color map is reduced from 16-bit to 8-bit.
+ *
+ * @usage pnpm moon-assets
+ */
+import { createHash } from 'node:crypto';
+import { createReadStream, createWriteStream, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
+import pc from 'picocolors';
+import sharp from 'sharp';
+
+const SVS_URL = 'https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720';
+const CACHE_DIR = join(tmpdir(), 'moon-over-oakland');
+const ASSETS_DIR = new URL('../assets/', import.meta.url);
+
+interface Source {
+  url: string;
+  sha256: string;
+}
+
+const SOURCES = {
+  /** LROC WAC color, 2025 edition, 4096 × 2048, 16-bit sRGB */
+  color: {
+    url: `${SVS_URL}/lroc_color_16bit_srgb_4k.tif`,
+    sha256: '9731fa8af425b6c2f88f277ecca82bf8c603f3743894f64ed7b25c5bfefa22ff',
+  },
+  /** LOLA elevation, 16 px/deg (5760 × 2880), uint16 half-meters above 1727.4 km */
+  height: {
+    url: `${SVS_URL}/ldem_16_uint.tif`,
+    sha256: '45a2b32d56e81ed30db07fead8abc842b249b6511219d9ca2c53f81bc2dc5d62',
+  },
+} satisfies Record<string, Source>;
+
+async function sha256File(path: string): Promise<string> {
+  const hash = createHash('sha256');
+  await pipeline(createReadStream(path), hash);
+  return hash.digest('hex');
+}
+
+function sha256Pixels(data: Uint8Array | Uint16Array): string {
+  return createHash('sha256')
+    .update(new Uint8Array(data.buffer, data.byteOffset, data.byteLength))
+    .digest('hex');
+}
+
+/**
+ * The cached download of `source`, fetched again unless the cached copy
+ * matches the pinned hash. An unpinned hash (empty string) accepts whatever
+ * arrives and prints it for pinning.
+ */
+async function download(source: Source): Promise<string> {
+  mkdirSync(CACHE_DIR, { recursive: true });
+  const path = join(CACHE_DIR, source.url.split('/').at(-1)!);
+
+  if (existsSync(path) && await sha256File(path) === source.sha256) {
+    console.log(`Cached:      ${path}`);
+    return path;
+  }
+
+  console.log(`Downloading: ${source.url}`);
+  const res = await fetch(source.url);
+  if (!res.ok || res.body === null) {
+    throw new Error(`Download failed: ${res.status} ${res.statusText} <${source.url}>`);
+  }
+  await pipeline(Readable.fromWeb(res.body), createWriteStream(path));
+
+  const sha256 = await sha256File(path);
+  if (source.sha256 === '') {
+    console.log(pc.yellow(`Unpinned:    ${sha256} (pin this in SOURCES)`));
+  } else if (sha256 !== source.sha256) {
+    throw new Error(`SHA-256 mismatch for <${source.url}>:\n  expected ${source.sha256}\n  received ${sha256}`);
+  }
+  return path;
+}
+
+/**
+ * 8-bit sRGB: the output is an 8-bit JPEG, and bilinear sampling in linear
+ * light smooths any banding a 16-bit source would have avoided.
+ */
+async function buildColor(path: string) {
+  const { data, info } = await sharp(path)
+    .toColourspace('srgb')
+    .removeAlpha()
+    .raw({ depth: 'uchar' })
+    .toBuffer({ resolveWithObject: true });
+  const pixels = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+
+  await sharp(pixels, { raw: { width: info.width, height: info.height, channels: 3 } })
+    .png({ compressionLevel: 9 })
+    .toFile(new URL('moon-color.png', ASSETS_DIR).pathname);
+
+  return { width: info.width, height: info.height, pixelsSha256: sha256Pixels(pixels) };
+}
+
+/**
+ * 16-bit grayscale, NASA's own encoding kept: half-meters above a 1727.4 km
+ * sphere, i.e. km above the 1737.4 km reference sphere = value / 2000 − 10.
+ */
+async function buildHeight(path: string) {
+  // `toColourspace`, not `extractChannel`: sharp otherwise reads through 8-bit
+  // sRGB and returns every height divided by 256.
+  const { data, info } = await sharp(path)
+    .toColourspace('grey16')
+    .raw({ depth: 'ushort' })
+    .toBuffer({ resolveWithObject: true });
+  // Copied, not viewed: a Uint16Array needs an even byte offset.
+  const pixels = new Uint16Array(new Uint8Array(data).buffer);
+
+  await sharp(pixels, { raw: { width: info.width, height: info.height, channels: 1 } })
+    .toColourspace('grey16')
+    .png({ compressionLevel: 9 })
+    .toFile(new URL('moon-height.png', ASSETS_DIR).pathname);
+
+  return { width: info.width, height: info.height, pixelsSha256: sha256Pixels(pixels) };
+}
+
+mkdirSync(ASSETS_DIR, { recursive: true });
+const colorPath = await download(SOURCES.color);
+const heightPath = await download(SOURCES.height);
+
+console.log('Building:    moon-color.png');
+const color = await buildColor(colorPath);
+console.log('Building:    moon-height.png');
+const height = await buildHeight(heightPath);
+
+const manifest = {
+  description: 'Built by `pnpm moon-assets` (scripts/build-moon-render-assets.ts). Do not edit.',
+  projection: 'Equirectangular, centered on 0° longitude, east to the right, north up.',
+  sharp: sharp.versions.sharp,
+  libvips: sharp.versions.vips,
+  files: {
+    'moon-color.png': {
+      source: SOURCES.color,
+      encoding: '8-bit sRGB',
+      ...color,
+    },
+    'moon-height.png': {
+      source: SOURCES.height,
+      encoding: '16-bit grayscale; km above the 1737.4 km sphere = value / 2000 − 10',
+      ...height,
+    },
+  },
+};
+writeFileSync(new URL('manifest.json', ASSETS_DIR), `${JSON.stringify(manifest, null, 2)}\n`);
+console.log(pc.green('Wrote assets/manifest.json'));

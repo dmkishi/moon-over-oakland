@@ -1,5 +1,6 @@
 /**
- * Renders a `PhaseEvent` into the plain text of a post.
+ * Renders a `PhaseEvent` into the plain text of a post and the alt text of its
+ * image.
  */
 import type { PhaseEvent } from './phase-event.ts';
 
@@ -23,6 +24,35 @@ function formatTime(zoned: Temporal.ZonedDateTime): string {
   const hour = zoned.hour % 12 || 12;
   const minute = String(zoned.minute).padStart(2, '0');
   return `${hour}:${minute} ${zoned.hour < 12 ? 'am' : 'pm'}`;
+}
+
+const PHASE_NAMES: Record<PhaseEvent['type'], string> = {
+  'new': 'New moon',
+  'first-quarter': 'First quarter moon',
+  'full': 'Full moon',
+  'last-quarter': 'Last quarter moon',
+};
+
+/**
+ * Bluesky requires one, and it also carries the image's credit, which costs
+ * the post no graphemes.
+ * @pure
+ */
+export function renderAltText(
+  phaseEvent: PhaseEvent,
+  illuminatedFraction: number,
+  timezone: string,
+): string {
+  const zoned = phaseEvent.time.withTimeZone(timezone);
+  const percent = (illuminatedFraction * 100).toFixed(1);
+  const sentences = [
+    `${PHASE_NAMES[phaseEvent.type]}, ${percent}% illuminated, as seen from Earth at ${formatTime(zoned)} on ${formatDate(zoned)}, celestial north up.`,
+    'Rendered from NASA LRO data (NASA SVS CGI Moon Kit).',
+  ];
+  // At conjunction the Moon is lost in the Sun's glare, and real earthshine
+  // is far too faint to show at this exposure.
+  if (phaseEvent.type === 'new') sentences.push('Earthshine exaggerated.');
+  return sentences.join(' ');
 }
 
 export function renderPost(phaseEvent: PhaseEvent, timezone: string): string {

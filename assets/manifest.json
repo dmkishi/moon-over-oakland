@@ -1,0 +1,28 @@
+{
+  "description": "Built by `pnpm moon-assets` (scripts/build-moon-render-assets.ts). Do not edit.",
+  "projection": "Equirectangular, centered on 0° longitude, east to the right, north up.",
+  "sharp": "0.35.5",
+  "libvips": "8.18.7",
+  "files": {
+    "moon-color.png": {
+      "source": {
+        "url": "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/lroc_color_16bit_srgb_4k.tif",
+        "sha256": "9731fa8af425b6c2f88f277ecca82bf8c603f3743894f64ed7b25c5bfefa22ff"
+      },
+      "encoding": "8-bit sRGB",
+      "width": 4096,
+      "height": 2048,
+      "pixelsSha256": "1b11e1519a30e268540f724f6b042ac267fcd2dd3667cb2abe523562fe6e6371"
+    },
+    "moon-height.png": {
+      "source": {
+        "url": "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/ldem_16_uint.tif",
+        "sha256": "45a2b32d56e81ed30db07fead8abc842b249b6511219d9ca2c53f81bc2dc5d62"
+      },
+      "encoding": "16-bit grayscale; km above the 1737.4 km sphere = value / 2000 − 10",
+      "width": 5760,
+      "height": 2880,
+      "pixelsSha256": "45a979b1dbe37c47c35f21c62d0d6aca34f4879e8f8151d36df1fc7c6876d2fc"
+    }
+  }
+}

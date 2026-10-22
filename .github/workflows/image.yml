@@ -35,7 +35,13 @@ jobs:
     needs: check
     runs-on: ubuntu-24.04-arm
     steps:
+      # Git LFS holds the moon image textures that the Dockerfile copies. Only
+      # this job needs them: `check` renders from synthetic textures. The builds
+      # below must keep `context: .`, since a Git context skips LFS and would
+      # copy pointer files.
       - uses: actions/checkout@v5
+        with:
+          lfs: true
 
       - id: node
         run: echo "version=$(cat .nvmrc)" >> "$GITHUB_OUTPUT"

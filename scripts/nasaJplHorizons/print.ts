@@ -2,6 +2,7 @@ import pc from 'picocolors';
 import {
   eventsAt,
   MOON_EPHEMERIS_STEP_SIZE,
+  type HorizonsMoonDisc,
   type MoonEphemeris,
   type MoonEventName,
 } from './horizons.ts';
@@ -266,4 +267,35 @@ export function printFixtureJson(summary: MoonSummary): void {
   console.log('Fixture JSON');
   console.log('--------------------------------------------------------------------------------');
   console.log(JSON.stringify(fixture, null, 2));
+}
+
+/**
+ * Round to `digits` decimal places, so the fixture holds what Horizons printed
+ * rather than float noise.
+ */
+function round(value: number, digits: number): number {
+  return Number(value.toFixed(digits));
+}
+
+/**
+ * Prints the rows of `tests/fixtures/moon-disc.accuracy.jsonc`, one per line.
+ */
+export function printMoonDiscFixture(rows: { description: string; disc: HorizonsMoonDisc }[]): void {
+  console.log('Fixture JSONC');
+  console.log('--------------------------------------------------------------------------------');
+  for (const { description, disc } of rows) {
+    const fixture = {
+      description,
+      instant: disc.at.toString({ smallestUnit: 'second' }),
+      subEarth: { lon: round(disc.subEarth.lon, 6), lat: round(disc.subEarth.lat, 6) },
+      subSolar: { lon: round(disc.subSolar.lon, 6), lat: round(disc.subSolar.lat, 6) },
+      axisPositionAngle: round(disc.axisPositionAngle, 4),
+      brightLimbPositionAngle: round(disc.brightLimbPositionAngle, 4),
+      phaseAngle: round(disc.phaseAngle, 4),
+      illuminatedFraction: round(disc.illuminatedFraction, 5),
+      distanceKm: round(disc.distanceKm, 1),
+      angularDiameterArcmin: round(disc.angularDiameterArcmin, 4),
+    };
+    console.log(`  ${JSON.stringify(fixture)},`);
+  }
 }

@@ -2,6 +2,7 @@ Bluesky Limits
 ================================================================================
 
 Sources:
+- [`app.bsky.embed.images` Lexicon](https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/embed/images.json)
 - [Every Bluesky limit in 2026: posts, images, video, bio and DMs](https://opentweet.io/answers/bluesky-limits)
 
 Profile

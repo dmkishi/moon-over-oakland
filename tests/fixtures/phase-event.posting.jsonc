@@ -6,9 +6,8 @@
  * - `post` says which day carries the post: `same` for the event's own date,
  *   `prev` for the day before.
  *
- * - `dateTime` is the instant itself, from `pnpm horizons <eventDate>`, which
- *   interpolates the crossing to well under a second. The doc's Time column is
- *   the same data truncated to the whole minute, so it is not the source here.
+ * - `dateTime` is the instant itself, from `pnpm horizons sky <eventDate>`,
+ *   which interpolates the crossing to well under a second.
  */
 [
   // 🌑 New Moon

@@ -16,6 +16,7 @@
     "lint": "oxlint",
     "test": "vitest",
     "coverage": "vitest run --coverage",
+    "moon-assets": "node scripts/build-moon-render-assets.ts",
     "prepare": "husky"
   },
   "dependencies": {
@@ -26,6 +27,7 @@
     "@atcute/util-text": "1.3.4",
     "astronomia": "^4.2.0",
     "picocolors": "^1.1.1",
+    "sharp": "^0.35.5",
     "suncalc": "^2.1.1"
   },
   "devDependencies": {

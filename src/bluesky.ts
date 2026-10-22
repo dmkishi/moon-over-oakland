@@ -19,12 +19,19 @@ const SERVICE = 'https://bsky.social';
 
 export const MAX_GRAPHEMES: number = feedPost.text.maxGraphemes;
 
+export interface PostImage {
+  jpeg: Uint8Array;
+  alt: string;
+  width: number;
+  height: number;
+}
+
 export type PostResult =
   | { status: 'posted'; uri: string; cid: string }
   | { status: 'skipped' };
 
 export interface BlueskyClient {
-  post: (text: string) => Promise<PostResult>;
+  post: (text: string, image?: PostImage) => Promise<PostResult>;
 }
 
 /**
@@ -95,7 +102,7 @@ export async function createBlueskyClient(
   const rpc = new Client({ handler: session });
 
   return {
-    async post(text) {
+    async post(text, image) {
       if (checkPostedToday && await hasPostedToday(rpc, session.did, timezone)) {
         return {
           status: 'skipped',
@@ -108,6 +115,23 @@ export async function createBlueskyClient(
         langs: ['en-US'],
         createdAt: new Date().toISOString(),
       };
+
+      if (image) {
+        // If `createRecord` then fails, the blob is left unreferenced, and the
+        // PDS garbage-collects it.
+        const { blob } = await ok(rpc.post('com.atproto.repo.uploadBlob', {
+          input: image.jpeg,
+          headers: { 'content-type': 'image/jpeg' },
+        }));
+        record.embed = {
+          $type: 'app.bsky.embed.images',
+          images: [{
+            image: blob,
+            alt: image.alt,
+            aspectRatio: { width: image.width, height: image.height },
+          }],
+        };
+      }
 
       const { uri, cid } = await ok(rpc.post('com.atproto.repo.createRecord', {
         input: {

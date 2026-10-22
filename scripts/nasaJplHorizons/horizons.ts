@@ -176,21 +176,57 @@ function resolveColumns<K extends string>(
   return Object.fromEntries(entries) as Record<K, number>;
 }
 
-interface ObserverTableQuery {
+/**
+ * A uniform grid of rows from `start` to `stop`.
+ */
+interface TimeWindow {
+  /** Window start; converted to UT here (see `toHorizonsUtc`) */
+  start: Temporal.ZonedDateTime;
+  /** Window end, likewise */
+  stop: Temporal.ZonedDateTime;
+  stepSize: string;
+}
+
+/**
+ * One row per instant, sent as a `TLIST` to the second.
+ */
+interface TimeList {
+  instants: Temporal.Instant[];
+}
+
+type ObserverTableQuery = (TimeWindow | TimeList) & {
   body: Body;
   /**
    * Where the table is computed from: the observing site, or `'geocentric'` for
    * Earth's center.
    */
   site: Observer | 'geocentric';
-  /** Window start; converted to UT here (see `toHorizonsUtc`) */
-  start: Temporal.ZonedDateTime;
-  /** Window end, likewise */
-  stop: Temporal.ZonedDateTime;
-  stepSize: string;
   quantities: string;
   /** Hands the untouched response body to a caller that wants to show it. */
   onRawResponse?: ((raw: string) => void) | undefined;
+};
+
+/**
+ * The time parameters for either kind of query. A `TLIST` excludes the window
+ * parameters, and its quotes and spaces have to be percent-encoded.
+ */
+function timeParams(times: TimeWindow | TimeList): Record<string, string> {
+  if ('instants' in times) {
+    const list = times.instants
+      .map((instant) => `'${instant.toString({ smallestUnit: 'second' }).replace('T', ' ').replace('Z', '')}'`)
+      .join(' ');
+    return {
+      TLIST: list.replaceAll("'", '%27').replaceAll(' ', '%20'),
+      TLIST_TYPE: "'CAL'",
+      TIME_TYPE: "'UT'",
+    };
+  }
+
+  return {
+    START_TIME: `'${toHorizonsUtc(times.start)}'`,
+    STOP_TIME: `'${toHorizonsUtc(times.stop)}'`,
+    STEP_SIZE: `'${times.stepSize}'`,
+  };
 }
 
 /**
@@ -203,7 +239,7 @@ interface ObserverTableQuery {
  * whoever asked (see `parseHorizonsInstant`).
  */
 async function requestObserverTable({
-  body, site, start, stop, stepSize, quantities, onRawResponse,
+  body, site, quantities, onRawResponse, ...times
 }: ObserverTableQuery): Promise<{ headers: string[]; rows: string[][] }> {
   const params: Record<string, string> = {
     format: 'text', // `json` merely wraps the text content in a JSON object
@@ -219,9 +255,7 @@ async function requestObserverTable({
       COORD_TYPE: "'GEODETIC'", // Geodetic coordinates (lat/lon/elev) for observer location
       SITE_COORD: `'${site.lon},${site.lat},${site.elevationMeter / 1_000}'`,
     }),
-    START_TIME: `'${toHorizonsUtc(start)}'`,
-    STOP_TIME: `'${toHorizonsUtc(stop)}'`,
-    STEP_SIZE: `'${stepSize}'`,
+    ...timeParams(times),
     ANG_FORMAT: "'DEG'",
     // APPARENT: "'AIRLESS'", // Request apparent coordinates without atmospheric refraction correction
     QUANTITIES: `'${quantities}'`,
@@ -447,4 +481,168 @@ export async function fetchEclipticLongitudes(
     at: parseHorizonsInstant(cell(cols, 0)),
     lonDeg: numericCell(cols, columnIndex.lonDeg),
   }));
+}
+
+/**
+ * Apparent RA/Dec, on the true equator and equinox of date. Quantity 1 (ICRF)
+ * would tilt every position angle by the precession since J2000 (~0.15° by
+ * 2026), and so would `PsAng`, which is why the bright limb is derived from
+ * these instead.
+ */
+const APPARENT_EQUATORIAL_COLUMNS = {
+  /** Apparent right ascension, in degrees */
+  rightAscensionDeg: { quantity: 2, headerPattern: /R\.A\._+\(a-app\)/u },
+  /** Apparent declination, in degrees */
+  declinationDeg: { quantity: 2, headerPattern: /DEC_+\(a-app\)/u },
+} satisfies Record<string, Column>;
+
+/**
+ * The geocentric columns `src/ephemeris/moon-disc.ts` is checked against.
+ */
+const MOON_DISC_COLUMNS = {
+  ...APPARENT_EQUATORIAL_COLUMNS,
+  /** Illuminated fraction of the Moon's disk, as a percentage, 0–100 */
+  illuminatedPercent: { quantity: 10, headerPattern: /Illu%/u },
+  /** Angular diameter, in arcseconds */
+  angularDiameterArcsec: { quantity: 13, headerPattern: /Ang-diam/u },
+  /** Sub-observer point: libration in longitude, in degrees */
+  subEarthLonDeg: { quantity: 14, headerPattern: /ObsSub-LON/u },
+  /** Sub-observer point: libration in latitude, in degrees */
+  subEarthLatDeg: { quantity: 14, headerPattern: /ObsSub-LAT/u },
+  /** Subsolar longitude, in degrees */
+  subSolarLonDeg: { quantity: 15, headerPattern: /SunSub-LON/u },
+  /** Subsolar latitude, in degrees */
+  subSolarLatDeg: { quantity: 15, headerPattern: /SunSub-LAT/u },
+  /** Position angle of the north pole, in degrees */
+  axisPositionAngleDeg: { quantity: 17, headerPattern: /NP\.ang/u },
+  /** Observer range (distance) to the Moon, in AU */
+  distanceAu: { quantity: 20, headerPattern: /^delta$/ui },
+  /** Sun–target–observer angle, i.e. the phase angle, in degrees */
+  phaseAngleDeg: { quantity: 24, headerPattern: /S-T-O/u },
+} satisfies Record<string, Column>;
+
+type MoonDiscColumn = keyof typeof MOON_DISC_COLUMNS;
+
+/**
+ * Horizons' geocentric view of the Moon's disc at one instant, in the units
+ * and conventions of `MoonDisc` in `src/ephemeris/moon-disc.ts`.
+ */
+export interface HorizonsMoonDisc {
+  at: Temporal.Instant;
+  subEarth: { lon: number; lat: number };
+  subSolar: { lon: number; lat: number };
+  axisPositionAngle: number;
+  brightLimbPositionAngle: number;
+  phaseAngle: number;
+  illuminatedFraction: number;
+  distanceKm: number;
+  angularDiameterArcmin: number;
+}
+
+/**
+ * Position angle of the bright limb (Meeus 48.5), 0–360°, from the apparent
+ * RA/Dec of the Moon and the Sun in degrees.
+ */
+function brightLimbPositionAngle(
+  moon: { rightAscensionDeg: number; declinationDeg: number },
+  sun: { rightAscensionDeg: number; declinationDeg: number },
+): number {
+  const rad = Math.PI / 180;
+  const [α, δ] = [moon.rightAscensionDeg * rad, moon.declinationDeg * rad];
+  const [α0, δ0] = [sun.rightAscensionDeg * rad, sun.declinationDeg * rad];
+  const χ = Math.atan2(
+    Math.cos(δ0) * Math.sin(α0 - α),
+    Math.sin(δ0) * Math.cos(δ) - Math.cos(δ0) * Math.sin(δ) * Math.cos(α0 - α),
+  ) / rad;
+  return (χ + 360) % 360;
+}
+
+/**
+ * Horizons longitudes run 0–360°, `MoonDisc` longitudes −180° to 180°.
+ */
+function toSignedDeg(lonDeg: number): number {
+  return lonDeg > 180 ? lonDeg - 360 : lonDeg;
+}
+
+/**
+ * Fixed at one hour, with no flag, to match Dial-a-Moon's hourly frames. The
+ * disc changes too slowly (the phase angle moves ~0.5°/h) for a finer step to
+ * show anything new.
+ */
+const MOON_DISC_STEP_SIZE = '1h';
+
+/**
+ * Instants per request. A `TLIST` travels in the URL, and Horizons answers a
+ * year's worth of instants (~56) with a 502.
+ */
+const TLIST_BATCH_SIZE = 10;
+
+/**
+ * Fetch the Moon's disc as seen from Earth's center, hourly across a window or
+ * at each of a list of instants.
+ */
+export async function fetchMoonDiscs(
+  times: Omit<TimeWindow, 'stepSize'> | TimeList,
+): Promise<HorizonsMoonDisc[]> {
+  // Only a `TLIST` is long enough to need batching.
+  if (!('instants' in times)) {
+    return fetchMoonDiscBatch({ ...times, stepSize: MOON_DISC_STEP_SIZE });
+  }
+
+  const discs: HorizonsMoonDisc[] = [];
+  for (let i = 0; i < times.instants.length; i += TLIST_BATCH_SIZE) {
+    // Sequential, not parallel: Horizons asks for one request at a time.
+    // oxlint-disable-next-line no-await-in-loop
+    discs.push(...await fetchMoonDiscBatch({ instants: times.instants.slice(i, i + TLIST_BATCH_SIZE) }));
+  }
+  return discs;
+}
+
+async function fetchMoonDiscBatch(times: TimeWindow | TimeList): Promise<HorizonsMoonDisc[]> {
+  const { headers, rows } = await requestObserverTable({
+    body: 'moon',
+    site: 'geocentric',
+    ...times,
+    quantities: quantitiesFor(MOON_DISC_COLUMNS),
+  });
+
+  const columnIndex = resolveColumns(headers, MOON_DISC_COLUMNS);
+
+  const sunTable = await requestObserverTable({
+    body: 'sun',
+    site: 'geocentric',
+    ...times,
+    quantities: quantitiesFor(APPARENT_EQUATORIAL_COLUMNS),
+  });
+  const sunIndex = resolveColumns(sunTable.headers, APPARENT_EQUATORIAL_COLUMNS);
+
+  return rows.map((cols, i) => {
+    const num = (name: MoonDiscColumn) => numericCell(cols, columnIndex[name]);
+    const at = parseHorizonsInstant(cell(cols, 0));
+
+    // Both tables come back in time order, so rows pair up by index.
+    const sunCols = sunTable.rows[i];
+    if (sunCols === undefined || !parseHorizonsInstant(cell(sunCols, 0)).equals(at)) {
+      throw new Error(`No Sun row for ${at.toString()}`);
+    }
+    const sun = {
+      rightAscensionDeg: numericCell(sunCols, sunIndex.rightAscensionDeg),
+      declinationDeg: numericCell(sunCols, sunIndex.declinationDeg),
+    };
+
+    return {
+      at,
+      subEarth: { lon: toSignedDeg(num('subEarthLonDeg')), lat: num('subEarthLatDeg') },
+      subSolar: { lon: toSignedDeg(num('subSolarLonDeg')), lat: num('subSolarLatDeg') },
+      axisPositionAngle: num('axisPositionAngleDeg'),
+      brightLimbPositionAngle: brightLimbPositionAngle({
+        rightAscensionDeg: num('rightAscensionDeg'),
+        declinationDeg: num('declinationDeg'),
+      }, sun),
+      phaseAngle: num('phaseAngleDeg'),
+      illuminatedFraction: num('illuminatedPercent') / 100,
+      distanceKm: num('distanceAu') * AU_TO_KM,
+      angularDiameterArcmin: num('angularDiameterArcsec') / 60,
+    };
+  });
 }

@@ -24,7 +24,7 @@ export interface ObservingDay {
  * The observing day's true bounds. DST transition days are 23 or 25 hours long,
  * so the end is derived by calendar arithmetic rather than by adding 24 hours.
  */
-export function civilDayBounds(observer: Observer): ObservingDay {
+export function civilDayBounds(observer: Pick<Observer, 'date' | 'timeZone'>): ObservingDay {
   const start = Temporal.PlainDate.from(observer.date)
     .toZonedDateTime({ timeZone: observer.timeZone });
   return {

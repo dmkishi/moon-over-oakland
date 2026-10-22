@@ -26,7 +26,7 @@ day of and before 4:00 AM the next day**.
   which can make wall-clock times either nonexistent ("spring forward") or
   ambiguous ("fall back").
 - All tabulated data below are for 2026 in local time (America/Los_Angeles) and
-  sourced from JPL Horizons via `pnpm horizons`.
+  sourced from JPL Horizons via `pnpm horizons sky`.
 
 🌑 New Moon
 --------------------------------------------------------------------------------

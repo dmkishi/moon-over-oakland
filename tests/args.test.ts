@@ -37,6 +37,19 @@ describe('parseCliArgs', () => {
     expect(() => parseCliArgs(['2000-01-31', '2000-02-01'])).toThrow('Too many arguments');
   });
 
+  it('reads an image path', () => {
+    expect(parseCliArgs(['--dry-run', '--image=moon.jpg']).imagePath).toBe('moon.jpg');
+    expect(parseCliArgs(['--image', 'moon.jpg']).imagePath).toBe('moon.jpg');
+  });
+
+  it('leaves the image path out by default', () => {
+    expect(parseCliArgs([])).not.toHaveProperty('imagePath');
+  });
+
+  it('rejects an empty image path', () => {
+    expect(() => parseCliArgs(['--image='])).toThrow('--image needs a path');
+  });
+
   it('rejects an unknown option', () => {
     expect(() => parseCliArgs(['--nope'])).toThrow(/ERR_PARSE_ARGS_UNKNOWN_OPTION|--nope/u);
   });

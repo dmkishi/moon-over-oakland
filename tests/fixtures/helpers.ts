@@ -6,8 +6,9 @@
  * place their shape is spelled out. `phaseType` derives from `PHASE_TYPES`, so
  * the valid phase names are stated once in the repo, in `src/`.
  *
- * Schemas are strict: `pnpm horizons` prints a superset of what these files
- * keep, so an untrimmed paste is rejected by name rather than ignored.
+ * Schemas are strict: `pnpm horizons sky` and `pnpm horizons disc` print a
+ * superset of what these files keep, so an untrimmed paste is rejected by name
+ * rather than ignored.
  */
 import { readFileSync } from 'node:fs';
 import stripJsonComments from 'strip-json-comments';
@@ -47,8 +48,24 @@ const postingFixture = z.object({
   dateTime,
 }).strict();
 
+const selenographic = z.object({ lon: z.number(), lat: z.number() }).strict();
+
+const moonDiscFixture = z.object({
+  description: z.union([z.enum(PHASE_TYPES), z.literal('sample')]),
+  instant: z.iso.datetime(),
+  subEarth: selenographic,
+  subSolar: selenographic,
+  axisPositionAngle: z.number(),
+  brightLimbPositionAngle: z.number(),
+  phaseAngle: z.number(),
+  illuminatedFraction: z.number(),
+  distanceKm: z.number(),
+  angularDiameterArcmin: z.number(),
+}).strict();
+
 export type AccuracyFixture = z.infer<typeof accuracyFixture>;
 export type PostingFixture = z.infer<typeof postingFixture>;
+export type MoonDiscFixture = z.infer<typeof moonDiscFixture>;
 
 function load<S extends z.ZodType>(name: string, schema: S): z.infer<S> {
   const raw = readFileSync(new URL(name, import.meta.url), 'utf8');
@@ -68,4 +85,12 @@ const PHASES_IN_2026 = 50;
 export const postingFixtures = load(
   './phase-event.posting.jsonc',
   z.array(postingFixture).length(PHASES_IN_2026),
+);
+
+/** 50 principal phases plus 6 samples between them. */
+const MOON_DISC_ROWS = PHASES_IN_2026 + 6;
+
+export const moonDiscFixtures = load(
+  './moon-disc.accuracy.jsonc',
+  z.array(moonDiscFixture).length(MOON_DISC_ROWS),
 );

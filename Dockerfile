@@ -35,6 +35,9 @@ ENV NODE_ENV=production
 ENV TZ=America/Los_Angeles
 # Copy `node_modules` from the "dependencies" stage to the "runtime" stage here.
 COPY --from=dependencies /app/node_modules ./node_modules
+# Copy NASA moon image textures, stored in Git LFS (see `image.yml`.) Copy
+# before `package.json` and `src/`, as the textures change far less often.
+COPY assets/ ./assets/
 # Copy so that ESM is explicit via `"type": "module"` instead of relying on
 # syntax detection.
 COPY package.json ./

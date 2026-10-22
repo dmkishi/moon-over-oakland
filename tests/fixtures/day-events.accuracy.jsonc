@@ -13,7 +13,7 @@
  * Keep fixtures to a single calendar year outside of specific cross-year cases,
  * such as leap years, etc.
  *
- * Run `pnpm horizons YYYY-MM-DD` to generate additional fixtures.
+ * Run `pnpm horizons sky YYYY-MM-DD` to generate additional fixtures.
  */
 [
   {
