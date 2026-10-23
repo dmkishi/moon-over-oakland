@@ -8,7 +8,7 @@
  * cannot drift apart, and everything downstream sees only typed rows.
  */
 import type { Observer } from './observer.ts';
-import { moonTilt } from './tilt.ts';
+import { moonTilt, wrapDeg180, wrapDeg360 } from './tilt.ts';
 
 const HORIZONS_API_URL = 'https://ssd.jpl.nasa.gov/api/horizons.api';
 
@@ -622,14 +622,7 @@ function brightLimbPositionAngle(
     Math.cos(δ0) * Math.sin(α0 - α),
     Math.sin(δ0) * Math.cos(δ) - Math.cos(δ0) * Math.sin(δ) * Math.cos(α0 - α),
   ) / rad;
-  return (χ + 360) % 360;
-}
-
-/**
- * Horizons longitudes run 0–360°, `MoonDisc` longitudes −180° to 180°.
- */
-function toSignedDeg(lonDeg: number): number {
-  return lonDeg > 180 ? lonDeg - 360 : lonDeg;
+  return wrapDeg360(χ);
 }
 
 /**
@@ -663,10 +656,11 @@ export async function fetchMoonDiscs(
       throw new Error(`No Sun row for ${at.toString()}`);
     }
 
+    // Horizons longitudes run 0–360°, `MoonDisc` longitudes −180° to 180°.
     return {
       at,
-      subEarth: { lon: toSignedDeg(moon.subEarthLonDeg), lat: moon.subEarthLatDeg },
-      subSolar: { lon: toSignedDeg(moon.subSolarLonDeg), lat: moon.subSolarLatDeg },
+      subEarth: { lon: wrapDeg180(moon.subEarthLonDeg), lat: moon.subEarthLatDeg },
+      subSolar: { lon: wrapDeg180(moon.subSolarLonDeg), lat: moon.subSolarLatDeg },
       axisPositionAngle: moon.axisPositionAngleDeg,
       brightLimbPositionAngle: brightLimbPositionAngle(moon, sun.values),
       phaseAngle: moon.phaseAngleDeg,

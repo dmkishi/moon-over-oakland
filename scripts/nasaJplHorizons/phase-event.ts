@@ -1,5 +1,6 @@
 import { fetchEclipticLongitudes, type EclipticLongitude } from './horizons.ts';
 import type { ObservingDay } from './observer.ts';
+import { wrapDeg180, wrapDeg360 } from './tilt.ts';
 
 export type PhaseEventName = 'new' | 'first-quarter' | 'full' | 'last-quarter';
 
@@ -17,15 +18,6 @@ const PHASE_CROSSINGS: { targetDeg: number; name: PhaseEventName }[] = [
   { targetDeg: 180, name: 'full' },
   { targetDeg: 270, name: 'last-quarter' },
 ];
-
-/**
- * Signed distance from a target longitude, in `[-180, 180)`. Wrapping the
- * difference this way makes the 360°→0° rollover at new moon need no special
- * case: the offset simply passes through zero like any other crossing.
- */
-function signedOffsetDeg(deltaLonDeg: number, targetDeg: number): number {
-  return (((deltaLonDeg - targetDeg + 540) % 360 + 360) % 360) - 180;
-}
 
 /**
  * Find the principal phase instant, if any, that falls on the observing day.
@@ -53,15 +45,18 @@ function findPhaseEvent(
   // monotonic across a DST transition.
   const series = moonLons.map((moon, i) => ({
     minutes: (moon.at.epochMilliseconds - day.start.epochMilliseconds) / 60_000,
-    deltaLonDeg: ((moon.lonDeg - sunLons[i]!.lonDeg) % 360 + 360) % 360,
+    deltaLonDeg: wrapDeg360(moon.lonDeg - sunLons[i]!.lonDeg),
   }));
 
   for (let i = 1; i < series.length; i++) {
     const prev = series[i - 1]!;
     const curr = series[i]!;
     for (const { targetDeg, name } of PHASE_CROSSINGS) {
-      const prevOffset = signedOffsetDeg(prev.deltaLonDeg, targetDeg);
-      const currOffset = signedOffsetDeg(curr.deltaLonDeg, targetDeg);
+      // Wrapping the offset to [-180, 180) makes the 360°→0° rollover at new
+      // moon need no special case: it passes through zero like any other
+      // crossing.
+      const prevOffset = wrapDeg180(prev.deltaLonDeg - targetDeg);
+      const currOffset = wrapDeg180(curr.deltaLonDeg - targetDeg);
       // The difference in longitude increases monotonically, so a sign change
       // is always a forward crossing of this target.
       if (prevOffset < 0 && currOffset >= 0) {

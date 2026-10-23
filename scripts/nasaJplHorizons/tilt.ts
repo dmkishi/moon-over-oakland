@@ -1,6 +1,20 @@
 const DEG = Math.PI / 180;
 
 /**
+ * Wrap an angle to `[0, 360)`.
+ */
+export function wrapDeg360(deg: number): number {
+  return ((deg % 360) + 360) % 360;
+}
+
+/**
+ * Wrap an angle to `[-180, 180)`.
+ */
+export function wrapDeg180(deg: number): number {
+  return wrapDeg360(deg + 180) - 180;
+}
+
+/**
  * Compute the hour angle from LST and RA.
  *
  * @param lstHours - Local apparent sidereal time in decimal hours
@@ -9,11 +23,7 @@ const DEG = Math.PI / 180;
  */
 function computeHourAngleDeg(lstHours: number, raDeg: number): number {
   const lstDeg = lstHours * 15;
-  let hourAngleDeg = lstDeg - raDeg;
-  // Normalize to [-180, +180]
-  while (hourAngleDeg > 180) hourAngleDeg -= 360;
-  while (hourAngleDeg < -180) hourAngleDeg += 360;
-  return hourAngleDeg;
+  return wrapDeg180(lstDeg - raDeg);
 }
 
 /**
@@ -51,8 +61,5 @@ export function moonTilt(
 ): number {
   const hourAngleDeg = computeHourAngleDeg(lstHours, raDeg);
   const parallacticAngleDeg = computeParallacticAngle(hourAngleDeg, decDeg, observerLat);
-  let tiltDeg = (paSunDeg + 180) - parallacticAngleDeg;
-  while (tiltDeg > 180) tiltDeg -= 360;
-  while (tiltDeg < -180) tiltDeg += 360;
-  return tiltDeg;
+  return wrapDeg180((paSunDeg + 180) - parallacticAngleDeg);
 }
