@@ -4,7 +4,7 @@
 import { parseArgs } from 'node:util';
 import { parseDateArg, UsageError } from './args.ts';
 import { fetchMoonEphemeris } from './horizons.ts';
-import { resolvePhaseEvent } from './phase-event.ts';
+import { resolvePhaseEvent } from './phase-crossing.ts';
 import { printCsv, printFixtureJson, printSummary, printTable, thinEphemeris } from './print.ts';
 import { civilDay, SITE } from './site.ts';
 import { computeMoonSummary } from './summary.ts';

@@ -1,5 +1,5 @@
 import type { MoonEphemeris } from './horizons.ts';
-import type { PhaseEvent } from './phase-event.ts';
+import type { PhaseEvent } from './phase-crossing.ts';
 import type { ObservingDay, Site } from './site.ts';
 
 /**
