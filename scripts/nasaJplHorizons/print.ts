@@ -1,11 +1,11 @@
 import pc from 'picocolors';
+import type { PhaseType } from '../../src/ephemeris/phase.ts';
 import {
   MOON_EPHEMERIS_STEP_SIZE,
   type HorizonsMoonDisc,
   type MoonEphemeris,
   type MoonEventName,
 } from './horizons.ts';
-import type { PhaseEventName } from './phase-event.ts';
 import type { MoonSummary } from './summary.ts';
 
 /**
@@ -147,7 +147,7 @@ export function printCsv(displayRows: EphemerisDisplayRow[]): void {
   }
 }
 
-const PHASE_EVENT_LABEL: Record<PhaseEventName, string> = {
+const PHASE_EVENT_LABEL: Record<PhaseType, string> = {
   'new': 'New Moon',
   'first-quarter': 'First Quarter',
   'full': 'Full Moon',

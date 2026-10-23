@@ -1,23 +1,18 @@
+import { PHASE_TYPES, type PhaseType } from '../../src/ephemeris/phase.ts';
 import { fetchEclipticLongitudes, type EclipticLongitude } from './horizons.ts';
 import type { ObservingDay } from './site.ts';
 import { wrapDeg180, wrapDeg360 } from './tilt.ts';
-
-export type PhaseEventName = 'new' | 'first-quarter' | 'full' | 'last-quarter';
 
 /**
  * The principal phase instant falling on the observing day.
  */
 export interface PhaseEvent {
   at: Temporal.ZonedDateTime;
-  name: PhaseEventName;
+  name: PhaseType;
 }
 
-const PHASE_CROSSINGS: { targetDeg: number; name: PhaseEventName }[] = [
-  { targetDeg: 0,   name: 'new' },
-  { targetDeg: 90,  name: 'first-quarter' },
-  { targetDeg: 180, name: 'full' },
-  { targetDeg: 270, name: 'last-quarter' },
-];
+// `PHASE_TYPES` runs in lunation order, so each phase sits 90° past the last.
+const PHASE_CROSSINGS = PHASE_TYPES.map((name, i) => ({ name, targetDeg: i * 90 }));
 
 /**
  * Find the principal phase instant, if any, that falls on the observing day.
