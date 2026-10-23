@@ -1,6 +1,6 @@
-import type { MoonEphemeris } from './horizons.ts';
+import type { ObservingDay, Site } from '../site.ts';
+import type { MoonEphemeris } from './ephemeris.ts';
 import type { PhaseEvent } from './phase-crossing.ts';
-import type { ObservingDay, Site } from './site.ts';
 
 /**
  * A single observing day distilled from the full `MoonEphemeris` run.

@@ -63,3 +63,25 @@ export function moonTilt(
   const parallacticAngleDeg = computeParallacticAngle(hourAngleDeg, decDeg, observerLat);
   return wrapDeg180((paSunDeg + 180) - parallacticAngleDeg);
 }
+
+/**
+ * Apparent RA/Dec in degrees, keyed as the Horizons columns are named.
+ */
+type ApparentEquatorial = Record<'apparentRightAscensionDeg' | 'apparentDeclinationDeg', number>;
+
+/**
+ * Position angle of the bright limb (Meeus 48.5), 0–360°, from the apparent
+ * RA/Dec of the Moon and the Sun.
+ */
+export function brightLimbPositionAngle(
+  moon: ApparentEquatorial,
+  sun: ApparentEquatorial,
+): number {
+  const [α, δ] = [moon.apparentRightAscensionDeg * DEG, moon.apparentDeclinationDeg * DEG];
+  const [α0, δ0] = [sun.apparentRightAscensionDeg * DEG, sun.apparentDeclinationDeg * DEG];
+  const χ = Math.atan2(
+    Math.cos(δ0) * Math.sin(α0 - α),
+    Math.sin(δ0) * Math.cos(δ) - Math.cos(δ0) * Math.sin(δ) * Math.cos(α0 - α),
+  ) / DEG;
+  return wrapDeg360(χ);
+}

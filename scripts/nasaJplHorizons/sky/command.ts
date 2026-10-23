@@ -1,12 +1,12 @@
 /**
- * @see main.ts for usage and subcommand descriptions.
+ * @see ../main.ts for usage and subcommand descriptions.
  */
 import { parseArgs } from 'node:util';
-import { parseDateArg, UsageError } from './args.ts';
-import { fetchMoonEphemeris } from './horizons.ts';
+import { parseDateArg, UsageError } from '../args.ts';
+import { civilDay, SITE } from '../site.ts';
+import { fetchMoonEphemeris, thinEphemeris } from './ephemeris.ts';
 import { resolvePhaseEvent } from './phase-crossing.ts';
-import { printCsv, printFixtureJson, printSummary, printTable, thinEphemeris } from './print.ts';
-import { civilDay, SITE } from './site.ts';
+import { printCsv, printFixtureJson, printSummary, printTable } from './print.ts';
 import { computeMoonSummary } from './summary.ts';
 
 /**

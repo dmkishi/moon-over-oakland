@@ -1,12 +1,11 @@
 /**
- * @see main.ts for usage and subcommand descriptions.
+ * @see ../main.ts for usage and subcommand descriptions.
  */
 import { parseArgs } from 'node:util';
-import { findNextPhases, PHASE_TYPES, type PhaseType } from '../../src/ephemeris/phase.ts';
-import { parseDayOrYearArg, UsageError } from './args.ts';
-import { fetchMoonDiscs } from './horizons.ts';
-import { printMoonDiscFixture } from './print.ts';
-import { civilDay, type ObservingDay } from './site.ts';
+import { findNextPhases, PHASE_TYPES, type PhaseType } from '../../../src/ephemeris/phase.ts';
+import { parseDayOrYearArg, UsageError } from '../args.ts';
+import { civilDay, type ObservingDay } from '../site.ts';
+import { fetchMoonDiscs, printMoonDiscFixture } from './moon-disc.ts';
 
 /**
  * Every principal phase instant from `start` up to `end`, in order, from the

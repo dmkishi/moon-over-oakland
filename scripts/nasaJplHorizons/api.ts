@@ -1,16 +1,19 @@
 /**
- * The whole conversation with NASA JPL's Horizons API.
+ * The transport layer for NASA JPL's Horizons API: sending an observer-table
+ * request and reading the reply back as typed rows.
  * <https://ssd.jpl.nasa.gov/horizons/manual.html>
  *
  * What we ask for and how the reply reads back are two halves of one contract:
  * the quantities requested decide which columns arrive, and the UT window sent
- * is the frame the row labels come back in. Both halves are stated here so they
- * cannot drift apart, and everything downstream sees only typed rows.
+ * is the frame the row labels come back in. `fetchColumns` derives both halves
+ * from the one list of column names a query passes, so they cannot drift apart,
+ * and each query sees only typed rows.
  */
-import type { ObservingDay, Site } from './site.ts';
-import { moonTilt, wrapDeg180, wrapDeg360 } from './tilt.ts';
+import type { Site } from './site.ts';
 
 const HORIZONS_API_URL = 'https://ssd.jpl.nasa.gov/api/horizons.api';
+
+export const AU_TO_KM = 149_597_870.7;
 
 /**
  * Horizons target body IDs. Bodies are named at every call site rather than
@@ -19,7 +22,7 @@ const HORIZONS_API_URL = 'https://ssd.jpl.nasa.gov/api/horizons.api';
  */
 const BODY_COMMAND = { moon: "'301'", sun: "'10'" };
 
-type Body = keyof typeof BODY_COMMAND;
+export type Body = keyof typeof BODY_COMMAND;
 
 /**
  * Converts a zoned instant to a Horizons-acceptable "YYYY-MM-DD HH:MM" string
@@ -194,7 +197,7 @@ const COLUMNS = {
   eclipticLonDeg: { quantity: 31, headerPattern: /ObsEcLon/u },
 } satisfies Record<string, Column>;
 
-type ColumnName = keyof typeof COLUMNS;
+export type ColumnName = keyof typeof COLUMNS;
 
 /**
  * The `QUANTITIES` list that asks for exactly these columns. Derived rather than
@@ -240,14 +243,14 @@ interface TimeWindow {
 /**
  * One row per instant, sent as a `TLIST` to the second.
  */
-interface TimeList {
+export interface TimeList {
   instants: Temporal.Instant[];
 }
 
 /**
  * What to tabulate and when, short of which columns to send back.
  */
-type TableQuery = (TimeWindow | TimeList) & {
+export type TableQuery = (TimeWindow | TimeList) & {
   body: Body;
   /**
    * Where the table is computed from: the observing site, or `'geocentric'` for
@@ -385,7 +388,7 @@ function batched(query: TableQuery): TableQuery[] {
  * Fetch exactly the `names` columns for `query` and decode every row, in time
  * order.
  */
-async function fetchColumns<K extends ColumnName>(
+export async function fetchColumns<K extends ColumnName>(
   query: TableQuery,
   names: readonly K[],
 ): Promise<TableRow<K>[]> {
@@ -411,297 +414,5 @@ async function fetchColumns<K extends ColumnName>(
         columnIndex.map(([name, i]) => [name, numericCell(cols, i)]),
       ) as Record<K, number>,
     }));
-  });
-}
-
-/**
- * The columns making up an observer-centric Moon ephemeris.
- *
- * Right ascension, declination and sidereal time are requested only to derive
- * `tiltDeg` and are consumed on the way out; the rest are carried through to
- * `MoonEphemeris` as they arrive.
- */
-const MOON_EPHEMERIS_COLUMNS = [
-  'icrfRightAscensionDeg',
-  'icrfDeclinationDeg',
-  'azimuthDeg',
-  'altitudeDeg',
-  'siderealTimeHours',
-  'illuminatedPercent',
-  'distanceAu',
-  'sunPositionAngleDeg',
-] as const satisfies ColumnName[];
-
-/**
- * Fixed at one minute, and deliberately not configurable. Horizons does not
- * interpolate rise/set: it tags the nearest grid row with `r`/`s`, so event
- * resolution equals the step size and the summary's azimuth and tilt are read
- * off that row.
- *
- * One minute bounds the error to ~0.14° of azimuth and ~0.12° of tilt, two
- * orders of magnitude inside the accuracy suite's tolerances.
- */
-export const MOON_EPHEMERIS_STEP_SIZE = '1m';
-
-const AU_TO_KM = 149_597_870.7;
-
-/**
- * The Moon's observer-centric ephemeris at a single instant: its apparent
- * position and appearance in the observer's sky.
- */
-export interface MoonEphemeris {
-  at: Temporal.ZonedDateTime; // Row instant re-expressed in the observer's zone
-  /**
-   * Flag legend:
-   * - `*`: Sun is above the horizon (daytime)
-   * - `C`: Civil twilight
-   * - `N`: Nautical twilight
-   * - `A`: Astronomical twilight
-   * - `r`: Moonrise event
-   * - `m`: Refracted upper-limb of Moon on or above apparent horizon
-   * - `e`: Moon elevation max (target body maximum elevation angle has occurred)
-   * - `t`: Moon transit (target body at or passed through observer meridian)
-   * - `s`: Moonset event
-   */
-  flags: string[];
-  events: MoonEventName[]; // The events occurring during this row's step, decoded from `flags`
-  azimuthDeg: number; // Apparent azimuth of the Moon
-  altitudeDeg: number; // Apparent altitude of the Moon
-  illuminatedPercent: number; // Illuminated fraction of the disk, as a percentage (0–100)
-  distanceKm: number;
-  tiltDeg: number; // Tilt of the moon (relative to the local vertical)
-}
-
-export type MoonEventName = 'moonrise' | 'moonset' | 'transit' | 'sunrise' | 'sunset';
-
-/**
- * The flags standing for an event on their own row. The twilight flags (`C`,
- * `N`, `A`) and the `m`/`e` states describe the row rather than mark an
- * occurrence, so they decode to nothing.
- */
-const EVENT_FLAGS: Record<string, MoonEventName> = {
-  'r': 'moonrise',
-  's': 'moonset',
-  't': 'transit',
-};
-
-/**
- * The events occurring during a row's step, e.g. `['transit', 'sunset']`.
- *
- * Sunrise and sunset have no flag of their own: `*` marks daytime, so the
- * crossing is a change between consecutive rows.
- *
- * @param prevFlags - `undefined` for the first row
- */
-function eventsAt(flags: string[], prevFlags: string[] | undefined): MoonEventName[] {
-  const names = flags
-    .map((flag) => EVENT_FLAGS[flag])
-    .filter((name) => name !== undefined);
-
-  const isDay = flags.includes('*');
-  if (prevFlags !== undefined && prevFlags.includes('*') !== isDay) {
-    names.push(isDay ? 'sunrise' : 'sunset');
-  }
-
-  return names;
-}
-
-/**
- * Fetch the Moon's topocentric, observer-centric ephemeris as one
- * `MoonEphemeris` per step across the observing day.
- *
- * @param onRawResponse - Receives the untouched response body, for `--show-raw`
- */
-export async function fetchMoonEphemeris(
-  site: Site,
-  day: ObservingDay,
-  onRawResponse?: (raw: string) => void,
-): Promise<MoonEphemeris[]> {
-  const rows = await fetchColumns(
-    {
-      body: 'moon',
-      site,
-      start: day.start,
-      // One step short of the next day's midnight, which belongs to that day.
-      stop: day.end.subtract({ minutes: 1 }),
-      stepSize: MOON_EPHEMERIS_STEP_SIZE,
-      onRawResponse,
-    },
-    MOON_EPHEMERIS_COLUMNS,
-  );
-
-  return rows.map(({ at, flags, values }, i) => ({
-    at: at.toZonedDateTimeISO(site.timezone),
-    flags,
-    events: eventsAt(flags, rows[i - 1]?.flags),
-    azimuthDeg: values.azimuthDeg,
-    altitudeDeg: values.altitudeDeg,
-    illuminatedPercent: values.illuminatedPercent,
-    distanceKm: values.distanceAu * AU_TO_KM,
-    tiltDeg: moonTilt(
-      values.siderealTimeHours,
-      values.icrfRightAscensionDeg,
-      values.icrfDeclinationDeg,
-      site.latitude,
-      values.sunPositionAngleDeg,
-    ),
-  }));
-}
-
-/**
- * Step size for the ecliptic longitude tables, independent of the ephemeris
- * step. The Moon-Sun difference in longitude advances a near-linear
- * ~0.00847°/min, so interpolating across 10 minutes resolves a crossing to well
- * under a second.
- */
-const ECLIPTIC_LONGITUDE_STEP_SIZE = '10m';
-
-/**
- * One sample of a body's geocentric ecliptic longitude.
- *
- * Timed as an instant rather than a wall clock: the series exists to be
- * interpolated across, and only elapsed time stays monotonic through a DST
- * transition.
- */
-export interface EclipticLongitude {
-  at: Temporal.Instant;
-  lonDeg: number;
-}
-
-/**
- * Fetch a geocentric ecliptic longitude table for the Moon or Sun across the
- * observing day.
- */
-export async function fetchEclipticLongitudes(
-  body: Body,
-  day: ObservingDay,
-): Promise<EclipticLongitude[]> {
-  const rows = await fetchColumns(
-    {
-      body,
-      // Phase is defined geocentrically, so the observer is Earth's center.
-      site: 'geocentric',
-      start: day.start,
-      // Through the next day's midnight, unlike the other fetches: stopping a
-      // step short would leave the last 10 minutes with nothing to interpolate
-      // across.
-      stop: day.end,
-      stepSize: ECLIPTIC_LONGITUDE_STEP_SIZE,
-    },
-    ['eclipticLonDeg'],
-  );
-
-  return rows.map(({ at, values }) => ({ at, lonDeg: values.eclipticLonDeg }));
-}
-
-/**
- * Apparent RA/Dec, read for both the Moon and the Sun to derive the bright limb.
- */
-const APPARENT_EQUATORIAL_COLUMNS = [
-  'apparentRightAscensionDeg',
-  'apparentDeclinationDeg',
-] as const satisfies ColumnName[];
-
-/**
- * The geocentric columns `src/ephemeris/moon-disc.ts` is checked against.
- */
-const MOON_DISC_COLUMNS = [
-  ...APPARENT_EQUATORIAL_COLUMNS,
-  'illuminatedPercent',
-  'angularDiameterArcsec',
-  'subEarthLonDeg',
-  'subEarthLatDeg',
-  'subSolarLonDeg',
-  'subSolarLatDeg',
-  'axisPositionAngleDeg',
-  'distanceAu',
-  'phaseAngleDeg',
-] as const satisfies ColumnName[];
-
-/**
- * Horizons' geocentric view of the Moon's disc at one instant, in the units
- * and conventions of `MoonDisc` in `src/ephemeris/moon-disc.ts`.
- */
-export interface HorizonsMoonDisc {
-  at: Temporal.Instant;
-  subEarth: { lon: number; lat: number };
-  subSolar: { lon: number; lat: number };
-  axisPositionAngle: number;
-  brightLimbPositionAngle: number;
-  phaseAngle: number;
-  illuminatedFraction: number;
-  distanceKm: number;
-  angularDiameterArcmin: number;
-}
-
-/**
- * Position angle of the bright limb (Meeus 48.5), 0–360°, from the apparent
- * RA/Dec of the Moon and the Sun in degrees.
- */
-function brightLimbPositionAngle(
-  moon: Record<typeof APPARENT_EQUATORIAL_COLUMNS[number], number>,
-  sun: Record<typeof APPARENT_EQUATORIAL_COLUMNS[number], number>,
-): number {
-  const rad = Math.PI / 180;
-  const [α, δ] = [moon.apparentRightAscensionDeg * rad, moon.apparentDeclinationDeg * rad];
-  const [α0, δ0] = [sun.apparentRightAscensionDeg * rad, sun.apparentDeclinationDeg * rad];
-  const χ = Math.atan2(
-    Math.cos(δ0) * Math.sin(α0 - α),
-    Math.sin(δ0) * Math.cos(δ) - Math.cos(δ0) * Math.sin(δ) * Math.cos(α0 - α),
-  ) / rad;
-  return wrapDeg360(χ);
-}
-
-/**
- * Fixed at one hour, with no flag, to match Dial-a-Moon's hourly frames. The
- * disc changes too slowly (the phase angle moves ~0.5°/h) for a finer step to
- * show anything new.
- */
-const MOON_DISC_STEP_SIZE = '1h';
-
-/**
- * Fetch the Moon's disc as seen from Earth's center, hourly across the
- * observing day or at each of a list of instants.
- */
-export async function fetchMoonDiscs(
-  times: ObservingDay | TimeList,
-): Promise<HorizonsMoonDisc[]> {
-  const query: TableQuery = {
-    body: 'moon',
-    site: 'geocentric',
-    ...('instants' in times
-      ? times
-      : {
-        start: times.start,
-        // Short of the next day's midnight, so the last hour is in and the
-        // next day is not.
-        stop: times.end.subtract({ minutes: 1 }),
-        stepSize: MOON_DISC_STEP_SIZE,
-      }),
-  };
-  const [moonRows, sunRows] = await Promise.all([
-    fetchColumns(query, MOON_DISC_COLUMNS),
-    fetchColumns({ ...query, body: 'sun' }, APPARENT_EQUATORIAL_COLUMNS),
-  ]);
-
-  return moonRows.map(({ at, values: moon }, i) => {
-    // Both tables come back in time order, so rows pair up by index.
-    const sun = sunRows[i];
-    if (sun === undefined || !sun.at.equals(at)) {
-      throw new Error(`No Sun row for ${at.toString()}`);
-    }
-
-    // Horizons longitudes run 0–360°, `MoonDisc` longitudes −180° to 180°.
-    return {
-      at,
-      subEarth: { lon: wrapDeg180(moon.subEarthLonDeg), lat: moon.subEarthLatDeg },
-      subSolar: { lon: wrapDeg180(moon.subSolarLonDeg), lat: moon.subSolarLatDeg },
-      axisPositionAngle: moon.axisPositionAngleDeg,
-      brightLimbPositionAngle: brightLimbPositionAngle(moon, sun.values),
-      phaseAngle: moon.phaseAngleDeg,
-      illuminatedFraction: moon.illuminatedPercent / 100,
-      distanceKm: moon.distanceAu * AU_TO_KM,
-      angularDiameterArcmin: moon.angularDiameterArcsec / 60,
-    };
   });
 }

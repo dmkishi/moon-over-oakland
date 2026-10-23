@@ -1,79 +1,7 @@
 import pc from 'picocolors';
-import type { PhaseType } from '../../src/ephemeris/phase.ts';
-import {
-  MOON_EPHEMERIS_STEP_SIZE,
-  type HorizonsMoonDisc,
-  type MoonEphemeris,
-  type MoonEventName,
-} from './horizons.ts';
+import type { PhaseType } from '../../../src/ephemeris/phase.ts';
+import { MOON_EPHEMERIS_STEP_SIZE, type EphemerisDisplayRow } from './ephemeris.ts';
 import type { MoonSummary } from './summary.ts';
-
-/**
- * Whether a row starts a display interval.
- */
-function isIntervalStart(row: MoonEphemeris, intervalMinutes: number): boolean {
-  /**
-   * True when the row's local wall clock is a whole number of `intervalMinutes`
-   * past local midnight.
-   *
-   * Rows arrive on a uniform absolute-time grid, so taking every Nth one would
-   * keep the spacing but lose the anchor: past a DST transition every display
-   * time shifts by the offset and stops being a multiple of the interval.
-   * Reading the clock holds the anchor, and the two transition days then need
-   * no special case — a start time inside a fall-back day's repeated hour comes
-   * round twice, and one inside a spring-forward day's skipped hour never
-   * arrives at all.
-   */
-  return (row.at.hour * 60 + row.at.minute) % intervalMinutes === 0;
-}
-
-interface EphemerisDisplayRow {
-  row: MoonEphemeris;
-  events: { name: MoonEventName; at: Temporal.ZonedDateTime }[];
-}
-
-/**
- * Reduces the one-row-per-minute grid to one row per `intervalMinutes`, folding
- * each occurrence into the interval that contains it rather than giving it a
- * row of its own.
- *
- * Events attach to the interval in progress — the most recent display row — so
- * they read forward from it. Walking the run in order rather than bucketing by
- * a computed key is what keeps that true through a DST transition, where a wall
- * clock repeats itself for an hour.
- *
- * An event's own altitude, azimuth and tilt are dropped rather than carried
- * onto its interval's row, which would misreport them by up to a full interval.
- * `printSummary` is where the readings at moonrise and moonset are taken, off
- * the full grid, and `--show-raw` is what still holds every sample.
- *
- * This thins for display only. `computeMoonSummary` keeps the full grid, whose
- * one-minute step is the resolution every reported event time is good to.
- */
-export function thinEphemeris(
-  moonEphemeris: MoonEphemeris[],
-  intervalMinutes: number,
-): EphemerisDisplayRow[] {
-  const displayRows: EphemerisDisplayRow[] = [];
-
-  for (const row of moonEphemeris) {
-    if (isIntervalStart(row, intervalMinutes)) {
-      displayRows.push({ row, events: [] });
-    }
-
-    // The run begins at local midnight, which starts an interval whatever the
-    // width, so one is always in progress by the time an event needs somewhere
-    // to go.
-    const current = displayRows.at(-1);
-    if (current === undefined) continue;
-
-    for (const name of row.events) {
-      current.events.push({ name, at: row.at });
-    }
-  }
-
-  return displayRows;
-}
 
 /**
  * Formats an instant's local wall clock as 12-hour time, e.g. "7:30 PM".
@@ -266,35 +194,4 @@ export function printFixtureJson(summary: MoonSummary): void {
   console.log('Fixture JSON');
   console.log('--------------------------------------------------------------------------------');
   console.log(JSON.stringify(fixture, null, 2));
-}
-
-/**
- * Round to `digits` decimal places, so the fixture holds what Horizons printed
- * rather than float noise.
- */
-function round(value: number, digits: number): number {
-  return Number(value.toFixed(digits));
-}
-
-/**
- * Prints the rows of `tests/fixtures/moon-disc.accuracy.jsonc`, one per line.
- */
-export function printMoonDiscFixture(rows: { description: string; disc: HorizonsMoonDisc }[]): void {
-  console.log('Fixture JSONC');
-  console.log('--------------------------------------------------------------------------------');
-  for (const { description, disc } of rows) {
-    const fixture = {
-      description,
-      instant: disc.at.toString({ smallestUnit: 'second' }),
-      subEarth: { lon: round(disc.subEarth.lon, 6), lat: round(disc.subEarth.lat, 6) },
-      subSolar: { lon: round(disc.subSolar.lon, 6), lat: round(disc.subSolar.lat, 6) },
-      axisPositionAngle: round(disc.axisPositionAngle, 4),
-      brightLimbPositionAngle: round(disc.brightLimbPositionAngle, 4),
-      phaseAngle: round(disc.phaseAngle, 4),
-      illuminatedFraction: round(disc.illuminatedFraction, 5),
-      distanceKm: round(disc.distanceKm, 1),
-      angularDiameterArcmin: round(disc.angularDiameterArcmin, 4),
-    };
-    console.log(`  ${JSON.stringify(fixture)},`);
-  }
 }

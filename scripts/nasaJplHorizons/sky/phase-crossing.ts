@@ -1,7 +1,53 @@
-import { PHASE_TYPES, type PhaseType } from '../../src/ephemeris/phase.ts';
-import { fetchEclipticLongitudes, type EclipticLongitude } from './horizons.ts';
-import type { ObservingDay } from './site.ts';
-import { wrapDeg180, wrapDeg360 } from './tilt.ts';
+import { PHASE_TYPES, type PhaseType } from '../../../src/ephemeris/phase.ts';
+import { wrapDeg180, wrapDeg360 } from '../angles.ts';
+import { fetchColumns, type Body } from '../api.ts';
+import type { ObservingDay } from '../site.ts';
+
+/**
+ * Step size for the ecliptic longitude tables, independent of the ephemeris
+ * step. The Moon-Sun difference in longitude advances a near-linear
+ * ~0.00847°/min, so interpolating across 10 minutes resolves a crossing to well
+ * under a second.
+ */
+const ECLIPTIC_LONGITUDE_STEP_SIZE = '10m';
+
+/**
+ * One sample of a body's geocentric ecliptic longitude.
+ *
+ * Timed as an instant rather than a wall clock: the series exists to be
+ * interpolated across, and only elapsed time stays monotonic through a DST
+ * transition.
+ */
+interface EclipticLongitude {
+  at: Temporal.Instant;
+  lonDeg: number;
+}
+
+/**
+ * Fetch a geocentric ecliptic longitude table for the Moon or Sun across the
+ * observing day.
+ */
+async function fetchEclipticLongitudes(
+  body: Body,
+  day: ObservingDay,
+): Promise<EclipticLongitude[]> {
+  const rows = await fetchColumns(
+    {
+      body,
+      // Phase is defined geocentrically, so the observer is Earth's center.
+      site: 'geocentric',
+      start: day.start,
+      // Through the next day's midnight, unlike the other fetches: stopping a
+      // step short would leave the last 10 minutes with nothing to interpolate
+      // across.
+      stop: day.end,
+      stepSize: ECLIPTIC_LONGITUDE_STEP_SIZE,
+    },
+    ['eclipticLonDeg'],
+  );
+
+  return rows.map(({ at, values }) => ({ at, lonDeg: values.eclipticLonDeg }));
+}
 
 /**
  * The principal phase instant falling on the observing day.

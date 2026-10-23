@@ -15,8 +15,8 @@
  */
 import pc from 'picocolors';
 import { UsageError } from './args.ts';
-import { runDisc } from './disc.ts';
-import { runSky } from './sky.ts';
+import { runDisc } from './disc/command.ts';
+import { runSky } from './sky/command.ts';
 
 try {
   const [subcommand, ...argv] = process.argv.slice(2);
