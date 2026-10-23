@@ -1,4 +1,4 @@
-import { eventsAt, type MoonEphemeris } from './horizons.ts';
+import type { MoonEphemeris } from './horizons.ts';
 import type { PhaseEvent } from './phase-event.ts';
 import type { ObservingDay, Site } from './site.ts';
 
@@ -62,8 +62,8 @@ export function computeMoonSummary(
 
   // The summary reports one of each, so the first occurrence wins and any later
   // one is dropped.
-  for (const [i, row] of rows.entries()) {
-    for (const name of eventsAt(row, rows[i - 1])) {
+  for (const row of rows) {
+    for (const name of row.events) {
       switch (name) {
         case 'moonrise': moonrise ??= flagEvent(row); break;
         case 'moonset': moonset ??= flagEvent(row); break;

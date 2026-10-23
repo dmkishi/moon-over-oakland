@@ -464,6 +464,7 @@ export interface MoonEphemeris {
    * - `s`: Moonset event
    */
   flags: string[];
+  events: MoonEventName[]; // The events occurring during this row's step, decoded from `flags`
   azimuthDeg: number; // Apparent azimuth of the Moon
   altitudeDeg: number; // Apparent altitude of the Moon
   illuminatedPercent: number; // Illuminated fraction of the disk, as a percentage (0–100)
@@ -485,23 +486,20 @@ const EVENT_FLAGS: Record<string, MoonEventName> = {
 };
 
 /**
- * The events occurring during `row`'s step, e.g. `['transit', 'sunset']`.
+ * The events occurring during a row's step, e.g. `['transit', 'sunset']`.
  *
  * Sunrise and sunset have no flag of their own: `*` marks daytime, so the
  * crossing is a change between consecutive rows.
  *
- * @param prev - `undefined` for the first row
+ * @param prevFlags - `undefined` for the first row
  */
-export function eventsAt(
-  row: MoonEphemeris,
-  prev: MoonEphemeris | undefined,
-): MoonEventName[] {
-  const names = row.flags
+function eventsAt(flags: string[], prevFlags: string[] | undefined): MoonEventName[] {
+  const names = flags
     .map((flag) => EVENT_FLAGS[flag])
     .filter((name) => name !== undefined);
 
-  const isDay = row.flags.includes('*');
-  if (prev !== undefined && prev.flags.includes('*') !== isDay) {
+  const isDay = flags.includes('*');
+  if (prevFlags !== undefined && prevFlags.includes('*') !== isDay) {
     names.push(isDay ? 'sunrise' : 'sunset');
   }
 
@@ -532,9 +530,10 @@ export async function fetchMoonEphemeris(
     MOON_EPHEMERIS_COLUMNS,
   );
 
-  return rows.map(({ at, flags, values }) => ({
+  return rows.map(({ at, flags, values }, i) => ({
     at: at.toZonedDateTimeISO(site.timezone),
     flags,
+    events: eventsAt(flags, rows[i - 1]?.flags),
     azimuthDeg: values.azimuthDeg,
     altitudeDeg: values.altitudeDeg,
     illuminatedPercent: values.illuminatedPercent,

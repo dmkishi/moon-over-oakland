@@ -1,6 +1,5 @@
 import pc from 'picocolors';
 import {
-  eventsAt,
   MOON_EPHEMERIS_STEP_SIZE,
   type HorizonsMoonDisc,
   type MoonEphemeris,
@@ -57,7 +56,7 @@ export function thinEphemeris(
 ): EphemerisDisplayRow[] {
   const displayRows: EphemerisDisplayRow[] = [];
 
-  for (const [i, row] of moonEphemeris.entries()) {
+  for (const row of moonEphemeris) {
     if (isIntervalStart(row, intervalMinutes)) {
       displayRows.push({ row, events: [] });
     }
@@ -68,7 +67,7 @@ export function thinEphemeris(
     const current = displayRows.at(-1);
     if (current === undefined) continue;
 
-    for (const name of eventsAt(row, moonEphemeris[i - 1])) {
+    for (const name of row.events) {
       current.events.push({ name, at: row.at });
     }
   }
