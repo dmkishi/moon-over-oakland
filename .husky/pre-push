@@ -26,6 +26,13 @@ if ! grep -qE "^### ${README} \([0-9]{4}-[0-9]{1,2}-[0-9]{1,2}\)" README.md; the
 fi
 
 ################################################################################
+# Upload Git LFS objects
+################################################################################
+# Husky's `core.hooksPath` bypasses the hook that `git lfs install` would
+# install, so call it here. It reads the pushed refs from stdin.
+git lfs pre-push "$@"
+
+################################################################################
 # TO TEST THIS HOOK: uncomment statement below
 ################################################################################
 # exit 1
