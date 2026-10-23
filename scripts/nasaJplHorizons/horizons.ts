@@ -263,15 +263,34 @@ async function requestObserverTable({
 
   const query = Object.entries(params).map(([k, v]) => `${k}=${v}`).join('&');
   const url = `${HORIZONS_API_URL}?${query}`;
-  console.log(`Calling <${url}>`);
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Horizons API error: ${res.status} ${res.statusText}`);
-  }
+  const raw = await inHorizonsQueue(async () => {
+    console.log(`Calling <${url}>`);
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`Horizons API error: ${res.status} ${res.statusText}`);
+    }
+    return res.text();
+  });
 
-  const raw = await res.text();
   onRawResponse?.(raw);
   return parseCsvBlock(raw);
+}
+
+/**
+ * The settled-or-pending tail of every request sent so far.
+ */
+let horizonsQueueTail: Promise<unknown> = Promise.resolve();
+
+/**
+ * Run `request` once every earlier one has settled. Horizons asks for one
+ * request at a time, so the rule is kept here rather than by each caller, and
+ * callers are free to `Promise.all` their fetches.
+ */
+function inHorizonsQueue<T>(request: () => Promise<T>): Promise<T> {
+  const result = horizonsQueueTail.then(request);
+  // A failed request must not stall the ones queued behind it.
+  horizonsQueueTail = result.catch(() => {});
+  return result;
 }
 
 /**
@@ -589,13 +608,12 @@ export async function fetchMoonDiscs(
     return fetchMoonDiscBatch({ ...times, stepSize: MOON_DISC_STEP_SIZE });
   }
 
-  const discs: HorizonsMoonDisc[] = [];
+  const batches: Temporal.Instant[][] = [];
   for (let i = 0; i < times.instants.length; i += TLIST_BATCH_SIZE) {
-    // Sequential, not parallel: Horizons asks for one request at a time.
-    // oxlint-disable-next-line no-await-in-loop
-    discs.push(...await fetchMoonDiscBatch({ instants: times.instants.slice(i, i + TLIST_BATCH_SIZE) }));
+    batches.push(times.instants.slice(i, i + TLIST_BATCH_SIZE));
   }
-  return discs;
+  const discs = await Promise.all(batches.map((instants) => fetchMoonDiscBatch({ instants })));
+  return discs.flat();
 }
 
 async function fetchMoonDiscBatch(times: TimeWindow | TimeList): Promise<HorizonsMoonDisc[]> {
