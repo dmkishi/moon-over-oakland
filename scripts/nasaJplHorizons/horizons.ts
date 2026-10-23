@@ -147,33 +147,28 @@ interface Column {
  * written out, so adding or dropping a column changes what is requested and what
  * is read in a single edit.
  */
-function quantitiesFor(columns: Record<string, Column>): string {
-  const codes = new Set(Object.values(columns).map(({ quantity }) => quantity));
+function quantitiesFor<K extends string>(columns: Record<K, Column>): string {
+  const codes = new Set(Object.values<Column>(columns).map(({ quantity }) => quantity));
   return [...codes].toSorted((a, b) => a - b).join(',');
 }
 
 /**
- * Locate each column in the header row of the response it was requested from.
+ * Locate each column in the header row of the response it was requested from,
+ * as one `[name, index]` pair per key of `columns`.
  */
 function resolveColumns<K extends string>(
   headers: string[],
   columns: Record<K, Column>,
-): Record<K, number> {
-  const entries: [string, number][] = [];
-  for (const [name, { headerPattern }] of Object.entries<Column>(columns)) {
+): [string, number][] {
+  return Object.entries<Column>(columns).map(([name, { headerPattern }]) => {
     const index = headers.findIndex((h) => headerPattern.test(h));
     if (index === -1) {
       throw new Error(
         `Column matching ${headerPattern} not found. Headers: ${JSON.stringify(headers)}`,
       );
     }
-    entries.push([name, index]);
-  }
-
-  // One entry per key of `columns`, so the result really is `Record<K, number>`;
-  // only `Object.fromEntries`'s signature widens the keys back to `string`.
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-  return Object.fromEntries(entries) as Record<K, number>;
+    return [name, index];
+  });
 }
 
 /**
@@ -194,17 +189,21 @@ interface TimeList {
   instants: Temporal.Instant[];
 }
 
-type ObserverTableQuery = (TimeWindow | TimeList) & {
+/**
+ * What to tabulate and when, short of which columns to send back.
+ */
+type TableQuery = (TimeWindow | TimeList) & {
   body: Body;
   /**
    * Where the table is computed from: the observing site, or `'geocentric'` for
    * Earth's center.
    */
   site: Observer | 'geocentric';
-  quantities: string;
   /** Hands the untouched response body to a caller that wants to show it. */
   onRawResponse?: ((raw: string) => void) | undefined;
 };
+
+type ObserverTableQuery = TableQuery & { quantities: string };
 
 /**
  * The time parameters for either kind of query. A `TLIST` excludes the window
@@ -294,6 +293,72 @@ function inHorizonsQueue<T>(request: () => Promise<T>): Promise<T> {
 }
 
 /**
+ * One decoded row of an observer table.
+ */
+interface TableRow<K extends string> {
+  /** Row stamp, read as UT (see `parseHorizonsInstant`) */
+  at: Temporal.Instant;
+  /** The non-empty cells of the flag columns, which have empty headers */
+  flags: string[];
+  values: Record<K, number>;
+}
+
+/**
+ * Instants per request. A `TLIST` travels in the URL, and Horizons answers a
+ * year's worth of instants (~56) with a 502.
+ */
+const TLIST_BATCH_SIZE = 10;
+
+/**
+ * Split a `TLIST` query into requests of at most `TLIST_BATCH_SIZE` instants.
+ * A window query is sent whole.
+ */
+function batched(query: TableQuery): TableQuery[] {
+  if (!('instants' in query)) {
+    return [query];
+  }
+
+  const { instants, ...rest } = query;
+  const batches: TableQuery[] = [];
+  for (let i = 0; i < instants.length; i += TLIST_BATCH_SIZE) {
+    batches.push({ ...rest, instants: instants.slice(i, i + TLIST_BATCH_SIZE) });
+  }
+  return batches;
+}
+
+/**
+ * Fetch exactly `columns` for `query` and decode every row, in time order.
+ */
+async function fetchColumns<K extends string>(
+  query: TableQuery,
+  columns: Record<K, Column>,
+): Promise<TableRow<K>[]> {
+  const quantities = quantitiesFor(columns);
+  const tables = await Promise.all(
+    batched(query).map((batch) => requestObserverTable({ ...batch, quantities })),
+  );
+
+  return tables.flatMap(({ headers, rows }) => {
+    const columnIndex = resolveColumns(headers, columns);
+    const flagIndices = headers
+      .map((h, i) => ({ h, i }))
+      .filter(({ h }) => h === '')
+      .map(({ i }) => i);
+
+    return rows.map((cols) => ({
+      at: parseHorizonsInstant(cell(cols, 0)),
+      flags: flagIndices.map((i) => cell(cols, i)).filter((f) => f !== ''),
+      // One entry per key of `columns`, so this really is `Record<K, number>`;
+      // only `Object.fromEntries`'s signature widens the keys back to `string`.
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+      values: Object.fromEntries(
+        columnIndex.map(([name, i]) => [name, numericCell(cols, i)]),
+      ) as Record<K, number>,
+    }));
+  });
+}
+
+/**
  * The columns making up an observer-centric Moon ephemeris.
  *
  * Right ascension, declination and sidereal time are requested only to derive
@@ -322,8 +387,6 @@ const MOON_EPHEMERIS_COLUMNS = {
    */
   sunPositionAngleDeg: { quantity: 27, headerPattern: /PsAng/u },
 } satisfies Record<string, Column>;
-
-type MoonColumn = keyof typeof MOON_EPHEMERIS_COLUMNS;
 
 /**
  * Fixed at one minute, and deliberately not configurable. Horizons does not
@@ -413,42 +476,33 @@ export async function fetchMoonEphemeris(
   stop: Temporal.ZonedDateTime,
   onRawResponse?: (raw: string) => void,
 ): Promise<MoonEphemeris[]> {
-  const { headers, rows } = await requestObserverTable({
-    body: 'moon',
-    site: observer,
-    start,
-    stop,
-    stepSize: MOON_EPHEMERIS_STEP_SIZE,
-    quantities: quantitiesFor(MOON_EPHEMERIS_COLUMNS),
-    onRawResponse,
-  });
+  const rows = await fetchColumns(
+    {
+      body: 'moon',
+      site: observer,
+      start,
+      stop,
+      stepSize: MOON_EPHEMERIS_STEP_SIZE,
+      onRawResponse,
+    },
+    MOON_EPHEMERIS_COLUMNS,
+  );
 
-  const columnIndex = resolveColumns(headers, MOON_EPHEMERIS_COLUMNS);
-
-  // Collect flag columns, identified by empty headers.
-  const flagIndices = headers
-    .map((h, i) => ({ h, i }))
-    .filter(({ h }) => h === '')
-    .map(({ i }) => i);
-
-  return rows.map((cols) => {
-    const num = (name: MoonColumn) => numericCell(cols, columnIndex[name]);
-    return {
-      at: parseHorizonsInstant(cell(cols, 0)).toZonedDateTimeISO(observer.timeZone),
-      flags: flagIndices.map((i) => cell(cols, i)).filter((f) => f !== ''),
-      azimuthDeg: num('azimuthDeg'),
-      altitudeDeg: num('altitudeDeg'),
-      illuminatedPercent: num('illuminatedPercent'),
-      distanceKm: num('distanceAu') * AU_TO_KM,
-      tiltDeg: moonTilt(
-        num('siderealTimeHours'),
-        num('rightAscensionDeg'),
-        num('declinationDeg'),
-        observer.lat,
-        num('sunPositionAngleDeg'),
-      ),
-    };
-  });
+  return rows.map(({ at, flags, values }) => ({
+    at: at.toZonedDateTimeISO(observer.timeZone),
+    flags,
+    azimuthDeg: values.azimuthDeg,
+    altitudeDeg: values.altitudeDeg,
+    illuminatedPercent: values.illuminatedPercent,
+    distanceKm: values.distanceAu * AU_TO_KM,
+    tiltDeg: moonTilt(
+      values.siderealTimeHours,
+      values.rightAscensionDeg,
+      values.declinationDeg,
+      observer.lat,
+      values.sunPositionAngleDeg,
+    ),
+  }));
 }
 
 const ECLIPTIC_LONGITUDE_COLUMNS = {
@@ -484,22 +538,19 @@ export async function fetchEclipticLongitudes(
   start: Temporal.ZonedDateTime,
   stop: Temporal.ZonedDateTime,
 ): Promise<EclipticLongitude[]> {
-  const { headers, rows } = await requestObserverTable({
-    body,
-    // Phase is defined geocentrically, so the observer is Earth's center.
-    site: 'geocentric',
-    start,
-    stop,
-    stepSize: ECLIPTIC_LONGITUDE_STEP_SIZE,
-    quantities: quantitiesFor(ECLIPTIC_LONGITUDE_COLUMNS),
-  });
+  const rows = await fetchColumns(
+    {
+      body,
+      // Phase is defined geocentrically, so the observer is Earth's center.
+      site: 'geocentric',
+      start,
+      stop,
+      stepSize: ECLIPTIC_LONGITUDE_STEP_SIZE,
+    },
+    ECLIPTIC_LONGITUDE_COLUMNS,
+  );
 
-  const columnIndex = resolveColumns(headers, ECLIPTIC_LONGITUDE_COLUMNS);
-
-  return rows.map((cols) => ({
-    at: parseHorizonsInstant(cell(cols, 0)),
-    lonDeg: numericCell(cols, columnIndex.lonDeg),
-  }));
+  return rows.map(({ at, values }) => ({ at, lonDeg: values.lonDeg }));
 }
 
 /**
@@ -539,8 +590,6 @@ const MOON_DISC_COLUMNS = {
   /** Sun–target–observer angle, i.e. the phase angle, in degrees */
   phaseAngleDeg: { quantity: 24, headerPattern: /S-T-O/u },
 } satisfies Record<string, Column>;
-
-type MoonDiscColumn = keyof typeof MOON_DISC_COLUMNS;
 
 /**
  * Horizons' geocentric view of the Moon's disc at one instant, in the units
@@ -591,76 +640,39 @@ function toSignedDeg(lonDeg: number): number {
 const MOON_DISC_STEP_SIZE = '1h';
 
 /**
- * Instants per request. A `TLIST` travels in the URL, and Horizons answers a
- * year's worth of instants (~56) with a 502.
- */
-const TLIST_BATCH_SIZE = 10;
-
-/**
  * Fetch the Moon's disc as seen from Earth's center, hourly across a window or
  * at each of a list of instants.
  */
 export async function fetchMoonDiscs(
   times: Omit<TimeWindow, 'stepSize'> | TimeList,
 ): Promise<HorizonsMoonDisc[]> {
-  // Only a `TLIST` is long enough to need batching.
-  if (!('instants' in times)) {
-    return fetchMoonDiscBatch({ ...times, stepSize: MOON_DISC_STEP_SIZE });
-  }
-
-  const batches: Temporal.Instant[][] = [];
-  for (let i = 0; i < times.instants.length; i += TLIST_BATCH_SIZE) {
-    batches.push(times.instants.slice(i, i + TLIST_BATCH_SIZE));
-  }
-  const discs = await Promise.all(batches.map((instants) => fetchMoonDiscBatch({ instants })));
-  return discs.flat();
-}
-
-async function fetchMoonDiscBatch(times: TimeWindow | TimeList): Promise<HorizonsMoonDisc[]> {
-  const { headers, rows } = await requestObserverTable({
+  const query: TableQuery = {
     body: 'moon',
     site: 'geocentric',
-    ...times,
-    quantities: quantitiesFor(MOON_DISC_COLUMNS),
-  });
+    ...('instants' in times ? times : { ...times, stepSize: MOON_DISC_STEP_SIZE }),
+  };
+  const [moonRows, sunRows] = await Promise.all([
+    fetchColumns(query, MOON_DISC_COLUMNS),
+    fetchColumns({ ...query, body: 'sun' }, APPARENT_EQUATORIAL_COLUMNS),
+  ]);
 
-  const columnIndex = resolveColumns(headers, MOON_DISC_COLUMNS);
-
-  const sunTable = await requestObserverTable({
-    body: 'sun',
-    site: 'geocentric',
-    ...times,
-    quantities: quantitiesFor(APPARENT_EQUATORIAL_COLUMNS),
-  });
-  const sunIndex = resolveColumns(sunTable.headers, APPARENT_EQUATORIAL_COLUMNS);
-
-  return rows.map((cols, i) => {
-    const num = (name: MoonDiscColumn) => numericCell(cols, columnIndex[name]);
-    const at = parseHorizonsInstant(cell(cols, 0));
-
+  return moonRows.map(({ at, values: moon }, i) => {
     // Both tables come back in time order, so rows pair up by index.
-    const sunCols = sunTable.rows[i];
-    if (sunCols === undefined || !parseHorizonsInstant(cell(sunCols, 0)).equals(at)) {
+    const sun = sunRows[i];
+    if (sun === undefined || !sun.at.equals(at)) {
       throw new Error(`No Sun row for ${at.toString()}`);
     }
-    const sun = {
-      rightAscensionDeg: numericCell(sunCols, sunIndex.rightAscensionDeg),
-      declinationDeg: numericCell(sunCols, sunIndex.declinationDeg),
-    };
 
     return {
       at,
-      subEarth: { lon: toSignedDeg(num('subEarthLonDeg')), lat: num('subEarthLatDeg') },
-      subSolar: { lon: toSignedDeg(num('subSolarLonDeg')), lat: num('subSolarLatDeg') },
-      axisPositionAngle: num('axisPositionAngleDeg'),
-      brightLimbPositionAngle: brightLimbPositionAngle({
-        rightAscensionDeg: num('rightAscensionDeg'),
-        declinationDeg: num('declinationDeg'),
-      }, sun),
-      phaseAngle: num('phaseAngleDeg'),
-      illuminatedFraction: num('illuminatedPercent') / 100,
-      distanceKm: num('distanceAu') * AU_TO_KM,
-      angularDiameterArcmin: num('angularDiameterArcsec') / 60,
+      subEarth: { lon: toSignedDeg(moon.subEarthLonDeg), lat: moon.subEarthLatDeg },
+      subSolar: { lon: toSignedDeg(moon.subSolarLonDeg), lat: moon.subSolarLatDeg },
+      axisPositionAngle: moon.axisPositionAngleDeg,
+      brightLimbPositionAngle: brightLimbPositionAngle(moon, sun.values),
+      phaseAngle: moon.phaseAngleDeg,
+      illuminatedFraction: moon.illuminatedPercent / 100,
+      distanceKm: moon.distanceAu * AU_TO_KM,
+      angularDiameterArcmin: moon.angularDiameterArcsec / 60,
     };
   });
 }
