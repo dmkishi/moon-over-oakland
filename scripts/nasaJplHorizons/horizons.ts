@@ -143,24 +143,79 @@ interface Column {
 }
 
 /**
+ * Every column any query reads. Each query names the ones it needs, so a column
+ * is defined once however many queries share it.
+ */
+const COLUMNS = {
+  /** Right ascension, ICRF, in degrees */
+  icrfRightAscensionDeg: { quantity: 1, headerPattern: /R.A._\(ICRF\)/u },
+  /** Declination, ICRF, in degrees */
+  icrfDeclinationDeg: { quantity: 1, headerPattern: /DEC_\(ICRF\)/u },
+  /**
+   * Apparent right ascension, on the true equator and equinox of date, in
+   * degrees. ICRF would tilt every position angle by the precession since J2000
+   * (~0.15° by 2026), and so would `PsAng`, which is why the bright limb is
+   * derived from these instead.
+   */
+  apparentRightAscensionDeg: { quantity: 2, headerPattern: /R\.A\._+\(a-app\)/u },
+  /** Apparent declination, likewise, in degrees */
+  apparentDeclinationDeg: { quantity: 2, headerPattern: /DEC_+\(a-app\)/u },
+  /** Apparent azimuth, in degrees */
+  azimuthDeg: { quantity: 4, headerPattern: /Azi_\(a-app\)/u },
+  /** Apparent elevation (altitude), in degrees */
+  altitudeDeg: { quantity: 4, headerPattern: /Elev_\(a-app\)/u },
+  /** Local apparent sidereal time at the observer's location, in hours */
+  siderealTimeHours: { quantity: 7, headerPattern: /L_Ap_Sid_Time/u },
+  /** Illuminated fraction of the disk, as a percentage, 0–100 */
+  illuminatedPercent: { quantity: 10, headerPattern: /Illu%/u },
+  /** Angular diameter, in arcseconds */
+  angularDiameterArcsec: { quantity: 13, headerPattern: /Ang-diam/u },
+  /** Sub-observer point: libration in longitude, in degrees */
+  subEarthLonDeg: { quantity: 14, headerPattern: /ObsSub-LON/u },
+  /** Sub-observer point: libration in latitude, in degrees */
+  subEarthLatDeg: { quantity: 14, headerPattern: /ObsSub-LAT/u },
+  /** Subsolar longitude, in degrees */
+  subSolarLonDeg: { quantity: 15, headerPattern: /SunSub-LON/u },
+  /** Subsolar latitude, in degrees */
+  subSolarLatDeg: { quantity: 15, headerPattern: /SunSub-LAT/u },
+  /** Position angle of the north pole, in degrees */
+  axisPositionAngleDeg: { quantity: 17, headerPattern: /NP\.ang/u },
+  /** Observer range (distance), in AU */
+  distanceAu: { quantity: 20, headerPattern: /^delta$/ui },
+  /** Sun–target–observer angle, i.e. the phase angle, in degrees */
+  phaseAngleDeg: { quantity: 24, headerPattern: /S-T-O/u },
+  /**
+   * Position angle of the extended Sun-to-target radius vector (anti-sun /
+   * dark-limb direction), in degrees. Add 180° to get the bright-limb position
+   * angle.
+   */
+  sunPositionAngleDeg: { quantity: 27, headerPattern: /PsAng/u },
+  /** Apparent ecliptic longitude, in degrees */
+  eclipticLonDeg: { quantity: 31, headerPattern: /ObsEcLon/u },
+} satisfies Record<string, Column>;
+
+type ColumnName = keyof typeof COLUMNS;
+
+/**
  * The `QUANTITIES` list that asks for exactly these columns. Derived rather than
  * written out, so adding or dropping a column changes what is requested and what
  * is read in a single edit.
  */
-function quantitiesFor<K extends string>(columns: Record<K, Column>): string {
-  const codes = new Set(Object.values<Column>(columns).map(({ quantity }) => quantity));
+function quantitiesFor(names: readonly ColumnName[]): string {
+  const codes = new Set(names.map((name) => COLUMNS[name].quantity));
   return [...codes].toSorted((a, b) => a - b).join(',');
 }
 
 /**
  * Locate each column in the header row of the response it was requested from,
- * as one `[name, index]` pair per key of `columns`.
+ * as one `[name, index]` pair per name.
  */
-function resolveColumns<K extends string>(
+function resolveColumns(
   headers: string[],
-  columns: Record<K, Column>,
-): [string, number][] {
-  return Object.entries<Column>(columns).map(([name, { headerPattern }]) => {
+  names: readonly ColumnName[],
+): [ColumnName, number][] {
+  return names.map((name) => {
+    const { headerPattern } = COLUMNS[name];
     const index = headers.findIndex((h) => headerPattern.test(h));
     if (index === -1) {
       throw new Error(
@@ -327,19 +382,20 @@ function batched(query: TableQuery): TableQuery[] {
 }
 
 /**
- * Fetch exactly `columns` for `query` and decode every row, in time order.
+ * Fetch exactly the `names` columns for `query` and decode every row, in time
+ * order.
  */
-async function fetchColumns<K extends string>(
+async function fetchColumns<K extends ColumnName>(
   query: TableQuery,
-  columns: Record<K, Column>,
+  names: readonly K[],
 ): Promise<TableRow<K>[]> {
-  const quantities = quantitiesFor(columns);
+  const quantities = quantitiesFor(names);
   const tables = await Promise.all(
     batched(query).map((batch) => requestObserverTable({ ...batch, quantities })),
   );
 
   return tables.flatMap(({ headers, rows }) => {
-    const columnIndex = resolveColumns(headers, columns);
+    const columnIndex = resolveColumns(headers, names);
     const flagIndices = headers
       .map((h, i) => ({ h, i }))
       .filter(({ h }) => h === '')
@@ -348,7 +404,7 @@ async function fetchColumns<K extends string>(
     return rows.map((cols) => ({
       at: parseHorizonsInstant(cell(cols, 0)),
       flags: flagIndices.map((i) => cell(cols, i)).filter((f) => f !== ''),
-      // One entry per key of `columns`, so this really is `Record<K, number>`;
+      // One entry per name in `names`, so this really is `Record<K, number>`;
       // only `Object.fromEntries`'s signature widens the keys back to `string`.
       // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       values: Object.fromEntries(
@@ -365,28 +421,16 @@ async function fetchColumns<K extends string>(
  * `tiltDeg` and are consumed on the way out; the rest are carried through to
  * `MoonEphemeris` as they arrive.
  */
-const MOON_EPHEMERIS_COLUMNS = {
-  /** Right ascension of the Moon, in degrees */
-  rightAscensionDeg: { quantity: 1, headerPattern: /R.A._\(ICRF\)/u },
-  /** Declination of the Moon, in degrees */
-  declinationDeg: { quantity: 1, headerPattern: /DEC_\(ICRF\)/u },
-  /** Apparent azimuth of the Moon, in degrees */
-  azimuthDeg: { quantity: 4, headerPattern: /Azi_\(a-app\)/u },
-  /** Apparent elevation (altitude) of the Moon, in degrees */
-  altitudeDeg: { quantity: 4, headerPattern: /Elev_\(a-app\)/u },
-  /** Local apparent sidereal time at the observer's location, in hours */
-  siderealTimeHours: { quantity: 7, headerPattern: /L_Ap_Sid_Time/u },
-  /** Illuminated fraction of the Moon's disk, as a percentage, 0–100 */
-  illuminatedPercent: { quantity: 10, headerPattern: /Illu%/u },
-  /** Observer range (distance) to the Moon, in AU */
-  distanceAu: { quantity: 20, headerPattern: /^delta$/ui },
-  /**
-   * Position angle of the extended Sun-to-Moon radius vector (anti-sun /
-   * dark-limb direction), in degrees. Add 180° to get the bright-limb position
-   * angle.
-   */
-  sunPositionAngleDeg: { quantity: 27, headerPattern: /PsAng/u },
-} satisfies Record<string, Column>;
+const MOON_EPHEMERIS_COLUMNS = [
+  'icrfRightAscensionDeg',
+  'icrfDeclinationDeg',
+  'azimuthDeg',
+  'altitudeDeg',
+  'siderealTimeHours',
+  'illuminatedPercent',
+  'distanceAu',
+  'sunPositionAngleDeg',
+] as const satisfies ColumnName[];
 
 /**
  * Fixed at one minute, and deliberately not configurable. Horizons does not
@@ -497,18 +541,13 @@ export async function fetchMoonEphemeris(
     distanceKm: values.distanceAu * AU_TO_KM,
     tiltDeg: moonTilt(
       values.siderealTimeHours,
-      values.rightAscensionDeg,
-      values.declinationDeg,
+      values.icrfRightAscensionDeg,
+      values.icrfDeclinationDeg,
       observer.lat,
       values.sunPositionAngleDeg,
     ),
   }));
 }
-
-const ECLIPTIC_LONGITUDE_COLUMNS = {
-  /** Apparent ecliptic longitude, in degrees */
-  lonDeg: { quantity: 31, headerPattern: /ObsEcLon/u },
-} satisfies Record<string, Column>;
 
 /**
  * Step size for the ecliptic longitude tables, independent of the ephemeris
@@ -547,49 +586,35 @@ export async function fetchEclipticLongitudes(
       stop,
       stepSize: ECLIPTIC_LONGITUDE_STEP_SIZE,
     },
-    ECLIPTIC_LONGITUDE_COLUMNS,
+    ['eclipticLonDeg'],
   );
 
-  return rows.map(({ at, values }) => ({ at, lonDeg: values.lonDeg }));
+  return rows.map(({ at, values }) => ({ at, lonDeg: values.eclipticLonDeg }));
 }
 
 /**
- * Apparent RA/Dec, on the true equator and equinox of date. Quantity 1 (ICRF)
- * would tilt every position angle by the precession since J2000 (~0.15° by
- * 2026), and so would `PsAng`, which is why the bright limb is derived from
- * these instead.
+ * Apparent RA/Dec, read for both the Moon and the Sun to derive the bright limb.
  */
-const APPARENT_EQUATORIAL_COLUMNS = {
-  /** Apparent right ascension, in degrees */
-  rightAscensionDeg: { quantity: 2, headerPattern: /R\.A\._+\(a-app\)/u },
-  /** Apparent declination, in degrees */
-  declinationDeg: { quantity: 2, headerPattern: /DEC_+\(a-app\)/u },
-} satisfies Record<string, Column>;
+const APPARENT_EQUATORIAL_COLUMNS = [
+  'apparentRightAscensionDeg',
+  'apparentDeclinationDeg',
+] as const satisfies ColumnName[];
 
 /**
  * The geocentric columns `src/ephemeris/moon-disc.ts` is checked against.
  */
-const MOON_DISC_COLUMNS = {
+const MOON_DISC_COLUMNS = [
   ...APPARENT_EQUATORIAL_COLUMNS,
-  /** Illuminated fraction of the Moon's disk, as a percentage, 0–100 */
-  illuminatedPercent: { quantity: 10, headerPattern: /Illu%/u },
-  /** Angular diameter, in arcseconds */
-  angularDiameterArcsec: { quantity: 13, headerPattern: /Ang-diam/u },
-  /** Sub-observer point: libration in longitude, in degrees */
-  subEarthLonDeg: { quantity: 14, headerPattern: /ObsSub-LON/u },
-  /** Sub-observer point: libration in latitude, in degrees */
-  subEarthLatDeg: { quantity: 14, headerPattern: /ObsSub-LAT/u },
-  /** Subsolar longitude, in degrees */
-  subSolarLonDeg: { quantity: 15, headerPattern: /SunSub-LON/u },
-  /** Subsolar latitude, in degrees */
-  subSolarLatDeg: { quantity: 15, headerPattern: /SunSub-LAT/u },
-  /** Position angle of the north pole, in degrees */
-  axisPositionAngleDeg: { quantity: 17, headerPattern: /NP\.ang/u },
-  /** Observer range (distance) to the Moon, in AU */
-  distanceAu: { quantity: 20, headerPattern: /^delta$/ui },
-  /** Sun–target–observer angle, i.e. the phase angle, in degrees */
-  phaseAngleDeg: { quantity: 24, headerPattern: /S-T-O/u },
-} satisfies Record<string, Column>;
+  'illuminatedPercent',
+  'angularDiameterArcsec',
+  'subEarthLonDeg',
+  'subEarthLatDeg',
+  'subSolarLonDeg',
+  'subSolarLatDeg',
+  'axisPositionAngleDeg',
+  'distanceAu',
+  'phaseAngleDeg',
+] as const satisfies ColumnName[];
 
 /**
  * Horizons' geocentric view of the Moon's disc at one instant, in the units
@@ -612,12 +637,12 @@ export interface HorizonsMoonDisc {
  * RA/Dec of the Moon and the Sun in degrees.
  */
 function brightLimbPositionAngle(
-  moon: { rightAscensionDeg: number; declinationDeg: number },
-  sun: { rightAscensionDeg: number; declinationDeg: number },
+  moon: Record<typeof APPARENT_EQUATORIAL_COLUMNS[number], number>,
+  sun: Record<typeof APPARENT_EQUATORIAL_COLUMNS[number], number>,
 ): number {
   const rad = Math.PI / 180;
-  const [α, δ] = [moon.rightAscensionDeg * rad, moon.declinationDeg * rad];
-  const [α0, δ0] = [sun.rightAscensionDeg * rad, sun.declinationDeg * rad];
+  const [α, δ] = [moon.apparentRightAscensionDeg * rad, moon.apparentDeclinationDeg * rad];
+  const [α0, δ0] = [sun.apparentRightAscensionDeg * rad, sun.apparentDeclinationDeg * rad];
   const χ = Math.atan2(
     Math.cos(δ0) * Math.sin(α0 - α),
     Math.sin(δ0) * Math.cos(δ) - Math.cos(δ0) * Math.sin(δ) * Math.cos(α0 - α),
