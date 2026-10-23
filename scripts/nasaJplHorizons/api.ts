@@ -150,15 +150,11 @@ interface Column {
  * is defined once however many queries share it.
  */
 const COLUMNS = {
-  /** Right ascension, ICRF, in degrees */
-  icrfRightAscensionDeg: { quantity: 1, headerPattern: /R.A._\(ICRF\)/u },
-  /** Declination, ICRF, in degrees */
-  icrfDeclinationDeg: { quantity: 1, headerPattern: /DEC_\(ICRF\)/u },
   /**
    * Apparent right ascension, on the true equator and equinox of date, in
-   * degrees. ICRF would tilt every position angle by the precession since J2000
-   * (~0.15° by 2026), and so would `PsAng`, which is why the bright limb is
-   * derived from these instead.
+   * degrees. ICRF RA/Dec (quantity 1) would tilt every position angle by the
+   * precession since J2000 (~0.15° by 2026), and so would `PsAng` (quantity
+   * 27), which is why the bright limb is derived from these instead.
    */
   apparentRightAscensionDeg: { quantity: 2, headerPattern: /R\.A\._+\(a-app\)/u },
   /** Apparent declination, likewise, in degrees */
@@ -187,12 +183,6 @@ const COLUMNS = {
   distanceAu: { quantity: 20, headerPattern: /^delta$/ui },
   /** Sun–target–observer angle, i.e. the phase angle, in degrees */
   phaseAngleDeg: { quantity: 24, headerPattern: /S-T-O/u },
-  /**
-   * Position angle of the extended Sun-to-target radius vector (anti-sun /
-   * dark-limb direction), in degrees. Add 180° to get the bright-limb position
-   * angle.
-   */
-  sunPositionAngleDeg: { quantity: 27, headerPattern: /PsAng/u },
   /** Apparent ecliptic longitude, in degrees */
   eclipticLonDeg: { quantity: 31, headerPattern: /ObsEcLon/u },
 } satisfies Record<string, Column>;

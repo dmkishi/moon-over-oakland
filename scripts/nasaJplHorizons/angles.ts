@@ -49,22 +49,6 @@ function computeParallacticAngle(
 }
 
 /**
- * Compute the tilt of the Moon's bright limb relative to the local vertical.
- */
-// oxlint-disable-next-line max-params
-export function moonTilt(
-  lstHours: number, // Local apparent sidereal time in decimal hours
-  raDeg: number, // Right ascension
-  decDeg: number, // Declination
-  observerLat: number,
-  paSunDeg: number, // Position angle of the Sun (anti-sun/dark-limb direction)
-): number {
-  const hourAngleDeg = computeHourAngleDeg(lstHours, raDeg);
-  const parallacticAngleDeg = computeParallacticAngle(hourAngleDeg, decDeg, observerLat);
-  return wrapDeg180((paSunDeg + 180) - parallacticAngleDeg);
-}
-
-/**
  * Apparent RA/Dec in degrees, keyed as the Horizons columns are named.
  */
 type ApparentEquatorial = Record<'apparentRightAscensionDeg' | 'apparentDeclinationDeg', number>;
@@ -84,4 +68,30 @@ export function brightLimbPositionAngle(
     Math.sin(δ0) * Math.cos(δ) - Math.cos(δ0) * Math.sin(δ) * Math.cos(α0 - α),
   ) / DEG;
   return wrapDeg360(χ);
+}
+
+/**
+ * Compute the tilt of the Moon's bright limb relative to the local vertical.
+ *
+ * Everything is on the true equator and equinox of date, the frame local
+ * apparent sidereal time is measured in. ICRF RA/Dec would put the hour angle
+ * off by the precession in RA since J2000 (~0.36° by 2026), which the
+ * parallactic angle amplifies into ~2° of tilt when the Moon passes ~10° from
+ * the zenith.
+ *
+ * @param lstHours - Local apparent sidereal time in decimal hours
+ */
+export function moonTilt(
+  lstHours: number,
+  moon: ApparentEquatorial,
+  sun: ApparentEquatorial,
+  observerLat: number,
+): number {
+  const hourAngleDeg = computeHourAngleDeg(lstHours, moon.apparentRightAscensionDeg);
+  const parallacticAngleDeg = computeParallacticAngle(
+    hourAngleDeg,
+    moon.apparentDeclinationDeg,
+    observerLat,
+  );
+  return wrapDeg180(brightLimbPositionAngle(moon, sun) - parallacticAngleDeg);
 }

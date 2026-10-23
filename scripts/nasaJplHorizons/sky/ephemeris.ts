@@ -1,5 +1,5 @@
 import { moonTilt } from '../angles.ts';
-import { AU_TO_KM, fetchColumns, type ColumnName } from '../api.ts';
+import { AU_TO_KM, fetchColumns, type ColumnName, type TableQuery } from '../api.ts';
 import type { ObservingDay, Site } from '../site.ts';
 
 /**
@@ -10,14 +10,21 @@ import type { ObservingDay, Site } from '../site.ts';
  * `MoonEphemeris` as they arrive.
  */
 const MOON_EPHEMERIS_COLUMNS = [
-  'icrfRightAscensionDeg',
-  'icrfDeclinationDeg',
+  'apparentRightAscensionDeg',
+  'apparentDeclinationDeg',
   'azimuthDeg',
   'altitudeDeg',
   'siderealTimeHours',
   'illuminatedPercent',
   'distanceAu',
-  'sunPositionAngleDeg',
+] as const satisfies ColumnName[];
+
+/**
+ * The Sun's columns, requested only to place the bright limb for `tiltDeg`.
+ */
+const SUN_COLUMNS = [
+  'apparentRightAscensionDeg',
+  'apparentDeclinationDeg',
 ] as const satisfies ColumnName[];
 
 /**
@@ -103,35 +110,37 @@ export async function fetchMoonEphemeris(
   day: ObservingDay,
   onRawResponse?: (raw: string) => void,
 ): Promise<MoonEphemeris[]> {
-  const rows = await fetchColumns(
-    {
-      body: 'moon',
-      site,
-      start: day.start,
-      // One step short of the next day's midnight, which belongs to that day.
-      stop: day.end.subtract({ minutes: 1 }),
-      stepSize: MOON_EPHEMERIS_STEP_SIZE,
-      onRawResponse,
-    },
-    MOON_EPHEMERIS_COLUMNS,
-  );
+  const query: TableQuery = {
+    body: 'moon',
+    site,
+    start: day.start,
+    // One step short of the next day's midnight, which belongs to that day.
+    stop: day.end.subtract({ minutes: 1 }),
+    stepSize: MOON_EPHEMERIS_STEP_SIZE,
+  };
+  const [rows, sunRows] = await Promise.all([
+    fetchColumns({ ...query, onRawResponse }, MOON_EPHEMERIS_COLUMNS),
+    fetchColumns({ ...query, body: 'sun' }, SUN_COLUMNS),
+  ]);
 
-  return rows.map(({ at, flags, values }, i) => ({
-    at: at.toZonedDateTimeISO(site.timezone),
-    flags,
-    events: eventsAt(flags, rows[i - 1]?.flags),
-    azimuthDeg: values.azimuthDeg,
-    altitudeDeg: values.altitudeDeg,
-    illuminatedPercent: values.illuminatedPercent,
-    distanceKm: values.distanceAu * AU_TO_KM,
-    tiltDeg: moonTilt(
-      values.siderealTimeHours,
-      values.icrfRightAscensionDeg,
-      values.icrfDeclinationDeg,
-      site.latitude,
-      values.sunPositionAngleDeg,
-    ),
-  }));
+  return rows.map(({ at, flags, values }, i) => {
+    // Both tables come back in time order, so rows pair up by index.
+    const sun = sunRows[i];
+    if (sun === undefined || !sun.at.equals(at)) {
+      throw new Error(`No Sun row for ${at.toString()}`);
+    }
+
+    return {
+      at: at.toZonedDateTimeISO(site.timezone),
+      flags,
+      events: eventsAt(flags, rows[i - 1]?.flags),
+      azimuthDeg: values.azimuthDeg,
+      altitudeDeg: values.altitudeDeg,
+      illuminatedPercent: values.illuminatedPercent,
+      distanceKm: values.distanceAu * AU_TO_KM,
+      tiltDeg: moonTilt(values.siderealTimeHours, values, sun.values, site.latitude),
+    };
+  });
 }
 
 /**
