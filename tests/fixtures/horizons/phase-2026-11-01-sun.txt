@@ -1,0 +1,252 @@
+API VERSION: 1.2
+API SOURCE: NASA/JPL Horizons API
+
+
+
+*******************************************************************************
+Ephemeris / API_USER Fri Oct 23 14:32:05 2026 Pasadena, USA      / Horizons    
+*******************************************************************************
+Target body name: Sun (10)                        {source: DE441}
+Center body name: Earth (399)                     {source: DE441}
+Center-site name: GEOCENTRIC
+*******************************************************************************
+Start time      : A.D. 2026-Nov-01 07:00:00.0000 UT      
+Stop  time      : A.D. 2026-Nov-02 08:00:00.0000 UT      
+Step-size       : 10 minutes
+*******************************************************************************
+Target pole/equ : IAU_SUN                         {East-longitude positive}
+Target radii    : 695700.0, 695700.0, 695700.0 km {Equator_a, b, pole_c}       
+Center geodetic : 0.0, 0.0, -6378.137             {E-lon(deg),Lat(deg),Alt(km)}
+Center cylindric: 0.0, 0.0, 0.0                   {E-lon(deg),Dxy(km),Dz(km)}
+Center pole/equ : ITRF93                          {East-longitude positive}
+Center radii    : 6378.137, 6378.137, 6356.752 km {Equator_a, b, pole_c}       
+Target primary  : Sun
+Vis. interferer : MOON (R_eq= 1737.400) km        {source: DE441}
+Rel. light bend : Sun                             {source: DE441}
+Rel. lght bnd GM: 1.3271E+11 km^3/s^2                                          
+Atmos refraction: NO (AIRLESS)
+RA format       : DEG
+Time format     : CAL 
+Calendar mode   : Mixed Julian/Gregorian
+EOP file        : eop.261022.p270118                                           
+EOP coverage    : DATA-BASED 1962-JAN-20 TO 2026-OCT-22. PREDICTS-> 2027-JAN-17
+Units conversion: 1 au= 149597870.700 km, c= 299792.458 km/s, 1 day= 86400.0 s 
+Table cut-offs 1: Elevation (-90.0deg=NO ),Airmass (>38.000=NO), Daylight (NO )
+Table cut-offs 2: Solar elongation (  0.0,180.0=NO ),Local Hour Angle( 0.0=NO )
+Table cut-offs 3: RA/DEC angular rate (     0.0=NO )                           
+Table format    : Comma Separated Values (spreadsheet)
+*******************************************************************************
+ Date__(UT)__HR:MN, , ,    ObsEcLon,   ObsEcLat,
+************************************************
+$$SOE
+ 2026-Nov-01 07:00, , , 218.8685730,  0.0001108,
+ 2026-Nov-01 07:10, , , 218.8755186,  0.0001106,
+ 2026-Nov-01 07:20, , , 218.8824643,  0.0001104,
+ 2026-Nov-01 07:30, , , 218.8894101,  0.0001101,
+ 2026-Nov-01 07:40, , , 218.8963558,  0.0001099,
+ 2026-Nov-01 07:50, , , 218.9033016,  0.0001097,
+ 2026-Nov-01 08:00, , , 218.9102474,  0.0001094,
+ 2026-Nov-01 08:10, , , 218.9171933,  0.0001092,
+ 2026-Nov-01 08:20, , , 218.9241392,  0.0001090,
+ 2026-Nov-01 08:30, , , 218.9310851,  0.0001088,
+ 2026-Nov-01 08:40, , , 218.9380310,  0.0001085,
+ 2026-Nov-01 08:50, , , 218.9449770,  0.0001083,
+ 2026-Nov-01 09:00, , , 218.9519230,  0.0001081,
+ 2026-Nov-01 09:10, , , 218.9588690,  0.0001079,
+ 2026-Nov-01 09:20, , , 218.9658150,  0.0001076,
+ 2026-Nov-01 09:30, , , 218.9727611,  0.0001074,
+ 2026-Nov-01 09:40, , , 218.9797072,  0.0001072,
+ 2026-Nov-01 09:50, , , 218.9866533,  0.0001069,
+ 2026-Nov-01 10:00, , , 218.9935995,  0.0001067,
+ 2026-Nov-01 10:10, , , 219.0005457,  0.0001065,
+ 2026-Nov-01 10:20, , , 219.0074919,  0.0001063,
+ 2026-Nov-01 10:30, , , 219.0144382,  0.0001060,
+ 2026-Nov-01 10:40, , , 219.0213844,  0.0001058,
+ 2026-Nov-01 10:50, , , 219.0283307,  0.0001056,
+ 2026-Nov-01 11:00, , , 219.0352771,  0.0001053,
+ 2026-Nov-01 11:10, , , 219.0422234,  0.0001051,
+ 2026-Nov-01 11:20, , , 219.0491698,  0.0001049,
+ 2026-Nov-01 11:30, , , 219.0561162,  0.0001047,
+ 2026-Nov-01 11:40, , , 219.0630627,  0.0001044,
+ 2026-Nov-01 11:50, , , 219.0700092,  0.0001042,
+ 2026-Nov-01 12:00, , , 219.0769557,  0.0001040,
+ 2026-Nov-01 12:10, , , 219.0839022,  0.0001037,
+ 2026-Nov-01 12:20, , , 219.0908488,  0.0001035,
+ 2026-Nov-01 12:30, , , 219.0977953,  0.0001033,
+ 2026-Nov-01 12:40, , , 219.1047420,  0.0001030,
+ 2026-Nov-01 12:50, , , 219.1116886,  0.0001028,
+ 2026-Nov-01 13:00, , , 219.1186353,  0.0001026,
+ 2026-Nov-01 13:10, , , 219.1255820,  0.0001023,
+ 2026-Nov-01 13:20, , , 219.1325287,  0.0001021,
+ 2026-Nov-01 13:30, , , 219.1394755,  0.0001019,
+ 2026-Nov-01 13:40, , , 219.1464223,  0.0001016,
+ 2026-Nov-01 13:50, , , 219.1533691,  0.0001014,
+ 2026-Nov-01 14:00, , , 219.1603159,  0.0001012,
+ 2026-Nov-01 14:10, , , 219.1672628,  0.0001010,
+ 2026-Nov-01 14:20, , , 219.1742097,  0.0001007,
+ 2026-Nov-01 14:30, , , 219.1811566,  0.0001005,
+ 2026-Nov-01 14:40, , , 219.1881036,  0.0001003,
+ 2026-Nov-01 14:50, , , 219.1950506,  0.0001000,
+ 2026-Nov-01 15:00, , , 219.2019976,  0.0000998,
+ 2026-Nov-01 15:10, , , 219.2089447,  0.0000996,
+ 2026-Nov-01 15:20, , , 219.2158917,  0.0000993,
+ 2026-Nov-01 15:30, , , 219.2228388,  0.0000991,
+ 2026-Nov-01 15:40, , , 219.2297860,  0.0000989,
+ 2026-Nov-01 15:50, , , 219.2367331,  0.0000986,
+ 2026-Nov-01 16:00, , , 219.2436803,  0.0000984,
+ 2026-Nov-01 16:10, , , 219.2506275,  0.0000981,
+ 2026-Nov-01 16:20, , , 219.2575748,  0.0000979,
+ 2026-Nov-01 16:30, , , 219.2645220,  0.0000977,
+ 2026-Nov-01 16:40, , , 219.2714693,  0.0000974,
+ 2026-Nov-01 16:50, , , 219.2784167,  0.0000972,
+ 2026-Nov-01 17:00, , , 219.2853640,  0.0000970,
+ 2026-Nov-01 17:10, , , 219.2923114,  0.0000967,
+ 2026-Nov-01 17:20, , , 219.2992588,  0.0000965,
+ 2026-Nov-01 17:30, , , 219.3062063,  0.0000963,
+ 2026-Nov-01 17:40, , , 219.3131538,  0.0000960,
+ 2026-Nov-01 17:50, , , 219.3201013,  0.0000958,
+ 2026-Nov-01 18:00, , , 219.3270488,  0.0000956,
+ 2026-Nov-01 18:10, , , 219.3339963,  0.0000953,
+ 2026-Nov-01 18:20, , , 219.3409439,  0.0000951,
+ 2026-Nov-01 18:30, , , 219.3478915,  0.0000948,
+ 2026-Nov-01 18:40, , , 219.3548392,  0.0000946,
+ 2026-Nov-01 18:50, , , 219.3617869,  0.0000944,
+ 2026-Nov-01 19:00, , , 219.3687346,  0.0000941,
+ 2026-Nov-01 19:10, , , 219.3756823,  0.0000939,
+ 2026-Nov-01 19:20, , , 219.3826300,  0.0000937,
+ 2026-Nov-01 19:30, , , 219.3895778,  0.0000934,
+ 2026-Nov-01 19:40, , , 219.3965256,  0.0000932,
+ 2026-Nov-01 19:50, , , 219.4034735,  0.0000930,
+ 2026-Nov-01 20:00, , , 219.4104214,  0.0000927,
+ 2026-Nov-01 20:10, , , 219.4173693,  0.0000925,
+ 2026-Nov-01 20:20, , , 219.4243172,  0.0000922,
+ 2026-Nov-01 20:30, , , 219.4312651,  0.0000920,
+ 2026-Nov-01 20:40, , , 219.4382131,  0.0000918,
+ 2026-Nov-01 20:50, , , 219.4451611,  0.0000915,
+ 2026-Nov-01 21:00, , , 219.4521092,  0.0000913,
+ 2026-Nov-01 21:10, , , 219.4590572,  0.0000910,
+ 2026-Nov-01 21:20, , , 219.4660053,  0.0000908,
+ 2026-Nov-01 21:30, , , 219.4729535,  0.0000906,
+ 2026-Nov-01 21:40, , , 219.4799016,  0.0000903,
+ 2026-Nov-01 21:50, , , 219.4868498,  0.0000901,
+ 2026-Nov-01 22:00, , , 219.4937980,  0.0000899,
+ 2026-Nov-01 22:10, , , 219.5007463,  0.0000896,
+ 2026-Nov-01 22:20, , , 219.5076945,  0.0000894,
+ 2026-Nov-01 22:30, , , 219.5146428,  0.0000891,
+ 2026-Nov-01 22:40, , , 219.5215911,  0.0000889,
+ 2026-Nov-01 22:50, , , 219.5285395,  0.0000887,
+ 2026-Nov-01 23:00, , , 219.5354879,  0.0000884,
+ 2026-Nov-01 23:10, , , 219.5424363,  0.0000882,
+ 2026-Nov-01 23:20, , , 219.5493847,  0.0000879,
+ 2026-Nov-01 23:30, , , 219.5563332,  0.0000877,
+ 2026-Nov-01 23:40, , , 219.5632817,  0.0000875,
+ 2026-Nov-01 23:50, , , 219.5702302,  0.0000872,
+ 2026-Nov-02 00:00, , , 219.5771788,  0.0000870,
+ 2026-Nov-02 00:10, , , 219.5841274,  0.0000867,
+ 2026-Nov-02 00:20, , , 219.5910760,  0.0000865,
+ 2026-Nov-02 00:30, , , 219.5980246,  0.0000862,
+ 2026-Nov-02 00:40, , , 219.6049733,  0.0000860,
+ 2026-Nov-02 00:50, , , 219.6119220,  0.0000858,
+ 2026-Nov-02 01:00, , , 219.6188707,  0.0000855,
+ 2026-Nov-02 01:10, , , 219.6258194,  0.0000853,
+ 2026-Nov-02 01:20, , , 219.6327682,  0.0000850,
+ 2026-Nov-02 01:30, , , 219.6397170,  0.0000848,
+ 2026-Nov-02 01:40, , , 219.6466659,  0.0000846,
+ 2026-Nov-02 01:50, , , 219.6536147,  0.0000843,
+ 2026-Nov-02 02:00, , , 219.6605636,  0.0000841,
+ 2026-Nov-02 02:10, , , 219.6675125,  0.0000838,
+ 2026-Nov-02 02:20, , , 219.6744615,  0.0000836,
+ 2026-Nov-02 02:30, , , 219.6814105,  0.0000833,
+ 2026-Nov-02 02:40, , , 219.6883595,  0.0000831,
+ 2026-Nov-02 02:50, , , 219.6953085,  0.0000829,
+ 2026-Nov-02 03:00, , , 219.7022576,  0.0000826,
+ 2026-Nov-02 03:10, , , 219.7092067,  0.0000824,
+ 2026-Nov-02 03:20, , , 219.7161558,  0.0000821,
+ 2026-Nov-02 03:30, , , 219.7231049,  0.0000819,
+ 2026-Nov-02 03:40, , , 219.7300541,  0.0000816,
+ 2026-Nov-02 03:50, , , 219.7370033,  0.0000814,
+ 2026-Nov-02 04:00, , , 219.7439525,  0.0000812,
+ 2026-Nov-02 04:10, , , 219.7509018,  0.0000809,
+ 2026-Nov-02 04:20, , , 219.7578511,  0.0000807,
+ 2026-Nov-02 04:30, , , 219.7648004,  0.0000804,
+ 2026-Nov-02 04:40, , , 219.7717498,  0.0000802,
+ 2026-Nov-02 04:50, , , 219.7786991,  0.0000799,
+ 2026-Nov-02 05:00, , , 219.7856485,  0.0000797,
+ 2026-Nov-02 05:10, , , 219.7925980,  0.0000795,
+ 2026-Nov-02 05:20, , , 219.7995474,  0.0000792,
+ 2026-Nov-02 05:30, , , 219.8064969,  0.0000790,
+ 2026-Nov-02 05:40, , , 219.8134464,  0.0000787,
+ 2026-Nov-02 05:50, , , 219.8203960,  0.0000785,
+ 2026-Nov-02 06:00, , , 219.8273456,  0.0000782,
+ 2026-Nov-02 06:10, , , 219.8342952,  0.0000780,
+ 2026-Nov-02 06:20, , , 219.8412448,  0.0000777,
+ 2026-Nov-02 06:30, , , 219.8481944,  0.0000775,
+ 2026-Nov-02 06:40, , , 219.8551441,  0.0000773,
+ 2026-Nov-02 06:50, , , 219.8620938,  0.0000770,
+ 2026-Nov-02 07:00, , , 219.8690436,  0.0000768,
+ 2026-Nov-02 07:10, , , 219.8759934,  0.0000765,
+ 2026-Nov-02 07:20, , , 219.8829432,  0.0000763,
+ 2026-Nov-02 07:30, , , 219.8898930,  0.0000760,
+ 2026-Nov-02 07:40, , , 219.8968428,  0.0000758,
+ 2026-Nov-02 07:50, , , 219.9037927,  0.0000755,
+ 2026-Nov-02 08:00, , , 219.9107426,  0.0000753,
+$$EOE
+*******************************************************************************
+Column meaning:
+ 
+TIME
+
+  Times PRIOR to 1962 are UT1, a mean-solar time closely related to the
+prior but now-deprecated GMT. Times AFTER 1962 are in UTC, the current
+civil or "wall-clock" time-scale. UTC is kept within 0.9 seconds of UT1
+using integer leap-seconds for 1972 and later years.
+
+  Conversion from the internal Barycentric Dynamical Time (TDB) of solar
+system dynamics to the non-uniform civil UT time-scale requested for output
+has not been determined for UTC times after the next July or January 1st.
+Therefore, the last known leap-second is used as a constant over future
+intervals.
+
+  Time tags refer to the UT time-scale conversion from TDB on Earth
+regardless of observer location within the solar system, although clock
+rates may differ due to the local gravity field and no analog to "UT"
+may be defined for that location.
+
+  Any 'b' symbol in the 1st-column denotes a B.C. date. First-column blank
+(" ") denotes an A.D. date.
+ 
+CALENDAR SYSTEM
+
+  Mixed calendar mode was active such that calendar dates after AD 1582-Oct-15
+(if any) are in the modern Gregorian system. Dates prior to 1582-Oct-5 (if any)
+are in the Julian calendar system, which is automatically extended for dates
+prior to its adoption on 45-Jan-1 BC.  The Julian calendar is useful for
+matching historical dates. The Gregorian calendar more accurately corresponds
+to the Earth's orbital motion and seasons. A "Gregorian-only" calendar mode is
+available if such physical events are the primary interest.
+
+  NOTE: "n.a." in output means quantity "not available" at the print-time.
+ 
+ 'ObsEcLon,   ObsEcLat,' =
+   Observer-centered IAU76/80 ecliptic-of-date longitude and latitude of the
+target centers' apparent position, with light-time, gravitational deflection of
+light, and stellar aberrations.  Units: DEGREES
+
+Computations by ...
+
+    Solar System Dynamics Group, Horizons On-Line Ephemeris System
+    4800 Oak Grove Drive, Jet Propulsion Laboratory
+    Pasadena, CA  91109   USA
+
+    General site: https://ssd.jpl.nasa.gov/
+    Mailing list: https://ssd.jpl.nasa.gov/email_list.html
+    System news : https://ssd.jpl.nasa.gov/horizons/news.html
+    User Guide  : https://ssd.jpl.nasa.gov/horizons/manual.html
+    Connect     : browser        https://ssd.jpl.nasa.gov/horizons/app.html#/x
+                  API            https://ssd-api.jpl.nasa.gov/doc/horizons.html
+                  command-line   telnet ssd.jpl.nasa.gov 6775
+                  e-mail/batch   https://ssd.jpl.nasa.gov/ftp/ssd/horizons_batch.txt
+                  scripts        https://ssd.jpl.nasa.gov/ftp/ssd/SCRIPTS
+    Inquiries   : Jon.D.Giorgini@jpl.nasa.gov
+
+*******************************************************************************
