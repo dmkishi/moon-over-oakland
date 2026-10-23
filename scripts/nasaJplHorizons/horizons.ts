@@ -7,7 +7,7 @@
  * is the frame the row labels come back in. Both halves are stated here so they
  * cannot drift apart, and everything downstream sees only typed rows.
  */
-import type { Observer } from './observer.ts';
+import type { Site } from './site.ts';
 import { moonTilt, wrapDeg180, wrapDeg360 } from './tilt.ts';
 
 const HORIZONS_API_URL = 'https://ssd.jpl.nasa.gov/api/horizons.api';
@@ -253,7 +253,7 @@ type TableQuery = (TimeWindow | TimeList) & {
    * Where the table is computed from: the observing site, or `'geocentric'` for
    * Earth's center.
    */
-  site: Observer | 'geocentric';
+  site: Site | 'geocentric';
   /** Hands the untouched response body to a caller that wants to show it. */
   onRawResponse?: ((raw: string) => void) | undefined;
 };
@@ -307,7 +307,7 @@ async function requestObserverTable({
     } : {
       CENTER: "'coord@399'", // Earth
       COORD_TYPE: "'GEODETIC'", // Geodetic coordinates (lat/lon/elev) for observer location
-      SITE_COORD: `'${site.lon},${site.lat},${site.elevationMeter / 1_000}'`,
+      SITE_COORD: `'${site.longitude},${site.latitude},${site.elevationMeter / 1_000}'`,
     }),
     ...timeParams(times),
     ANG_FORMAT: "'DEG'",
@@ -515,7 +515,7 @@ export function eventsAt(
  * @param onRawResponse - Receives the untouched response body, for `--show-raw`
  */
 export async function fetchMoonEphemeris(
-  observer: Observer,
+  site: Site,
   start: Temporal.ZonedDateTime,
   stop: Temporal.ZonedDateTime,
   onRawResponse?: (raw: string) => void,
@@ -523,7 +523,7 @@ export async function fetchMoonEphemeris(
   const rows = await fetchColumns(
     {
       body: 'moon',
-      site: observer,
+      site,
       start,
       stop,
       stepSize: MOON_EPHEMERIS_STEP_SIZE,
@@ -533,7 +533,7 @@ export async function fetchMoonEphemeris(
   );
 
   return rows.map(({ at, flags, values }) => ({
-    at: at.toZonedDateTimeISO(observer.timeZone),
+    at: at.toZonedDateTimeISO(site.timezone),
     flags,
     azimuthDeg: values.azimuthDeg,
     altitudeDeg: values.altitudeDeg,
@@ -543,7 +543,7 @@ export async function fetchMoonEphemeris(
       values.siderealTimeHours,
       values.icrfRightAscensionDeg,
       values.icrfDeclinationDeg,
-      observer.lat,
+      site.latitude,
       values.sunPositionAngleDeg,
     ),
   }));

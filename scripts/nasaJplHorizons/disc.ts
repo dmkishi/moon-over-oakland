@@ -3,11 +3,10 @@
  */
 import { parseArgs } from 'node:util';
 import { findNextPhases, PHASE_TYPES, type PhaseType } from '../../src/ephemeris/phase.ts';
-import { observer as site } from '../../src/observer.ts';
 import { parseDayOrYearArg, UsageError } from './args.ts';
 import { fetchMoonDiscs } from './horizons.ts';
-import { civilDayBounds, type ObservingDay } from './observer.ts';
 import { printMoonDiscFixture } from './print.ts';
+import { civilDay, type ObservingDay } from './site.ts';
 
 /**
  * Every principal phase instant from `start` up to `end`, in order, from the
@@ -29,13 +28,6 @@ function phasesBetween(
   }
 }
 
-/**
- * Oakland's civil day. The disc is geocentric, so only the time zone matters.
- */
-function civilDay(date: Temporal.PlainDate): ObservingDay {
-  return civilDayBounds({ date: date.toString(), timeZone: site.timezone });
-}
-
 export async function runDisc(argv: string[]): Promise<void> {
   const { positionals } = parseArgs({ args: argv, allowPositionals: true });
   if (positionals.length > 1) {
@@ -44,7 +36,7 @@ export async function runDisc(argv: string[]): Promise<void> {
   const arg = parseDayOrYearArg(positionals[0]);
 
   const { start, end }: ObservingDay = arg.kind === 'day'
-    ? civilDay(Temporal.PlainDate.from(arg.date))
+    ? civilDay(arg.date)
     : {
       start: civilDay(new Temporal.PlainDate(arg.year, 1, 1)).start,
       end: civilDay(new Temporal.PlainDate(arg.year, 12, 31)).end,

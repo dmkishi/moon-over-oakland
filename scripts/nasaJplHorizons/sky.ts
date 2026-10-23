@@ -2,12 +2,11 @@
  * @see main.ts for usage and subcommand descriptions.
  */
 import { parseArgs } from 'node:util';
-import { observer as site } from '../../src/observer.ts';
 import { parseDateArg, UsageError } from './args.ts';
 import { fetchMoonEphemeris } from './horizons.ts';
-import { civilDayBounds, type Observer } from './observer.ts';
 import { resolvePhaseEvent } from './phase-event.ts';
 import { printCsv, printFixtureJson, printSummary, printTable, thinEphemeris } from './print.ts';
+import { civilDay, SITE } from './site.ts';
 import { computeMoonSummary } from './summary.ts';
 
 /**
@@ -73,18 +72,10 @@ export async function runSky(argv: string[]): Promise<void> {
     );
   }
 
-  const observer: Observer = {
-    date,
-    timeZone: site.timezone,
-    lat: site.latitude,
-    lon: site.longitude,
-    elevationMeter: 20, // Elevation is hardcoded for now
-  };
-
-  const day = civilDayBounds(observer);
+  const day = civilDay(date);
 
   const moonEphemeris = await fetchMoonEphemeris(
-    observer,
+    SITE,
     day.start, // Starts at midnight
     day.end.subtract({ minutes: 1 }), // Stop one step short of next day's midnight
     showRaw ? (raw) => console.log(raw) : undefined,
@@ -97,7 +88,7 @@ export async function runSky(argv: string[]): Promise<void> {
     moonEphemeris.map((row) => row.illuminatedPercent),
   );
 
-  const moonSummary = computeMoonSummary(moonEphemeris, observer, day, phaseEvent);
+  const moonSummary = computeMoonSummary(moonEphemeris, SITE, day, phaseEvent);
 
   console.log();
   if (showTable || showCsv) {

@@ -1,5 +1,5 @@
 import { fetchEclipticLongitudes, type EclipticLongitude } from './horizons.ts';
-import type { ObservingDay } from './observer.ts';
+import type { ObservingDay } from './site.ts';
 import { wrapDeg180, wrapDeg360 } from './tilt.ts';
 
 export type PhaseEventName = 'new' | 'first-quarter' | 'full' | 'last-quarter';

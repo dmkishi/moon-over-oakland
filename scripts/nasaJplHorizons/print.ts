@@ -156,7 +156,7 @@ const PHASE_EVENT_LABEL: Record<PhaseEventName, string> = {
 };
 
 export function printSummary(s: MoonSummary): void {
-  const { observer, day } = s;
+  const { site, day } = s;
   const illuminationStr = s.noon.illuminatedPercent.toFixed(1) + '%';
   const distanceStr = Math.round(s.noon.distanceKm).toLocaleString('en-US') + ' km';
   const NONE_STR = pc.red('NONE');
@@ -170,9 +170,9 @@ export function printSummary(s: MoonSummary): void {
   console.log('Summary');
   console.log('--------------------------------------------------------------------------------');
   console.log('Observation Parameters:');
-  console.log(`  Date:         ${observer.date}`);
-  console.log(`  Time Zone:    ${observer.timeZone} (${offsetStr})`);
-  console.log(`  Location:     ${observer.lat}, ${observer.lon}, ${observer.elevationMeter} meters`);
+  console.log(`  Date:         ${day.start.toPlainDate().toString()}`);
+  console.log(`  Time Zone:    ${site.timezone} (${offsetStr})`);
+  console.log(`  Location:     ${site.latitude}, ${site.longitude}, ${site.elevationMeter} meters`);
   console.log(`  Query Step:   ${MOON_EPHEMERIS_STEP_SIZE}`);
   console.log();
   console.log('Noon (Average):');
@@ -232,7 +232,7 @@ function toDateTime(at: Temporal.ZonedDateTime): string {
 export function printFixtureJson(summary: MoonSummary): void {
   const fixture = {
     description: '',
-    day: summary.observer.date,
+    day: summary.day.start.toPlainDate().toString(),
     noon: {
       illuminationPercent: summary.noon.illuminatedPercent,
       distanceKm: Math.round(summary.noon.distanceKm),

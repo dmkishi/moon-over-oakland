@@ -1,12 +1,12 @@
 import { eventsAt, type MoonEphemeris } from './horizons.ts';
-import type { Observer, ObservingDay } from './observer.ts';
 import type { PhaseEvent } from './phase-event.ts';
+import type { ObservingDay, Site } from './site.ts';
 
 /**
  * A single observing day distilled from the full `MoonEphemeris` run.
  */
 export interface MoonSummary {
-  observer: Observer;
+  site: Site;
   day: ObservingDay;
   /**
    * The noon values represent an average of the Moon's illumination and
@@ -50,7 +50,7 @@ function findRowNearestToNoon(rows: MoonEphemeris[], day: ObservingDay): MoonEph
 
 export function computeMoonSummary(
   rows: MoonEphemeris[],
-  observer: Observer,
+  site: Site,
   day: ObservingDay,
   phaseEvent: PhaseEvent | null,
 ): MoonSummary {
@@ -78,7 +78,7 @@ export function computeMoonSummary(
   const noonRow = findRowNearestToNoon(rows, day);
 
   return {
-    observer,
+    site,
     day,
     noon: {
       illuminatedPercent: noonRow.illuminatedPercent,
