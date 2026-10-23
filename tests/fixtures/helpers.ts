@@ -42,10 +42,9 @@ const accuracyFixture = z.object({
 }).strict();
 
 const postingFixture = z.object({
-  eventDate: day,
+  dateTime,
   phaseType: z.enum(PHASE_TYPES),
   post: z.enum(['same', 'prev']),
-  dateTime,
 }).strict();
 
 const selenographic = z.object({ lon: z.number(), lat: z.number() }).strict();

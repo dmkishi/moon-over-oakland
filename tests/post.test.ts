@@ -70,7 +70,7 @@ describe('renderPost', () => {
   });
 
   it.each(postingFixtures.map((fixture) => {
-    const eventDate = Temporal.PlainDate.from(fixture.eventDate);
+    const eventDate = Temporal.PlainDate.from(fixture.dateTime);
     const postDate = fixture.post === 'prev' ? eventDate.subtract({ days: 1 }) : eventDate;
     return { postDate: postDate.toString() };
   }))('prints the moonrise and moonset for $postDate in local time', ({ postDate }) => {

@@ -35,7 +35,7 @@ function secondsBetween(a: Temporal.ZonedDateTime, isoDateTime: string): number 
 }
 
 function postDateOf(fixture: PostingFixture): Temporal.PlainDate {
-  const eventDate = Temporal.PlainDate.from(fixture.eventDate);
+  const eventDate = Temporal.PlainDate.from(fixture.dateTime);
   return fixture.post === 'prev' ? eventDate.subtract({ days: 1 }) : eventDate;
 }
 
@@ -75,10 +75,10 @@ const QUARTER_PAIRINGS: Partial<Record<PhaseType, { moonEvent: MoonEvent; noonOf
  * Test posting decisions
  ******************************************************************************/
 for (const fixture of postingFixtures) {
-  const eventDate = Temporal.PlainDate.from(fixture.eventDate);
+  const eventDate = Temporal.PlainDate.from(fixture.dateTime);
   const postDate = postDateOf(fixture);
 
-  describe(`${fixture.phaseType} on ${fixture.eventDate} (${fixture.post})`, () => {
+  describe(`${fixture.phaseType} on ${eventDate.toString()} (${fixture.post})`, () => {
     it(`posts on ${postDate.toString()}`, () => {
       const result = calculate(postDate);
       expect(result).not.toBeNull();
