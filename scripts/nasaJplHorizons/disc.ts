@@ -35,20 +35,16 @@ export async function runDisc(argv: string[]): Promise<void> {
   }
   const arg = parseDayOrYearArg(positionals[0]);
 
-  const { start, end }: ObservingDay = arg.kind === 'day'
+  const day: ObservingDay = arg.kind === 'day'
     ? civilDay(arg.date)
     : {
       start: civilDay(new Temporal.PlainDate(arg.year, 1, 1)).start,
       end: civilDay(new Temporal.PlainDate(arg.year, 12, 31)).end,
     };
 
-  const samples = arg.kind === 'day'
-    // One step short of the next day's midnight, so the last hour is in and
-    // the next day is not.
-    ? await fetchMoonDiscs({ start, stop: end.subtract({ minutes: 1 }) })
-    : [];
+  const samples = arg.kind === 'day' ? await fetchMoonDiscs(day) : [];
 
-  const phases = phasesBetween(start, end);
+  const phases = phasesBetween(day.start, day.end);
   const phaseDiscs = await fetchMoonDiscs({ instants: phases.map(({ instant }) => instant) });
   if (phaseDiscs.length !== phases.length) {
     throw new Error(`Asked Horizons for ${phases.length} instants, got ${phaseDiscs.length} rows`);

@@ -109,11 +109,9 @@ export async function resolvePhaseEvent(
 
   if (!mayHavePhaseEvent) return null;
 
-  // Stop at the next day's midnight rather than 23:59, which would leave a
-  // one-minute blind spot.
   const [moonLons, sunLons] = await Promise.all([
-    fetchEclipticLongitudes('moon', day.start, day.end),
-    fetchEclipticLongitudes('sun', day.start, day.end),
+    fetchEclipticLongitudes('moon', day),
+    fetchEclipticLongitudes('sun', day),
   ]);
 
   return findPhaseEvent(moonLons, sunLons, day);

@@ -76,14 +76,11 @@ export async function runSky(argv: string[]): Promise<void> {
 
   const moonEphemeris = await fetchMoonEphemeris(
     SITE,
-    day.start, // Starts at midnight
-    day.end.subtract({ minutes: 1 }), // Stop one step short of next day's midnight
+    day,
     showRaw ? (raw) => console.log(raw) : undefined,
   );
 
   const phaseEvent = await resolvePhaseEvent(
-    // This stops at midnight as the last sample, which is needed for the
-    // interpolation to find the phase event.
     day,
     moonEphemeris.map((row) => row.illuminatedPercent),
   );

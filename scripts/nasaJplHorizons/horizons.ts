@@ -7,7 +7,7 @@
  * is the frame the row labels come back in. Both halves are stated here so they
  * cannot drift apart, and everything downstream sees only typed rows.
  */
-import type { Site } from './site.ts';
+import type { ObservingDay, Site } from './site.ts';
 import { moonTilt, wrapDeg180, wrapDeg360 } from './tilt.ts';
 
 const HORIZONS_API_URL = 'https://ssd.jpl.nasa.gov/api/horizons.api';
@@ -508,22 +508,22 @@ function eventsAt(flags: string[], prevFlags: string[] | undefined): MoonEventNa
 
 /**
  * Fetch the Moon's topocentric, observer-centric ephemeris as one
- * `MoonEphemeris` per step.
+ * `MoonEphemeris` per step across the observing day.
  *
  * @param onRawResponse - Receives the untouched response body, for `--show-raw`
  */
 export async function fetchMoonEphemeris(
   site: Site,
-  start: Temporal.ZonedDateTime,
-  stop: Temporal.ZonedDateTime,
+  day: ObservingDay,
   onRawResponse?: (raw: string) => void,
 ): Promise<MoonEphemeris[]> {
   const rows = await fetchColumns(
     {
       body: 'moon',
       site,
-      start,
-      stop,
+      start: day.start,
+      // One step short of the next day's midnight, which belongs to that day.
+      stop: day.end.subtract({ minutes: 1 }),
       stepSize: MOON_EPHEMERIS_STEP_SIZE,
       onRawResponse,
     },
@@ -569,20 +569,23 @@ export interface EclipticLongitude {
 }
 
 /**
- * Fetch a geocentric ecliptic longitude table for the Moon or Sun.
+ * Fetch a geocentric ecliptic longitude table for the Moon or Sun across the
+ * observing day.
  */
 export async function fetchEclipticLongitudes(
   body: Body,
-  start: Temporal.ZonedDateTime,
-  stop: Temporal.ZonedDateTime,
+  day: ObservingDay,
 ): Promise<EclipticLongitude[]> {
   const rows = await fetchColumns(
     {
       body,
       // Phase is defined geocentrically, so the observer is Earth's center.
       site: 'geocentric',
-      start,
-      stop,
+      start: day.start,
+      // Through the next day's midnight, unlike the other fetches: stopping a
+      // step short would leave the last 10 minutes with nothing to interpolate
+      // across.
+      stop: day.end,
       stepSize: ECLIPTIC_LONGITUDE_STEP_SIZE,
     },
     ['eclipticLonDeg'],
@@ -657,16 +660,24 @@ function brightLimbPositionAngle(
 const MOON_DISC_STEP_SIZE = '1h';
 
 /**
- * Fetch the Moon's disc as seen from Earth's center, hourly across a window or
- * at each of a list of instants.
+ * Fetch the Moon's disc as seen from Earth's center, hourly across the
+ * observing day or at each of a list of instants.
  */
 export async function fetchMoonDiscs(
-  times: Omit<TimeWindow, 'stepSize'> | TimeList,
+  times: ObservingDay | TimeList,
 ): Promise<HorizonsMoonDisc[]> {
   const query: TableQuery = {
     body: 'moon',
     site: 'geocentric',
-    ...('instants' in times ? times : { ...times, stepSize: MOON_DISC_STEP_SIZE }),
+    ...('instants' in times
+      ? times
+      : {
+        start: times.start,
+        // Short of the next day's midnight, so the last hour is in and the
+        // next day is not.
+        stop: times.end.subtract({ minutes: 1 }),
+        stepSize: MOON_DISC_STEP_SIZE,
+      }),
   };
   const [moonRows, sunRows] = await Promise.all([
     fetchColumns(query, MOON_DISC_COLUMNS),
