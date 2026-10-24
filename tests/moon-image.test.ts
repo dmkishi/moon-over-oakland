@@ -3,12 +3,12 @@
  * flat terrain, so every lit pixel is lit by the sphere alone and nothing
  * depends on NASA's maps.
  */
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import sharp from 'sharp';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, onTestFinished } from 'vitest';
 import { moonDisc, type MoonDisc } from '../src/ephemeris/moon-disc.ts';
 import {
   loadMoonTextures,
@@ -196,8 +196,12 @@ describe('renderMoonImage', () => {
   });
 });
 
+/**
+ * An empty directory, removed when the test finishes.
+ */
 function tempDir(): URL {
   const path = mkdtempSync(join(tmpdir(), 'moon-textures-'));
+  onTestFinished(() => rmSync(path, { recursive: true }));
   return pathToFileURL(`${path}/`);
 }
 
