@@ -11,60 +11,22 @@ import { phaseEventFixtures, type PhaseEventFixture } from './fixtures/index.ts'
 import { PHASE_TYPES, type PhaseType } from '../src/ephemeris/phase.ts';
 import type { MoonEvent } from '../src/event-delta.ts';
 import { observer } from '../src/observer.ts';
-import { calculatePhaseEvent, type PhaseEvent } from '../src/phase-event.ts';
+import { calculatePhaseEvent, postOn } from './support/observer.ts';
+import { REFERENCES } from './support/references.ts';
+import { postDateOf } from './support/time.ts';
 
 /**
  * `astronomia/moonphase` agrees with Horizons to within 11 s across all 50
  * phases of 2026, so a minute is ~5x margin.
  */
-const TOLERANCE_SECONDS = 60;
+const TOLERANCE = { seconds: 60 };
 
-const { timezone, latitude, longitude } = observer;
-
-/**
- * Called per test, not hoisted into the `describe` body: a hoisted call runs at
- * collection time, where a throw fails the whole file and the work happens even
- * under a filter that excludes it. Recomputing costs tens of milliseconds.
- */
-function calculate(date: Temporal.PlainDate): PhaseEvent | null {
-  return calculatePhaseEvent(date, timezone, latitude, longitude);
-}
-
-function secondsBetween(a: Temporal.ZonedDateTime, isoDateTime: string): number {
-  return Math.abs(a.epochMilliseconds - new Date(isoDateTime).getTime()) / 1_000;
-}
-
-function postDateOf(fixture: PhaseEventFixture): Temporal.PlainDate {
-  const eventDate = Temporal.PlainDate.from(fixture.dateTime);
-  return fixture.post === 'prev' ? eventDate.subtract({ days: 1 }) : eventDate;
-}
+const { timezone } = observer;
 
 /** The instant `calculatePhaseEvent` passes to `findNextPhases`. */
 function windowEnd(postDate: Temporal.PlainDate): Temporal.ZonedDateTime {
   return postDate.add({ days: 1 }).toZonedDateTime({ timeZone: timezone, plainTime: '04:00' });
 }
-
-/**
- * A copy of `REFERENCES` in `event-delta.ts` so they cannot drift together.
- */
-const REFERENCES: Record<PhaseType, Record<MoonEvent, string>> = {
-  'new': {
-    moonrise: 'sunrise',
-    moonset: 'sunset',
-  },
-  'first-quarter': {
-    moonrise: 'noon',
-    moonset: 'midnight',
-  },
-  'full': {
-    moonrise: 'sunset',
-    moonset: 'sunrise',
-  },
-  'last-quarter': {
-    moonrise: 'midnight',
-    moonset: 'noon',
-  },
-};
 
 const QUARTER_PAIRINGS: Partial<Record<PhaseType, { moonEvent: MoonEvent; noonOffset: number }>> = {
   'first-quarter': { moonEvent: 'moonset', noonOffset: 0 },
@@ -80,39 +42,35 @@ for (const fixture of phaseEventFixtures) {
 
   describe(`${fixture.phaseType} on ${eventDate.toString()} (${fixture.post})`, () => {
     it(`posts on ${postDate.toString()}`, () => {
-      const result = calculate(postDate);
-      expect(result).not.toBeNull();
-      expect(result!.type).toBe(fixture.phaseType);
-      expect(result!.day).toBe(fixture.post === 'same' ? 'today' : 'tomorrow');
-      expect(result!.time.toPlainDate().equals(eventDate)).toBe(true);
+      const result = postOn(postDate);
+      expect(result.type).toBe(fixture.phaseType);
+      expect(result.day).toBe(fixture.post === 'same' ? 'today' : 'tomorrow');
+      expect(result.time.toPlainDate().equals(eventDate)).toBe(true);
     });
 
-    it(`matches the Horizons instant within ${TOLERANCE_SECONDS} seconds`, () => {
-      const result = calculate(postDate);
-      expect(secondsBetween(result!.time, fixture.dateTime)).toBeLessThanOrEqual(
-        TOLERANCE_SECONDS,
-      );
+    it(`matches the Horizons instant within ${TOLERANCE.seconds} seconds`, () => {
+      expect(postOn(postDate).time).toBeWithin(fixture.dateTime, TOLERANCE);
     });
 
     it('does not count its own phase as next', () => {
-      const result = calculate(postDate);
-      const nextOfSameType = result!.nextPhases[fixture.phaseType];
-      expect(Temporal.ZonedDateTime.compare(nextOfSameType, result!.time)).toBe(1);
+      const result = postOn(postDate);
+      const nextOfSameType = result.nextPhases[fixture.phaseType];
+      expect(Temporal.ZonedDateTime.compare(nextOfSameType, result.time)).toBe(1);
     });
 
     it('does not post on adjacent days', () => {
-      expect(calculate(postDate.subtract({ days: 1 }))).toBeNull();
-      expect(calculate(postDate.add({ days: 1 }))).toBeNull();
+      expect(calculatePhaseEvent(postDate.subtract({ days: 1 }))).toBeNull();
+      expect(calculatePhaseEvent(postDate.add({ days: 1 }))).toBeNull();
     });
 
     it('calculates the sun and moon times for the post date', () => {
-      const sunriseDate = calculate(postDate)!.dayEvents.sunrise.toPlainDate();
+      const sunriseDate = postOn(postDate).dayEvents.sunrise.toPlainDate();
       expect(sunriseDate.toString()).toBe(postDate.toString());
     });
 
     it(`reads its deltas against a ${fixture.phaseType} moon's references`, () => {
       const { moonrise, moonset } = REFERENCES[fixture.phaseType];
-      const { eventDeltas } = calculate(postDate)!;
+      const { eventDeltas } = postOn(postDate);
       expect(eventDeltas.moonrise.reference).toBe(moonrise);
       expect(eventDeltas.moonset.reference).toBe(moonset);
     });
@@ -125,7 +83,7 @@ for (const fixture of phaseEventFixtures) {
     if (pairing) {
       it(`pairs the ${pairing.moonEvent} within the noon-to-noon span around its midnight`, () => {
         const { moonEvent, noonOffset } = pairing;
-        const time = calculate(postDate)!.dayEvents[moonEvent];
+        const time = postOn(postDate).dayEvents[moonEvent];
         const start = postDate.add({ days: noonOffset }).toZonedDateTime({ timeZone: timezone, plainTime: '12:00' });
         const end = start.toPlainDate().add({ days: 1 }).toZonedDateTime({ timeZone: timezone, plainTime: '12:00' });
         expect(Temporal.ZonedDateTime.compare(time, start)).toBeGreaterThanOrEqual(0);
@@ -187,9 +145,8 @@ describe('nextPhases', () => {
   it.each(nextPhaseCases)(
     'on $postDate the next $phaseType is $expected',
     ({ postDate, phaseType, expected }) => {
-      const result = calculate(Temporal.PlainDate.from(postDate))!;
-      expect(secondsBetween(result.nextPhases[phaseType], expected))
-        .toBeLessThanOrEqual(TOLERANCE_SECONDS);
+      const { nextPhases } = postOn(Temporal.PlainDate.from(postDate));
+      expect(nextPhases[phaseType]).toBeWithin(expected, TOLERANCE);
     },
   );
 });

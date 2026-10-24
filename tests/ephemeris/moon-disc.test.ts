@@ -15,6 +15,7 @@ import { apparentEquatorialVSOP87 } from 'astronomia/solar';
 import { describe, it, expect } from 'vitest';
 import { moonDiscFixtures } from '../fixtures/index.ts';
 import { moonDisc } from '../../src/ephemeris/moon-disc.ts';
+import { angleDiff, DEG, limbArc } from '../support/angle.ts';
 
 /**
  * Tolerances, ~2–5x the largest residual across the fixture. Meeus ch. 53
@@ -43,54 +44,41 @@ const TOLERANCE = {
   angularDiameterArcmin: 0.01,
 };
 
-/**
- * Signed difference between two angles in degrees, −180° to 180°.
- * @pure
- */
-function angleDiff(a: number, b: number): number {
-  return ((a - b + 540) % 360) - 180;
-}
-
 describe('moonDisc vs Horizons', () => {
   describe.each(moonDiscFixtures)('$description at $instant', (fixture) => {
     const disc = () => moonDisc(Temporal.Instant.from(fixture.instant));
 
     it('places the disc center (libration l, b)', () => {
       const { subEarth } = disc();
-      expect(Math.abs(angleDiff(subEarth.lon, fixture.subEarth.lon))).toBeLessThan(TOLERANCE.libration);
-      expect(Math.abs(subEarth.lat - fixture.subEarth.lat)).toBeLessThan(TOLERANCE.libration);
+      expect(subEarth.lon).toBeWithinAngle(fixture.subEarth.lon, TOLERANCE.libration);
+      expect(subEarth.lat).toBeWithinAngle(fixture.subEarth.lat, TOLERANCE.libration);
     });
 
     it('places the subsolar point (l₀, b₀)', () => {
       const { subSolar } = disc();
-      expect(Math.abs(angleDiff(subSolar.lon, fixture.subSolar.lon))).toBeLessThan(TOLERANCE.libration);
-      expect(Math.abs(subSolar.lat - fixture.subSolar.lat)).toBeLessThan(TOLERANCE.libration);
+      expect(subSolar.lon).toBeWithinAngle(fixture.subSolar.lon, TOLERANCE.libration);
+      expect(subSolar.lat).toBeWithinAngle(fixture.subSolar.lat, TOLERANCE.libration);
     });
 
     it('tilts the axis (P)', () => {
-      const error = angleDiff(disc().axisPositionAngle, fixture.axisPositionAngle);
-      expect(Math.abs(error)).toBeLessThan(TOLERANCE.axisPositionAngle);
+      expect(disc().axisPositionAngle).toBeWithinAngle(fixture.axisPositionAngle, TOLERANCE.axisPositionAngle);
     });
 
     it('turns the bright limb (χ)', () => {
       const error = angleDiff(disc().brightLimbPositionAngle, fixture.brightLimbPositionAngle);
-      const shrink = Math.sin(fixture.phaseAngle * Math.PI / 180);
-      const arc = Math.abs(error) * shrink;
-      expect(arc).toBeLessThan(TOLERANCE.brightLimbArc);
+      expect(limbArc(error, fixture.phaseAngle)).toBeLessThan(TOLERANCE.brightLimbArc);
     });
 
     it('lights the disc (i, k)', () => {
       const { phaseAngle, illuminatedFraction } = disc();
-      expect(Math.abs(phaseAngle - fixture.phaseAngle)).toBeLessThan(TOLERANCE.phaseAngle);
-      expect(Math.abs(illuminatedFraction - fixture.illuminatedFraction))
-        .toBeLessThan(TOLERANCE.illuminatedFraction);
+      expect(phaseAngle).toBeWithinAngle(fixture.phaseAngle, TOLERANCE.phaseAngle);
+      expect(illuminatedFraction).toBeNear(fixture.illuminatedFraction, TOLERANCE.illuminatedFraction);
     });
 
     it('sizes the disc', () => {
       const { distanceKm, angularDiameterArcmin } = disc();
-      expect(Math.abs(distanceKm - fixture.distanceKm)).toBeLessThan(TOLERANCE.distanceKm);
-      expect(Math.abs(angularDiameterArcmin - fixture.angularDiameterArcmin))
-        .toBeLessThan(TOLERANCE.angularDiameterArcmin);
+      expect(distanceKm).toBeNear(fixture.distanceKm, TOLERANCE.distanceKm);
+      expect(angularDiameterArcmin).toBeNear(fixture.angularDiameterArcmin, TOLERANCE.angularDiameterArcmin);
     });
   });
 });
@@ -105,7 +93,7 @@ function meeusBrightLimb(instant: Temporal.Instant): number {
   const [Δψ, Δε] = nutation(jde);
   const moon = new Ecliptic(lon + Δψ, lat).toEquatorial(meanObliquity(jde) + Δε);
   const sun = apparentEquatorialVSOP87(new Planet(vsop87Bearth), jde);
-  return limb(new Coord(moon.ra, moon.dec), sun) * 180 / Math.PI;
+  return limb(new Coord(moon.ra, moon.dec), sun) / DEG;
 }
 
 describe('moonDisc bright limb vs Meeus 48.5', () => {
@@ -116,6 +104,6 @@ describe('moonDisc bright limb vs Meeus 48.5', () => {
     const at = Temporal.Instant.from(instant);
     const disc = moonDisc(at);
     const error = angleDiff(disc.brightLimbPositionAngle, meeusBrightLimb(at));
-    expect(Math.abs(error) * Math.sin(disc.phaseAngle * Math.PI / 180)).toBeLessThan(0.005);
+    expect(limbArc(error, disc.phaseAngle)).toBeLessThan(0.005);
   });
 });

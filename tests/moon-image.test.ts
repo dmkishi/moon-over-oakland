@@ -17,6 +17,7 @@ import {
   renderMoonImage,
   renderMoonPixels,
 } from '../src/moon-image.ts';
+import { DEG } from './support/angle.ts';
 
 const SIZE = 256;
 
@@ -84,7 +85,7 @@ function centroid(points: { x: number; y: number }[]): { x: number; y: number } 
 
 /** Position angle of an offset, from north toward east (left). */
 function positionAngle({ x, y }: { x: number; y: number }): number {
-  return ((Math.atan2(-x, y) * 180 / Math.PI) + 360) % 360;
+  return ((Math.atan2(-x, y) / DEG) + 360) % 360;
 }
 
 function radiusPx(disc: MoonDisc): number {
@@ -109,7 +110,7 @@ describe('renderMoonPixels geometry', () => {
       const disc = discAt(INSTANTS[name]);
       const pixels = renderMoonPixels(disc, textures, { size: SIZE });
       const lit = matching(pixels, (value) => value > 0).length / (Math.PI * radiusPx(disc) ** 2);
-      expect(Math.abs(lit - disc.illuminatedFraction)).toBeLessThan(0.01);
+      expect(lit).toBeNear(disc.illuminatedFraction, 0.01);
     },
   );
 
@@ -119,8 +120,7 @@ describe('renderMoonPixels geometry', () => {
       const disc = discAt(INSTANTS[name]);
       const pixels = renderMoonPixels(disc, textures, { size: SIZE });
       const angle = positionAngle(centroid(matching(pixels, (value) => value > 0)));
-      const error = ((angle - disc.brightLimbPositionAngle + 540) % 360) - 180;
-      expect(Math.abs(error)).toBeLessThan(2);
+      expect(angle).toBeWithinAngle(disc.brightLimbPositionAngle, 2);
     },
   );
 
@@ -138,7 +138,7 @@ describe('renderMoonPixels geometry', () => {
     const disc = discAt(INSTANTS.firstQuarter);
     const pixels = renderMoonPixels(disc, textures, { size: SIZE, earthshine: true });
     const middleRow = matching(pixels, (value) => value > 0).filter(({ y }) => y === 0.5);
-    expect(Math.abs(middleRow.length - 2 * radiusPx(disc))).toBeLessThanOrEqual(1);
+    expect(middleRow.length).toBeNear(2 * radiusPx(disc), 1);
   });
 
   it('places selenographic (0°, 0°) where libration and P put it', () => {
@@ -149,19 +149,18 @@ describe('renderMoonPixels geometry', () => {
 
     // Orthographic projection of (0°, 0°) about the sub-Earth point (l, b),
     // the Moon's north up, then turned counterclockwise by P.
-    const rad = Math.PI / 180;
     const { lon: l, lat: b } = disc.subEarth;
-    const x = -Math.sin(l * rad);
-    const y = -Math.cos(l * rad) * Math.sin(b * rad);
-    const p = disc.axisPositionAngle * rad;
+    const x = -Math.sin(l * DEG);
+    const y = -Math.cos(l * DEG) * Math.sin(b * DEG);
+    const p = disc.axisPositionAngle * DEG;
     const expected = {
       x: radiusPx(disc) * (x * Math.cos(p) - y * Math.sin(p)),
       y: radiusPx(disc) * (x * Math.sin(p) + y * Math.cos(p)),
     };
 
     expect(Math.hypot(expected.x, expected.y)).toBeGreaterThan(10); // A real offset, not ~0
-    expect(Math.abs(marker.x - expected.x)).toBeLessThan(1.5);
-    expect(Math.abs(marker.y - expected.y)).toBeLessThan(1.5);
+    expect(marker.x).toBeNear(expected.x, 1.5);
+    expect(marker.y).toBeNear(expected.y, 1.5);
   });
 
   // IAU east, toward Mare Crisium, is on the right of a north-up image. A map

@@ -5,29 +5,10 @@
  */
 import { describe, it, expect } from 'vitest';
 import { dayEventFixtures } from '../fixtures/index.ts';
-import { calculateDayEvents, type DayEvents } from '../../src/ephemeris/day-events.ts';
-import { observer } from '../../src/observer.ts';
+import { calculateDayEvents } from '../support/observer.ts';
+import { hoursInDay } from '../support/time.ts';
 
-const TOLERANCE_MINUTES = 15;
-
-const { timezone, latitude, longitude } = observer;
-
-/**
- * Called per test, not hoisted into the `describe` body: a hoisted call runs at
- * collection time, where a throw fails the whole file and the work happens even
- * under a filter that excludes it. Recomputing costs tens of milliseconds.
- */
-function calculate(date: Temporal.PlainDate): DayEvents {
-  return calculateDayEvents(date, timezone, latitude, longitude);
-}
-
-function calculateNight(date: Temporal.PlainDate): DayEvents {
-  return calculateDayEvents(date, timezone, latitude, longitude, 'night');
-}
-
-function minutesBetween(a: Temporal.ZonedDateTime, isoDateTime: string): number {
-  return Math.abs(a.epochMilliseconds - new Date(isoDateTime).getTime()) / 60_000;
-}
+const TOLERANCE = { minutes: 15 };
 
 for (const fixture of dayEventFixtures) {
   describe(`calculateDayEvents(${fixture.description ?? fixture.day})`, () => {
@@ -35,35 +16,35 @@ for (const fixture of dayEventFixtures) {
     const { moonrise, moonset, sunrise, sunset } = fixture.events;
 
     it('moonset comes after moonrise', () => {
-      const result = calculate(date);
+      const result = calculateDayEvents(date);
       expect(Temporal.ZonedDateTime.compare(result.moonset, result.moonrise)).toBe(1);
     });
 
     it('sunset comes after sunrise', () => {
-      const result = calculate(date);
+      const result = calculateDayEvents(date);
       expect(Temporal.ZonedDateTime.compare(result.sunset, result.sunrise)).toBe(1);
     });
 
     // oxlint-disable-next-line no-negated-condition - Echo shape below
     if (moonrise !== null) {
-      it(`moonrise matches within ±${TOLERANCE_MINUTES} minutes`, () => {
-        expect(minutesBetween(calculate(date).moonrise, moonrise.dateTime)).toBeLessThanOrEqual(TOLERANCE_MINUTES);
+      it(`moonrise matches within ±${TOLERANCE.minutes} minutes`, () => {
+        expect(calculateDayEvents(date).moonrise).toBeWithin(moonrise.dateTime, TOLERANCE);
       });
     } else {
       it('moonrise borrows from the previous day', () => {
-        expect(calculate(date).moonrise.toPlainDate().equals(date.subtract({ days: 1 }))).toBe(true);
+        expect(calculateDayEvents(date).moonrise.toPlainDate().equals(date.subtract({ days: 1 }))).toBe(true);
       });
     }
 
     // The fixture lists the moonset that occurs on that civil day but
     // `calculateDayEvents()` returns the moonset that comes after its rise.
     if (moonset !== null && (moonrise === null || new Date(moonset.dateTime) > new Date(moonrise.dateTime))) {
-      it(`moonset matches within ±${TOLERANCE_MINUTES} minutes`, () => {
-        expect(minutesBetween(calculate(date).moonset, moonset.dateTime)).toBeLessThanOrEqual(TOLERANCE_MINUTES);
+      it(`moonset matches within ±${TOLERANCE.minutes} minutes`, () => {
+        expect(calculateDayEvents(date).moonset).toBeWithin(moonset.dateTime, TOLERANCE);
       });
     } else {
       it('moonset falls on the next day', () => {
-        expect(calculate(date).moonset.toPlainDate().equals(date.add({ days: 1 }))).toBe(true);
+        expect(calculateDayEvents(date).moonset.toPlainDate().equals(date.add({ days: 1 }))).toBe(true);
       });
     }
 
@@ -72,8 +53,8 @@ for (const fixture of dayEventFixtures) {
       ['sunset', sunset],
     ] as const;
     for (const [name, expected] of sunEvents) {
-      it(`${name} matches within ±${TOLERANCE_MINUTES} minutes`, () => {
-        expect(minutesBetween(calculate(date)[name], expected.dateTime)).toBeLessThanOrEqual(TOLERANCE_MINUTES);
+      it(`${name} matches within ±${TOLERANCE.minutes} minutes`, () => {
+        expect(calculateDayEvents(date)[name]).toBeWithin(expected.dateTime, TOLERANCE);
       });
     }
   });
@@ -82,9 +63,9 @@ for (const fixture of dayEventFixtures) {
 describe('daylight saving time', () => {
   it('2026-03-08, a 23-hour day without a moonrise, borrows the previous day\'s', () => {
     const date = Temporal.PlainDate.from('2026-03-08');
-    expect(date.toZonedDateTime({ timeZone: timezone }).hoursInDay).toBe(23);
+    expect(hoursInDay(date)).toBe(23);
 
-    const result = calculate(date);
+    const result = calculateDayEvents(date);
     expect(result.moonrise.toPlainDate().toString()).toBe('2026-03-07');
     expect(result.moonset.toPlainDate().toString()).toBe('2026-03-08');
     expect(Temporal.ZonedDateTime.compare(result.moonset, result.moonrise)).toBe(1);
@@ -92,9 +73,9 @@ describe('daylight saving time', () => {
 
   it('2026-11-01, a 25-hour day, keeps its events in local time', () => {
     const date = Temporal.PlainDate.from('2026-11-01');
-    expect(date.toZonedDateTime({ timeZone: timezone }).hoursInDay).toBe(25);
+    expect(hoursInDay(date)).toBe(25);
 
-    const result = calculate(date);
+    const result = calculateDayEvents(date);
     // The rise falls after the 02:00 fall back, on standard time; its set
     // chases it onto the next civil day.
     expect(result.moonrise.offset).toBe('-08:00');
@@ -134,28 +115,28 @@ describe('night moonrise window', () => {
     describe(`${day} ${description}`, () => {
       const date = Temporal.PlainDate.from(day);
 
-      it(`moonrise matches within ±${TOLERANCE_MINUTES} minutes`, () => {
-        expect(minutesBetween(calculateNight(date).moonrise, moonrise)).toBeLessThanOrEqual(TOLERANCE_MINUTES);
+      it(`moonrise matches within ±${TOLERANCE.minutes} minutes`, () => {
+        expect(calculateDayEvents(date, 'night').moonrise).toBeWithin(moonrise, TOLERANCE);
       });
 
-      it(`moonset matches within ±${TOLERANCE_MINUTES} minutes`, () => {
-        expect(minutesBetween(calculateNight(date).moonset, moonset)).toBeLessThanOrEqual(TOLERANCE_MINUTES);
+      it(`moonset matches within ±${TOLERANCE.minutes} minutes`, () => {
+        expect(calculateDayEvents(date, 'night').moonset).toBeWithin(moonset, TOLERANCE);
       });
     });
   }
 
   it('2026-03-08, a 23-hour day without a moonrise, finds the previous evening\'s inside the window', () => {
     const date = Temporal.PlainDate.from('2026-03-08');
-    const night = calculateNight(date);
+    const night = calculateDayEvents(date, 'night');
     expect(night.moonrise.toPlainDate().toString()).toBe('2026-03-07');
     expect(night.moonrise.hour).toBe(22);
-    expect(night.moonrise.equals(calculate(date).moonrise)).toBe(true);
+    expect(night.moonrise.equals(calculateDayEvents(date).moonrise)).toBe(true);
   });
 
   it('leaves the sun times on the civil day', () => {
     const date = Temporal.PlainDate.from('2026-11-01');
-    const night = calculateNight(date);
-    const day = calculate(date);
+    const night = calculateDayEvents(date, 'night');
+    const day = calculateDayEvents(date);
     expect(night.sunrise.equals(day.sunrise)).toBe(true);
     expect(night.sunset.equals(day.sunset)).toBe(true);
   });

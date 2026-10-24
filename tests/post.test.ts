@@ -8,10 +8,11 @@
 import { afterAll, beforeAll, describe, it, expect, vi } from 'vitest';
 import { phaseEventFixtures } from './fixtures/index.ts';
 import { observer } from '../src/observer.ts';
-import { calculatePhaseEvent } from '../src/phase-event.ts';
 import { renderAltText, renderPost } from '../src/post.ts';
+import { postOn } from './support/observer.ts';
+import { postDateOf } from './support/time.ts';
 
-const { timezone, latitude, longitude } = observer;
+const { timezone } = observer;
 
 /**
  * Times must be formatted in the observer's zone, not the host's. Some bugs
@@ -50,7 +51,7 @@ function timeOnLine(post: string, label: string): string | undefined {
 }
 
 function render(postDate: Temporal.PlainDate) {
-  const phaseEvent = calculatePhaseEvent(postDate, timezone, latitude, longitude)!;
+  const phaseEvent = postOn(postDate);
   return { phaseEvent, post: renderPost(phaseEvent, timezone) };
 }
 
@@ -69,11 +70,7 @@ describe('renderPost', () => {
     expect(post).toContain('• Moonrise: 11:30 pm (yesterday)');
   });
 
-  it.each(phaseEventFixtures.map((fixture) => {
-    const eventDate = Temporal.PlainDate.from(fixture.dateTime);
-    const postDate = fixture.post === 'prev' ? eventDate.subtract({ days: 1 }) : eventDate;
-    return { postDate: postDate.toString() };
-  }))('prints the moonrise and moonset for $postDate in local time', ({ postDate }) => {
+  it.each(phaseEventFixtures.map((fixture) => ({ postDate: postDateOf(fixture).toString() })))('prints the moonrise and moonset for $postDate in local time', ({ postDate }) => {
     const { phaseEvent, post } = render(Temporal.PlainDate.from(postDate));
     expect(timeOnLine(post, 'Moonrise')).toBe(formatTime(phaseEvent.dayEvents.moonrise));
     expect(timeOnLine(post, 'Moonset')).toBe(formatTime(phaseEvent.dayEvents.moonset));

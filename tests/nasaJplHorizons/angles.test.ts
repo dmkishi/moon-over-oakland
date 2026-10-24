@@ -7,9 +7,8 @@ import {
 } from '../../scripts/nasaJplHorizons/angles.ts';
 import { fetchColumns, type TableQuery } from '../../scripts/nasaJplHorizons/api.ts';
 import { SITE } from '../../scripts/nasaJplHorizons/site.ts';
+import { DEG } from '../support/angle.ts';
 import { replayHorizons, savedResponse } from '../support/horizons.ts';
-
-const DEG = Math.PI / 180;
 
 describe('wrapDeg360', () => {
   it.each([

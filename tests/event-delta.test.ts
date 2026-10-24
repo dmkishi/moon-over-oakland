@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { calculateEventDeltas } from '../src/event-delta.ts';
 import type { DayEvents } from '../src/ephemeris/day-events.ts';
-import { PHASE_TYPES, type PhaseType } from '../src/ephemeris/phase.ts';
+import { PHASE_TYPES } from '../src/ephemeris/phase.ts';
 import { observer } from '../src/observer.ts';
+import { REFERENCES } from './support/references.ts';
+import { hoursInDay } from './support/time.ts';
 
 const NON_DST_DAY = {
   moonrise: '2026-09-15T12:00',
@@ -37,28 +39,6 @@ function dayEvents(times: Record<keyof DayEvents, string>): DayEvents {
  * lands is covered below.
  */
 describe('reference pairing', () => {
-  /**
-   * A copy of `REFERENCES` in `event-delta.ts` so they cannot drift together.
-   */
-  const REFERENCES: Record<PhaseType, { moonrise: string; moonset: string }> = {
-    'new': {
-      moonrise: 'sunrise',
-      moonset: 'sunset',
-    },
-    'first-quarter': {
-      moonrise: 'noon',
-      moonset: 'midnight',
-    },
-    'full': {
-      moonrise: 'sunset',
-      moonset: 'sunrise',
-    },
-    'last-quarter': {
-      moonrise: 'midnight',
-      moonset: 'noon',
-    },
-  };
-
   for (const phaseType of PHASE_TYPES) {
     const { moonrise: riseReference, moonset: setReference } = REFERENCES[phaseType];
 
@@ -147,8 +127,7 @@ describe('daylight saving time', () => {
   // it the opposite way from the day's length: the 23-hour day splits later on
   // the clock, the 25-hour day earlier.
   it('splits a 23-hour day at 12:30, not 12:00', () => {
-    const date = Temporal.PlainDate.from('2026-03-08');
-    expect(date.toZonedDateTime({ timeZone: timezone }).hoursInDay).toBe(23);
+    expect(hoursInDay(Temporal.PlainDate.from('2026-03-08'))).toBe(23);
 
     const events = dayEvents({
       moonrise: '2026-03-08T12:15',
@@ -163,8 +142,7 @@ describe('daylight saving time', () => {
   });
 
   it('splits a 25-hour day at 11:30, not 12:00', () => {
-    const date = Temporal.PlainDate.from('2026-11-01');
-    expect(date.toZonedDateTime({ timeZone: timezone }).hoursInDay).toBe(25);
+    expect(hoursInDay(Temporal.PlainDate.from('2026-11-01'))).toBe(25);
 
     const events = dayEvents({
       moonrise: '2026-11-01T11:45',

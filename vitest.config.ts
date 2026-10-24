@@ -6,6 +6,8 @@ export default defineConfig({
    * most of what it asserts is timezone dependent.
    */
   test: {
+    setupFiles: ['./tests/support/matchers.ts'],
+
     projects: [
       {
         test: {
