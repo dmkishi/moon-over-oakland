@@ -8,6 +8,13 @@ export default defineConfig({
   test: {
     setupFiles: ['./tests/support/matchers.ts'],
 
+    /**
+     * Undo every spy and stubbed global before each test. Not `unstubEnvs`,
+     * which would also undo a `vi.stubEnv` made in `beforeAll`.
+     */
+    restoreMocks: true,
+    unstubGlobals: true,
+
     projects: [
       {
         test: {

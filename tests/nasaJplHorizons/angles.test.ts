@@ -5,10 +5,10 @@ import {
   wrapDeg180,
   wrapDeg360,
 } from '../../scripts/nasaJplHorizons/angles.ts';
-import { fetchColumns, type TableQuery } from '../../scripts/nasaJplHorizons/api.ts';
+import { fetchColumns } from '../../scripts/nasaJplHorizons/api.ts';
 import { SITE } from '../../scripts/nasaJplHorizons/site.ts';
 import { DEG } from '../support/angle.ts';
-import { replayHorizons, savedResponse } from '../support/horizons.ts';
+import { replayCapture, SKY_QUERY } from '../support/horizons.ts';
 
 describe('wrapDeg360', () => {
   it.each([
@@ -69,27 +69,16 @@ function parallacticAngleFromHorizon(azimuthDeg: number, altitudeDeg: number, la
  * the azimuth and altitude to check it against.
  */
 async function skyRows() {
-  replayHorizons({
-    moon: savedResponse('sky-2026-02-24-moon'),
-    sun: savedResponse('sky-2026-02-24-sun'),
-  });
-  // The replay ignores the window, so any one will do.
-  const query: TableQuery = {
-    body: 'moon',
-    site: SITE,
-    start: Temporal.ZonedDateTime.from('2026-02-24T17:30[America/Los_Angeles]'),
-    stop: Temporal.ZonedDateTime.from('2026-02-24T18:59[America/Los_Angeles]'),
-    stepSize: '1m',
-  };
+  replayCapture('sky-2026-02-24');
   const [moonRows, sunRows] = await Promise.all([
-    fetchColumns(query, [
+    fetchColumns(SKY_QUERY, [
       'apparentRightAscensionDeg',
       'apparentDeclinationDeg',
       'azimuthDeg',
       'altitudeDeg',
       'siderealTimeHours',
     ]),
-    fetchColumns({ ...query, body: 'sun' }, ['apparentRightAscensionDeg', 'apparentDeclinationDeg']),
+    fetchColumns({ ...SKY_QUERY, body: 'sun' }, ['apparentRightAscensionDeg', 'apparentDeclinationDeg']),
   ]);
   return moonRows.map(({ values }, i) => ({ moon: values, sun: sunRows[i]!.values }));
 }

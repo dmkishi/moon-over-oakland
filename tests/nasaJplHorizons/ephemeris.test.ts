@@ -7,34 +7,24 @@ import {
   type MoonEphemeris,
   type MoonEventName,
 } from '../../scripts/nasaJplHorizons/sky/ephemeris.ts';
-import { replayHorizons, savedResponse } from '../support/horizons.ts';
-
-const zoned = (dateTime: string) => Temporal.ZonedDateTime.from(`${dateTime}[${SITE.timezone}]`);
-
-/**
- * The window of the `sky-2026-02-24-*` captures.
- */
-const SKY_WINDOW = { start: zoned('2026-02-24T17:30'), end: zoned('2026-02-24T19:00') };
-
-const replaySky = (sun = savedResponse('sky-2026-02-24-sun')) => replayHorizons({
-  moon: savedResponse('sky-2026-02-24-moon'),
-  sun,
-});
+import { replayCapture, savedResponse, SKY_WINDOW } from '../support/horizons.ts';
 
 describe('fetchMoonEphemeris', () => {
   it('asks for the Moon and Sun a minute at a time, short of the end', async () => {
-    const requests = replaySky();
+    const requests = replayCapture('sky-2026-02-24');
     await fetchMoonEphemeris(SITE, SKY_WINDOW);
     for (const params of requests) {
-      expect(params.get('START_TIME')).toBe("'2026-02-25 01:30'");
-      expect(params.get('STOP_TIME')).toBe("'2026-02-25 02:59'");
-      expect(params.get('STEP_SIZE')).toBe("'1m'");
+      expect(Object.fromEntries(params)).toMatchObject({
+        START_TIME: "'2026-02-25 01:30'",
+        STOP_TIME: "'2026-02-25 02:59'",
+        STEP_SIZE: "'1m'",
+      });
     }
     expect(new Set(requests.map((params) => params.get('COMMAND')))).toEqual(new Set(["'301'", "'10'"]));
   });
 
   it('returns a row a minute on the local clock', async () => {
-    replaySky();
+    replayCapture('sky-2026-02-24');
     const rows = await fetchMoonEphemeris(SITE, SKY_WINDOW);
     expect(rows).toHaveLength(90);
     expect(rows[0]!.at.toString()).toBe('2026-02-24T17:30:00-08:00[America/Los_Angeles]');
@@ -43,7 +33,7 @@ describe('fetchMoonEphemeris', () => {
 
   // Transit has a flag of its own. Sunset is where `*` stops.
   it('decodes the events from the flags', async () => {
-    replaySky();
+    replayCapture('sky-2026-02-24');
     const rows = await fetchMoonEphemeris(SITE, SKY_WINDOW);
     const events = rows
       .filter((row) => row.events.length > 0)
@@ -52,7 +42,7 @@ describe('fetchMoonEphemeris', () => {
   });
 
   it('carries the readings through in their units', async () => {
-    replaySky();
+    replayCapture('sky-2026-02-24');
     const [row] = await fetchMoonEphemeris(SITE, SKY_WINDOW);
     // ` 2026-Feb-25 01:30,*,m,    71.76971,    27.46961,  121.750315,
     //   72.666525,   3.6785723500,   56.51185,  0.00243375305934, -0.0890263,`
@@ -67,7 +57,7 @@ describe('fetchMoonEphemeris', () => {
 
   it('rejects a Sun table that does not line up with the Moon', async () => {
     const sun = savedResponse('sky-2026-02-24-sun').replace(/^ 2026-Feb-25 01:30,.*\n/mu, '');
-    replaySky(sun);
+    replayCapture('sky-2026-02-24', sun);
     await expect(fetchMoonEphemeris(SITE, SKY_WINDOW))
       .rejects.toThrow('No Sun row for 2026-02-25T01:30:00Z');
   });

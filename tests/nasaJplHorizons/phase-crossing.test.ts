@@ -2,35 +2,27 @@ import { describe, it, expect } from 'vitest';
 import { civilDay, type ObservingDay } from '../../scripts/nasaJplHorizons/site.ts';
 import { resolvePhaseEvent } from '../../scripts/nasaJplHorizons/sky/phase-crossing.ts';
 import { phaseEventFixtures } from '../fixtures/index.ts';
-import { horizonsStamp, horizonsTable, replayHorizons, savedResponse } from '../support/horizons.ts';
+import { horizonsStamp, horizonsTable, replayCapture, replayHorizons } from '../support/horizons.ts';
 
 /**
  * An illumination range that always passes the gate in front of the fetch.
  */
 const MAY_HOLD_PHASE = [0.5, 50];
 
-/**
- * Replay the `phase-<date>-*` captures, and return the requests made.
- */
-function replayPhaseDay(date: string): URLSearchParams[] {
-  return replayHorizons({
-    moon: savedResponse(`phase-${date}-moon`),
-    sun: savedResponse(`phase-${date}-sun`),
-  });
-}
-
 describe('resolvePhaseEvent against Horizons', () => {
   // The 25-hour day DST ends: 07:00 UT to 08:00 UT the next day.
   it('asks for both bodies across the whole civil day, every 10 minutes', async () => {
-    const requests = replayPhaseDay('2026-11-01');
+    const requests = replayCapture('phase-2026-11-01');
     await resolvePhaseEvent(civilDay('2026-11-01'), MAY_HOLD_PHASE);
     expect(requests).toHaveLength(2);
     for (const params of requests) {
-      expect(params.get('CENTER')).toBe("'500@399'");
-      expect(params.get('QUANTITIES')).toBe("'31'");
-      expect(params.get('START_TIME')).toBe("'2026-11-01 07:00'");
-      expect(params.get('STOP_TIME')).toBe("'2026-11-02 08:00'");
-      expect(params.get('STEP_SIZE')).toBe("'10m'");
+      expect(Object.fromEntries(params)).toMatchObject({
+        CENTER: "'500@399'",
+        QUANTITIES: "'31'",
+        START_TIME: "'2026-11-01 07:00'",
+        STOP_TIME: "'2026-11-02 08:00'",
+        STEP_SIZE: "'10m'",
+      });
     }
   });
 
@@ -39,7 +31,7 @@ describe('resolvePhaseEvent against Horizons', () => {
   // crosses the 360°→0° rollover.
   it.each(['2026-11-01', '2026-11-08'])('finds the phase that %s holds', async (date) => {
     const fixture = phaseEventFixtures.find(({ dateTime }) => dateTime.startsWith(date))!;
-    replayPhaseDay(date);
+    replayCapture(`phase-${date}`);
     const event = await resolvePhaseEvent(civilDay(date), MAY_HOLD_PHASE);
 
     expect(event?.name).toBe(fixture.phaseType);
@@ -56,7 +48,7 @@ describe('resolvePhaseEvent against Horizons', () => {
     ['a quarter', [45, 49], 2],
     ['a full moon', [97, 99.8], 2],
   ])('for %s day, makes %d requests', async (_label, illuminatedPercents, requestCount) => {
-    const requests = replayPhaseDay('2026-11-01');
+    const requests = replayCapture('phase-2026-11-01');
     await resolvePhaseEvent(civilDay('2026-11-01'), illuminatedPercents);
     expect(requests).toHaveLength(requestCount);
   });

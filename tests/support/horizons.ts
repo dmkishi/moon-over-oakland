@@ -19,8 +19,39 @@
  * - `disc-*`: `fetchMoonDiscs` at two instants of `moon-disc.accuracy.jsonc`.
  */
 import { readFileSync } from 'node:fs';
-import { onTestFinished, vi } from 'vitest';
-import type { Body } from '../../scripts/nasaJplHorizons/api.ts';
+import { vi } from 'vitest';
+import type { Body, TableQuery } from '../../scripts/nasaJplHorizons/api.ts';
+import { SITE } from '../../scripts/nasaJplHorizons/site.ts';
+
+/**
+ * A wall-clock time at the site.
+ */
+export function zoned(dateTime: string): Temporal.ZonedDateTime {
+  return Temporal.ZonedDateTime.from(`${dateTime}[${SITE.timezone}]`);
+}
+
+/**
+ * The window of the `sky-2026-02-24-*` captures.
+ */
+export const SKY_WINDOW = { start: zoned('2026-02-24T17:30'), end: zoned('2026-02-24T19:00') };
+
+/**
+ * The Moon's table query `fetchMoonEphemeris` makes of `SKY_WINDOW`: a row a
+ * minute, stopping a minute short of the end.
+ */
+export const SKY_QUERY: TableQuery = {
+  body: 'moon',
+  site: SITE,
+  start: SKY_WINDOW.start,
+  stop: SKY_WINDOW.end.subtract({ minutes: 1 }),
+  stepSize: '1m',
+};
+
+/**
+ * The instants of the `disc-*` captures.
+ */
+export const DISC_INSTANTS = ['2026-01-10T15:48:29Z', '2026-08-24T19:00:00Z']
+  .map((instant) => Temporal.Instant.from(instant));
 
 /**
  * The target IDs `api.ts` sends as `COMMAND`, repeated here rather than
@@ -57,7 +88,8 @@ export function horizonsStamp(instant: Temporal.Instant): string {
 
 /**
  * Stub `fetch` to answer each request with the response for the body it asks
- * for, until the end of the test.
+ * for. `unstubGlobals` and `restoreMocks` in `vitest.config.ts` undo the stub
+ * before the next test.
  *
  * @param responses - Response text, or a function returning a `Response` for
  *   a reply that isn't a table, such as an error status
@@ -81,9 +113,15 @@ export function replayHorizons(
   // Each request logs its URL.
   vi.spyOn(console, 'error').mockImplementation(() => {});
 
-  onTestFinished(() => {
-    vi.unstubAllGlobals();
-    vi.restoreAllMocks();
-  });
   return requests;
+}
+
+/**
+ * Replay a capture's `<name>-moon` and `<name>-sun` responses.
+ *
+ * @param sun - Response text in place of the saved Sun response
+ * @returns The query parameters of every request, in the order they were sent
+ */
+export function replayCapture(name: string, sun = savedResponse(`${name}-sun`)): URLSearchParams[] {
+  return replayHorizons({ moon: savedResponse(`${name}-moon`), sun });
 }
