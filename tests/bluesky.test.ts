@@ -38,37 +38,21 @@ describe('graphemeLength', () => {
 });
 
 describe('localDateOf', () => {
-  it('reads the calendar date of an instant', () => {
-    expect(localDateOf({ createdAt: '2026-03-15T19:30:00.000Z' }, timezone)?.toString())
-      .toBe('2026-03-15');
-  });
-
-  // A record written late in the local evening carries the next day's UTC date,
-  // which is the case that makes a naive `createdAt.slice(0, 10)` wrong.
-  it('keeps an instant on the local day, not the UTC one', () => {
-    expect(localDateOf({ createdAt: '2026-03-16T02:00:00.000Z' }, timezone)?.toString())
-      .toBe('2026-03-15');
-  });
-
-  // Identical UTC wall times, six months apart: the offset shift alone decides
-  // which local day each one lands on.
-  it('applies the offset in force at the instant, not a fixed one', () => {
-    expect(localDateOf({ createdAt: '2026-01-01T07:30:00.000Z' }, timezone)?.toString())
-      .toBe('2025-12-31');
-    expect(localDateOf({ createdAt: '2026-07-01T07:30:00.000Z' }, timezone)?.toString())
-      .toBe('2026-07-01');
-  });
-
-  it('accepts a timestamp that carries its own offset', () => {
-    expect(localDateOf({ createdAt: '2026-03-15T20:30:00+01:00' }, timezone)?.toString())
-      .toBe('2026-03-15');
-  });
-
-  // The annotation names a zone, but the caller's `timezone` is what the date
-  // is read in.
-  it('ignores a timezone annotation on the timestamp', () => {
-    expect(localDateOf({ createdAt: '2026-03-15T19:30:00.000Z[Asia/Tokyo]' }, timezone)?.toString())
-      .toBe('2026-03-15');
+  it.each([
+    ['2026-03-15T19:30:00.000Z', '2026-03-15', 'the plain case'],
+    // A record written late in the local evening carries the next day's UTC
+    // date, which is the case that makes a naive `createdAt.slice(0, 10)` wrong.
+    ['2026-03-16T02:00:00.000Z', '2026-03-15', 'the local day, not the UTC one'],
+    // Identical UTC wall times, six months apart: the offset shift alone
+    // decides which local day each one lands on.
+    ['2026-01-01T07:30:00.000Z', '2025-12-31', 'under the standard time offset'],
+    ['2026-07-01T07:30:00.000Z', '2026-07-01', 'under the daylight time offset'],
+    ['2026-03-15T20:30:00+01:00', '2026-03-15', 'from its own offset'],
+    // The annotation names a zone, but the caller's `timezone` is what the
+    // date is read in.
+    ['2026-03-15T19:30:00.000Z[Asia/Tokyo]', '2026-03-15', 'ignoring the timezone annotation'],
+  ])('reads %s as %s, %s', (createdAt, expected) => {
+    expect(localDateOf({ createdAt }, timezone)?.toString()).toBe(expected);
   });
 
   it('reads the same instant the same way in any timezone', () => {

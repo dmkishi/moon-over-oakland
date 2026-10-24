@@ -1,101 +1,98 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { loadEnv } from '../src/env.ts';
 
-interface Fixture {
-  name: string;
-  account?: 'test';
-  handleKey: string;
+interface Credentials {
   handle: string;
-  appPasswordKey: string;
   appPassword: string;
 }
 
-const withVars = (fixture: Fixture) => ({
-  ...fixture,
-  vars: {
-    [fixture.handleKey]: fixture.handle,
-    [fixture.appPasswordKey]: fixture.appPassword,
-  },
-});
+interface Fixture {
+  name: string;
+  account?: 'test';
+  /** The variable each credential is read from */
+  keys: Credentials;
+  values: Credentials;
+}
 
-const production = withVars({
+const production: Fixture = {
   name: 'production',
-  handleKey: 'BLUESKY_HANDLE',
-  handle: 'moon.example.com',
-  appPasswordKey: 'BLUESKY_APP_PASSWORD',
-  appPassword: 'abcd-efgh-ijkl-mnop',
-});
+  keys: { handle: 'BLUESKY_HANDLE', appPassword: 'BLUESKY_APP_PASSWORD' },
+  values: { handle: 'moon.example.com', appPassword: 'abcd-efgh-ijkl-mnop' },
+};
 
-const testAccount = withVars({
+const testAccount: Fixture = {
   name: 'test',
   account: 'test',
-  handleKey: 'TEST_BLUESKY_HANDLE',
-  handle: 'moon-test.example.com',
-  appPasswordKey: 'TEST_BLUESKY_APP_PASSWORD',
-  appPassword: 'qrst-uvwx-yzab-cdef',
+  keys: { handle: 'TEST_BLUESKY_HANDLE', appPassword: 'TEST_BLUESKY_APP_PASSWORD' },
+  values: { handle: 'moon-test.example.com', appPassword: 'qrst-uvwx-yzab-cdef' },
+};
+
+/**
+ * An account's credentials, keyed by variable name as an environment holds
+ * them.
+ */
+function varsOf({ keys, values }: Fixture): Record<string, string> {
+  return { [keys.handle]: values.handle, [keys.appPassword]: values.appPassword };
+}
+
+describe.each([
+  { ...production, other: testAccount },
+  { ...testAccount, other: production },
+])('loadEnv for the $name account', (fixture) => {
+  const { account, keys, values, other } = fixture;
+
+  // The other account's variables stay set throughout: there is deliberately
+  // no fallback, so they must never stand in for a missing one.
+  const source = { ...varsOf(fixture), ...varsOf(other) };
+
+  it('reads both credentials from the source', () => {
+    expect(loadEnv(source, account)).toEqual({ bluesky: values });
+  });
+
+  // An empty variable is the shape a `.env` with `BLUESKY_HANDLE=` produces,
+  // and it has to fail the same way an absent one does.
+  it.each([keys.handle, keys.appPassword].flatMap((key) => [
+    { key, state: 'absent', value: undefined },
+    { key, state: 'empty', value: '' },
+  ]))('names $key when it is $state', ({ key, value }) => {
+    expect(() => loadEnv({ ...source, [key]: value }, account))
+      .toThrow(`  - ${key} is required`);
+  });
+
+  // A first run has neither set. Reporting one at a time would mean two runs
+  // to learn what to configure.
+  it('reports both in one error', () => {
+    expect(() => loadEnv(varsOf(other), account)).toThrow(
+      `Configuration error:\n  - ${keys.handle} is required\n  - ${keys.appPassword} is required`,
+    );
+  });
 });
-
-const accounts = [
-  { ...production, otherVars: testAccount.vars },
-  { ...testAccount, otherVars: production.vars },
-];
-
-describe.each(accounts)(
-  'loadEnv for the $name account',
-  ({ account, handleKey, handle, appPasswordKey, appPassword, vars, otherVars }) => {
-    // The other account's variables stay set throughout: there is deliberately
-    // no fallback, so they must never stand in for a missing one.
-    const source = { ...vars, ...otherVars };
-
-    it('reads both credentials from the source', () => {
-      expect(loadEnv(source, account)).toEqual({ bluesky: { handle, appPassword } });
-    });
-
-    // An empty variable is the shape a `.env` with `BLUESKY_HANDLE=` produces,
-    // and it has to fail the same way an absent one does.
-    it.each([handleKey, appPasswordKey].flatMap((key) => [
-      { key, state: 'absent', value: undefined },
-      { key, state: 'empty', value: '' },
-    ]))('names $key when it is $state', ({ key, value }) => {
-      expect(() => loadEnv({ ...source, [key]: value }, account))
-        .toThrow(`  - ${key} is required`);
-    });
-
-    // A first run has neither set. Reporting one at a time would mean two runs
-    // to learn what to configure.
-    it('reports both in one error', () => {
-      expect(() => loadEnv(otherVars, account)).toThrow(
-        `Configuration error:\n  - ${handleKey} is required\n  - ${appPasswordKey} is required`,
-      );
-    });
-  },
-);
 
 describe('loadEnv', () => {
   it('ignores keys it was not asked for', () => {
-    expect(loadEnv({ ...production.vars, TIMEZONE: 'Asia/Tokyo' })).toEqual({
-      bluesky: { handle: production.handle, appPassword: production.appPassword },
+    expect(loadEnv({ ...varsOf(production), TIMEZONE: 'Asia/Tokyo' })).toEqual({
+      bluesky: production.values,
     });
   });
 });
 
-// The Worker has no `process.env` and passes its bindings instead, so reading
-// the ambient environment would work in the CLI and fail only in production.
+// `loadEnv` reads only the source it is handed, so a variable left set on the
+// host, or stubbed by another test, can't stand in for one the source lacks.
 describe('loadEnv and the ambient environment', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
   });
 
   it('does not fall back to it', () => {
-    vi.stubEnv(production.handleKey, production.handle);
-    vi.stubEnv(production.appPasswordKey, production.appPassword);
+    vi.stubEnv(production.keys.handle, production.values.handle);
+    vi.stubEnv(production.keys.appPassword, production.values.appPassword);
 
     expect(() => loadEnv({})).toThrow('Configuration error:');
   });
 
   it('prefers the source over it', () => {
-    vi.stubEnv(production.handleKey, 'ambient.example.com');
+    vi.stubEnv(production.keys.handle, 'ambient.example.com');
 
-    expect(loadEnv(production.vars).bluesky.handle).toBe('moon.example.com');
+    expect(loadEnv(varsOf(production)).bluesky.handle).toBe(production.values.handle);
   });
 });

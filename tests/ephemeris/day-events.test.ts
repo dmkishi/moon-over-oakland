@@ -4,16 +4,29 @@
  * daylight saving transition days of 2026.
  */
 import { describe, it, expect } from 'vitest';
-import { dayEventFixtures } from '../fixtures/index.ts';
+import { dayEventFixtures, type DayEventFixture } from '../fixtures/index.ts';
 import { calculateDayEvents } from '../support/observer.ts';
 import { hoursInDay } from '../support/time.ts';
 
 const TOLERANCE = { minutes: 15 };
 
+/**
+ * The fixture's moonset, if it's the one `calculateDayEvents()` returns, or
+ * null if that one falls on the next day. The fixture lists the moonset that
+ * occurs on the civil day, but `calculateDayEvents()` returns the moonset that
+ * comes after its rise.
+ */
+function expectedMoonset({ events: { moonrise, moonset } }: DayEventFixture): string | null {
+  if (moonset === null) return null;
+  if (moonrise !== null && new Date(moonset.dateTime) <= new Date(moonrise.dateTime)) return null;
+  return moonset.dateTime;
+}
+
 for (const fixture of dayEventFixtures) {
   describe(`calculateDayEvents(${fixture.description ?? fixture.day})`, () => {
     const date = Temporal.PlainDate.from(fixture.day);
-    const { moonrise, moonset, sunrise, sunset } = fixture.events;
+    const { moonrise, sunrise, sunset } = fixture.events;
+    const moonset = expectedMoonset(fixture);
 
     it('moonset comes after moonrise', () => {
       const result = calculateDayEvents(date);
@@ -25,26 +38,23 @@ for (const fixture of dayEventFixtures) {
       expect(Temporal.ZonedDateTime.compare(result.sunset, result.sunrise)).toBe(1);
     });
 
-    // oxlint-disable-next-line no-negated-condition - Echo shape below
-    if (moonrise !== null) {
-      it(`moonrise matches within ±${TOLERANCE.minutes} minutes`, () => {
-        expect(calculateDayEvents(date).moonrise).toBeWithin(moonrise.dateTime, TOLERANCE);
-      });
-    } else {
+    if (moonrise === null) {
       it('moonrise borrows from the previous day', () => {
         expect(calculateDayEvents(date).moonrise.toPlainDate().equals(date.subtract({ days: 1 }))).toBe(true);
       });
+    } else {
+      it(`moonrise matches within ±${TOLERANCE.minutes} minutes`, () => {
+        expect(calculateDayEvents(date).moonrise).toBeWithin(moonrise.dateTime, TOLERANCE);
+      });
     }
 
-    // The fixture lists the moonset that occurs on that civil day but
-    // `calculateDayEvents()` returns the moonset that comes after its rise.
-    if (moonset !== null && (moonrise === null || new Date(moonset.dateTime) > new Date(moonrise.dateTime))) {
-      it(`moonset matches within ±${TOLERANCE.minutes} minutes`, () => {
-        expect(calculateDayEvents(date).moonset).toBeWithin(moonset.dateTime, TOLERANCE);
-      });
-    } else {
+    if (moonset === null) {
       it('moonset falls on the next day', () => {
         expect(calculateDayEvents(date).moonset.toPlainDate().equals(date.add({ days: 1 }))).toBe(true);
+      });
+    } else {
+      it(`moonset matches within ±${TOLERANCE.minutes} minutes`, () => {
+        expect(calculateDayEvents(date).moonset).toBeWithin(moonset, TOLERANCE);
       });
     }
 

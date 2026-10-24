@@ -1,5 +1,5 @@
 /**
- * Shape the configuration is read from: `process.env`, or a Worker binding.
+ * Shape the configuration is read from, such as `process.env`.
  */
 type EnvSource = Record<string, string | undefined>;
 

@@ -36,6 +36,8 @@ const INSTANTS = {
   librated: '2026-12-17T05:42:41Z',
 };
 
+const PHASES = ['crescent', 'firstQuarter', 'gibbous', 'lastQuarter'] as const;
+
 /**
  * A 1 px/deg map with a uniform albedo and flat terrain. `paint` may darken
  * texels by selenographic longitude and latitude.
@@ -62,6 +64,10 @@ function discAt(instant: string): MoonDisc {
   return moonDisc(Temporal.Instant.from(instant));
 }
 
+function render(disc: MoonDisc, textures: MoonTextures, earthshine = false): Uint8Array {
+  return renderMoonPixels(disc, textures, { size: SIZE, earthshine });
+}
+
 /**
  * Pixels matching `test`, with their offsets from the frame's center in px:
  * x toward celestial west (right), y toward celestial north (up).
@@ -76,6 +82,13 @@ function matching(pixels: Uint8Array, test: (value: number) => boolean): { x: nu
     }
   }
   return points;
+}
+
+/**
+ * Pixels lit at all, by the Sun or by earthshine.
+ */
+function litPixels(pixels: Uint8Array): { x: number; y: number }[] {
+  return matching(pixels, (value) => value > 0);
 }
 
 function centroid(points: { x: number; y: number }[]): { x: number; y: number } {
@@ -104,30 +117,28 @@ function markerCentroid(pixels: Uint8Array, disc: MoonDisc): { x: number; y: num
 describe('renderMoonPixels geometry', () => {
   const textures = testTextures();
 
-  it.each(['crescent', 'firstQuarter', 'gibbous', 'lastQuarter'] as const)(
+  it.each(PHASES)(
     'lights the illuminated fraction of the disc (%s)',
     (name) => {
       const disc = discAt(INSTANTS[name]);
-      const pixels = renderMoonPixels(disc, textures, { size: SIZE });
-      const lit = matching(pixels, (value) => value > 0).length / (Math.PI * radiusPx(disc) ** 2);
+      const lit = litPixels(render(disc, textures)).length / (Math.PI * radiusPx(disc) ** 2);
       expect(lit).toBeNear(disc.illuminatedFraction, 0.01);
     },
   );
 
-  it.each(['crescent', 'firstQuarter', 'gibbous', 'lastQuarter'] as const)(
+  it.each(PHASES)(
     'turns the lit side toward the bright limb position angle (%s)',
     (name) => {
       const disc = discAt(INSTANTS[name]);
-      const pixels = renderMoonPixels(disc, textures, { size: SIZE });
-      const angle = positionAngle(centroid(matching(pixels, (value) => value > 0)));
-      expect(angle).toBeWithinAngle(disc.brightLimbPositionAngle, 2);
+      const lit = litPixels(render(disc, textures));
+      expect(positionAngle(centroid(lit))).toBeWithinAngle(disc.brightLimbPositionAngle, 2);
     },
   );
 
   it('lights the first quarter on the right and the last quarter on the left', () => {
     const lit = (instant: string) => {
-      const pixels = renderMoonPixels(discAt(instant), textures, { size: SIZE });
-      return centroid(matching(pixels, (value) => value > 0));
+      const pixels = render(discAt(instant), textures);
+      return centroid(litPixels(pixels));
     };
     expect(lit(INSTANTS.firstQuarter).x).toBeGreaterThan(radiusPx(discAt(INSTANTS.firstQuarter)) / 3);
     expect(lit(INSTANTS.lastQuarter).x).toBeLessThan(-radiusPx(discAt(INSTANTS.lastQuarter)) / 3);
@@ -136,16 +147,14 @@ describe('renderMoonPixels geometry', () => {
   it('sizes the disc by the plate scale', () => {
     // Earthshine lights the whole disc, so its full width can be measured.
     const disc = discAt(INSTANTS.firstQuarter);
-    const pixels = renderMoonPixels(disc, textures, { size: SIZE, earthshine: true });
-    const middleRow = matching(pixels, (value) => value > 0).filter(({ y }) => y === 0.5);
+    const middleRow = litPixels(render(disc, textures, true)).filter(({ y }) => y === 0.5);
     expect(middleRow.length).toBeNear(2 * radiusPx(disc), 1);
   });
 
   it('places selenographic (0°, 0°) where libration and P put it', () => {
     const disc = discAt(INSTANTS.librated);
     const marked = testTextures((lon, lat) => (Math.abs(lon) < 2 && Math.abs(lat) < 2 ? 0 : undefined));
-    const pixels = renderMoonPixels(disc, marked, { size: SIZE, earthshine: true });
-    const marker = markerCentroid(pixels, disc);
+    const marker = markerCentroid(render(disc, marked, true), disc);
 
     // Orthographic projection of (0°, 0°) about the sub-Earth point (l, b),
     // the Moon's north up, then turned counterclockwise by P.
@@ -168,13 +177,12 @@ describe('renderMoonPixels geometry', () => {
   it('puts selenographic east on the right', () => {
     const disc = discAt(INSTANTS.firstQuarter);
     const marked = testTextures((lon, lat) => (Math.abs(lon - 60) < 3 && Math.abs(lat) < 3 ? 0 : undefined));
-    const pixels = renderMoonPixels(disc, marked, { size: SIZE, earthshine: true });
-    const marker = markerCentroid(pixels, disc);
+    const marker = markerCentroid(render(disc, marked, true), disc);
     expect(marker.x).toBeGreaterThan(radiusPx(disc) * 0.7);
   });
 
   it('leaves the sky black', () => {
-    const pixels = renderMoonPixels(discAt(INSTANTS.gibbous), textures, { size: SIZE, earthshine: true });
+    const pixels = render(discAt(INSTANTS.gibbous), textures, true);
     expect(pixels[0]).toBe(0);
     expect(pixels.at(-1)).toBe(0);
   });

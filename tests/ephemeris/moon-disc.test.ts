@@ -42,6 +42,8 @@ const TOLERANCE = {
   distanceKm: 100,
   /** Arcminutes; residuals ≤ 0.0035′ */
   angularDiameterArcmin: 0.01,
+  /** Degrees of arc on the disc, against Meeus 48.5; residuals ≤ 0.003° */
+  meeusBrightLimbArc: 0.005,
 };
 
 describe('moonDisc vs Horizons', () => {
@@ -104,6 +106,6 @@ describe('moonDisc bright limb vs Meeus 48.5', () => {
     const at = Temporal.Instant.from(instant);
     const disc = moonDisc(at);
     const error = angleDiff(disc.brightLimbPositionAngle, meeusBrightLimb(at));
-    expect(limbArc(error, disc.phaseAngle)).toBeLessThan(0.005);
+    expect(limbArc(error, disc.phaseAngle)).toBeLessThan(TOLERANCE.meeusBrightLimbArc);
   });
 });

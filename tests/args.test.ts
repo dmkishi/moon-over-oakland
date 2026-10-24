@@ -1,6 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { parseCliArgs } from '../src/args.ts';
 
+/**
+ * The date `parseCliArgs()` reads from `args`, as a string.
+ */
+function dateOf(args: string[]): string | undefined {
+  return parseCliArgs(args).date?.toString();
+}
+
 describe('parseCliArgs', () => {
   it('defaults to no date and a live run', () => {
     expect(parseCliArgs([])).toEqual({ date: undefined, isDryRun: false, isTest: false });
@@ -10,15 +17,11 @@ describe('parseCliArgs', () => {
     expect(parseCliArgs(['--dry-run']).isDryRun).toBe(true);
   });
 
-  it('defaults to the production account', () => {
-    expect(parseCliArgs([]).isTest).toBe(false);
-  });
-
   it('reads the test flag', () => {
     expect(parseCliArgs(['--test']).isTest).toBe(true);
   });
 
-  it('takes the flag alongside a date and a dry run, in any order', () => {
+  it('takes --test alongside a date and a dry run, in any order', () => {
     expect(parseCliArgs(['--test', '2000-01-31', '--dry-run'])).toEqual({
       date: Temporal.PlainDate.from('2000-01-31'),
       isDryRun: true,
@@ -26,7 +29,7 @@ describe('parseCliArgs', () => {
     });
   });
 
-  it('accepts the flag on either side of the date', () => {
+  it('accepts --dry-run on either side of the date', () => {
     const before = parseCliArgs(['--dry-run', '2000-01-31']);
     const after = parseCliArgs(['2000-01-31', '--dry-run']);
     expect(before).toEqual(after);
@@ -59,15 +62,15 @@ describe('parseCliArgs date parsing', () => {
   it('parses a calendar date', () => {
     const { date } = parseCliArgs(['2000-01-31', '--dry-run']);
     expect(date).toBeInstanceOf(Temporal.PlainDate);
-    expect(date!.toString()).toBe('2000-01-31');
+    expect(date?.toString()).toBe('2000-01-31');
   });
 
   it('accepts month and day without a leading zero', () => {
-    expect(parseCliArgs(['2000-1-3', '--dry-run']).date!.toString()).toBe('2000-01-03');
+    expect(dateOf(['2000-1-3', '--dry-run'])).toBe('2000-01-03');
   });
 
   it('keeps a leap day that exists', () => {
-    expect(parseCliArgs(['2000-02-29', '--dry-run']).date!.toString()).toBe('2000-02-29');
+    expect(dateOf(['2000-02-29', '--dry-run'])).toBe('2000-02-29');
   });
 
   // `overflow: 'reject'` is what stops these from being clamped into range.
@@ -103,7 +106,7 @@ describe('parseCliArgs date rule', () => {
   });
 
   it.each(['--test', '--dry-run'])('accepts a date with %s', (flag) => {
-    expect(parseCliArgs(['2000-01-31', flag]).date!.toString()).toBe('2000-01-31');
+    expect(dateOf(['2000-01-31', flag])).toBe('2000-01-31');
   });
 
   // The rule is checked after the date is parsed, so a bad date keeps its own
