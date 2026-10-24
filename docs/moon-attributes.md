@@ -123,14 +123,27 @@ CSS `rotate()` is clockwise-positive, so draw it with `rotate(${-tilt}deg)`.
   one Earth radius closer when the Moon is overhead, which makes it ~1.7% larger
   than the geocentric size.
 
-### Optional refinements
-- **Libration (optical, in longitude and latitude)** — the slight wobble that
-  exposes slightly different edges of the near side over time. Matters if you're
-  texture-mapping real lunar surface detail rather than just drawing a phase
-  silhouette.
+### Surface orientation
+- **Libration (*l*, *b*)** — the slight wobble that exposes slightly different
+  edges of the near side over time, given as the selenographic longitude and
+  latitude of the sub-Earth point. Matters if you're texture-mapping real lunar
+  surface detail rather than just drawing a phase silhouette.
 - **Position angle of the rotation axis (*P*)** — needed alongside libration if
   you want surface features (maria, craters) correctly oriented rather than just
   the phase shape.
-- **Atmospheric extinction / color** — not geometric, but elevation-dependent
-  dimming and reddening is what gives a rising/setting moon its orange "harvest
-  moon" look, if you want that realism.
+
+### Atmospheric extinction / color
+Not geometric, but elevation-dependent dimming and reddening is what gives a
+rising/setting moon its orange "harvest moon" look.
+
+- **Airmass**, Kasten–Young:
+  `X = 1 / (cos z + 0.50572 · (96.07995° − z)^−1.6364)`, about 38 at the
+  horizon.
+- **Extinction per channel**: `I = I₀ · 10^(−0.4 · k_λ · X)`, with a Rayleigh
+  term ∝ λ⁻⁴ and an aerosol term ∝ λ^−α (Ångström α ≈ 1.3). A sea-level site
+  has k_V ≈ 0.2–0.3 mag per airmass, more with marine haze. Evaluate at ~610,
+  550, and 465 nm for R, G, and B.
+- **Refraction flattens the disc** near the horizon, compressing it vertically
+  by up to ~20% at 0°.
+- **Input**: SunCalc's `getMoonPosition().altitude`, which already corrects for
+  refraction.
