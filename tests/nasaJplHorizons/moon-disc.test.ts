@@ -36,8 +36,9 @@ describe('fetchMoonDiscs', () => {
       instants: FIXTURES.map(({ instant }) => Temporal.Instant.from(instant)),
     });
 
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
     printMoonDiscFixture(discs.map((disc, i) => ({ description: FIXTURES[i]!.description, disc })));
-    const printed = vi.mocked(console.log).mock.calls
+    const printed = log.mock.calls
       .map(([line]) => String(line))
       .filter((line) => line.startsWith('  {'))
       .map((line) => JSON.parse(line.trim().replace(/,$/u, '')) as unknown);

@@ -311,7 +311,7 @@ async function requestObserverTable({
   const query = Object.entries(params).map(([k, v]) => `${k}=${v}`).join('&');
   const url = `${HORIZONS_API_URL}?${query}`;
   const raw = await inHorizonsQueue(async () => {
-    console.log(`Calling <${url}>`);
+    console.error(`Calling <${url}>`);
     const res = await fetch(url);
     if (!res.ok) {
       throw new Error(`Horizons API error: ${res.status} ${res.statusText}`);

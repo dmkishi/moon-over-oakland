@@ -54,6 +54,6 @@ export async function runDisc(argv: string[]): Promise<void> {
     ...phases.map(({ type }, i) => ({ description: type, disc: phaseDiscs[i]! })),
   ].toSorted((a, b) => Temporal.Instant.compare(a.disc.at, b.disc.at));
 
-  console.log();
+  console.error();
   printMoonDiscFixture(rows);
 }

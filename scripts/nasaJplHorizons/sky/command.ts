@@ -72,12 +72,21 @@ export async function runSky(argv: string[]): Promise<void> {
     );
   }
 
+  // A blank line between sections, never before the first, so a lone section
+  // such as `--show-csv` redirects to a file as is.
+  let printedSection = false;
+  const section = (print: () => void): void => {
+    if (printedSection) console.log();
+    print();
+    printedSection = true;
+  };
+
   const day = civilDay(date);
 
   const moonEphemeris = await fetchMoonEphemeris(
     SITE,
     day,
-    showRaw ? (raw) => console.log(raw) : undefined,
+    showRaw ? (raw) => section(() => console.log(raw)) : undefined,
   );
 
   const phaseEvent = await resolvePhaseEvent(
@@ -87,15 +96,12 @@ export async function runSky(argv: string[]): Promise<void> {
 
   const moonSummary = computeMoonSummary(moonEphemeris, SITE, day, phaseEvent);
 
-  console.log();
+  console.error();
   if (showTable || showCsv) {
     const displayRows = thinEphemeris(moonEphemeris, everyMinutes);
-    if (showTable) printTable(displayRows);
-    if (showCsv) printCsv(displayRows);
+    if (showTable) section(() => printTable(displayRows));
+    if (showCsv) section(() => printCsv(displayRows));
   }
-  if (showSummary) printSummary(moonSummary);
-  if (showJson) {
-    if (showTable || showCsv || showSummary) console.log();
-    printFixtureJson(moonSummary);
-  }
+  if (showSummary) section(() => printSummary(moonSummary));
+  if (showJson) section(() => printFixtureJson(moonSummary));
 }

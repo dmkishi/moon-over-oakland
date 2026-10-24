@@ -79,7 +79,7 @@ export function replayHorizons(
     return Promise.resolve(typeof response === 'string' ? new Response(response) : response());
   });
   // Each request logs its URL.
-  vi.spyOn(console, 'log').mockImplementation(() => {});
+  vi.spyOn(console, 'error').mockImplementation(() => {});
 
   onTestFinished(() => {
     vi.unstubAllGlobals();
