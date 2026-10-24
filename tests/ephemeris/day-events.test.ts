@@ -1,12 +1,12 @@
 /**
  * Verifies `calculateDayEvents()`'s rise/set times against JPL Horizons
- * reference data at `./fixtures/day-events.accuracy.jsonc`, plus the two
+ * reference data at `../fixtures/day-events.accuracy.jsonc`, plus the two
  * daylight saving transition days of 2026.
  */
 import { describe, it, expect } from 'vitest';
-import { dayEventFixtures } from './fixtures/index.ts';
-import { calculateDayEvents, type DayEvents } from '../src/ephemeris/day-events.ts';
-import { observer } from '../src/observer.ts';
+import { dayEventFixtures } from '../fixtures/index.ts';
+import { calculateDayEvents, type DayEvents } from '../../src/ephemeris/day-events.ts';
+import { observer } from '../../src/observer.ts';
 
 const TOLERANCE_MINUTES = 15;
 

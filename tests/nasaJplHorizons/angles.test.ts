@@ -118,7 +118,7 @@ function worstParallacticError(
 
 /**
  * `moonTilt` is the bright limb less the parallactic angle, and the bright limb
- * is checked against the disc fixture (see `moon-disc.test.ts` here), so what's
+ * is checked against the disc fixture (see `./moon-disc.test.ts`), so what's
  * left to check is the parallactic angle. A frame error shows up there: the
  * hour angle is only right if RA is on the same equinox as sidereal time, and
  * an error in it is amplified as the Moon nears the zenith, which it passes

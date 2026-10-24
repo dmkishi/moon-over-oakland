@@ -1,6 +1,6 @@
 /**
- * JPL Horizons reference data for `day-events.test.ts`. See the test file for
- * more information.
+ * JPL Horizons reference data for `tests/ephemeris/day-events.test.ts`.
+ * See the test file for more information.
  *
  * Fixture covers:
  * - All four principal phases.

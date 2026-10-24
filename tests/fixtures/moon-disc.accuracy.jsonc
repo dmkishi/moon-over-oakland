@@ -1,6 +1,6 @@
 /**
- * JPL Horizons reference data for `moon-disc.test.ts`. See the test file for
- * more information.
+ * JPL Horizons reference data for `tests/ephemeris/moon-disc.test.ts`.
+ * See the test file for more information.
  *
  * Fixture covers:
  * - Every principal phase of 2026 (`pnpm horizons disc 2026`).

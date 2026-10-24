@@ -2,7 +2,7 @@
  * Verifies `moonDisc()` against JPL Horizons' geocentric view of the disc at
  * every principal phase of 2026 and six instants between them.
  *
- * Horizons values at `./fixtures/moon-disc.accuracy.jsonc`.
+ * Horizons values at `../fixtures/moon-disc.accuracy.jsonc`.
  */
 import { Coord, limb } from 'astronomia/base';
 import vsop87Bearth from 'astronomia/data/vsop87Bearth';
@@ -13,8 +13,8 @@ import { meanObliquity, nutation } from 'astronomia/nutation';
 import { Planet } from 'astronomia/planetposition';
 import { apparentEquatorialVSOP87 } from 'astronomia/solar';
 import { describe, it, expect } from 'vitest';
-import { moonDiscFixtures } from './fixtures/index.ts';
-import { moonDisc } from '../src/ephemeris/moon-disc.ts';
+import { moonDiscFixtures } from '../fixtures/index.ts';
+import { moonDisc } from '../../src/ephemeris/moon-disc.ts';
 
 /**
  * Tolerances, ~2–5x the largest residual across the fixture. Meeus ch. 53
