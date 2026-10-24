@@ -20,6 +20,13 @@ The posts are written for a general audience.
 - Optional: **[Healthchecks.io](https://healthchecks.io) dead man's switch** so
   a silent failure gets noticed.
 
+**Table of Contents**:
+1. [Develop](#develop)
+1. [Deployment (Raspberry Pi 3+)](#deployment-raspberry-pi-3)
+1. [Deployment (Alternatives)](#deployment-alternatives)
+1. [See Also](#see-also)
+1. [License](#license)
+
 Develop
 --------------------------------------------------------------------------------
 ### Setup
