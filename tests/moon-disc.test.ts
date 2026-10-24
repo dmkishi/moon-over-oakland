@@ -13,7 +13,7 @@ import { meanObliquity, nutation } from 'astronomia/nutation';
 import { Planet } from 'astronomia/planetposition';
 import { apparentEquatorialVSOP87 } from 'astronomia/solar';
 import { describe, it, expect } from 'vitest';
-import { moonDiscFixtures } from './fixtures/helpers.ts';
+import { moonDiscFixtures } from './fixtures/index.ts';
 import { moonDisc } from '../src/ephemeris/moon-disc.ts';
 
 /**

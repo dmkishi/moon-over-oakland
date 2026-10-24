@@ -4,7 +4,7 @@
  * daylight saving transition days of 2026.
  */
 import { describe, it, expect } from 'vitest';
-import { accuracyFixtures } from './fixtures/helpers.ts';
+import { dayEventFixtures } from './fixtures/index.ts';
 import { calculateDayEvents, type DayEvents } from '../src/ephemeris/day-events.ts';
 import { observer } from '../src/observer.ts';
 
@@ -29,7 +29,7 @@ function minutesBetween(a: Temporal.ZonedDateTime, isoDateTime: string): number 
   return Math.abs(a.epochMilliseconds - new Date(isoDateTime).getTime()) / 60_000;
 }
 
-for (const fixture of accuracyFixtures) {
+for (const fixture of dayEventFixtures) {
   describe(`calculateDayEvents(${fixture.description ?? fixture.day})`, () => {
     const date = Temporal.PlainDate.from(fixture.day);
     const { moonrise, moonset, sunrise, sunset } = fixture.events;

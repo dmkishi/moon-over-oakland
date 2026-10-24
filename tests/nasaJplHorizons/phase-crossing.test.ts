@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { civilDay, type ObservingDay } from '../../scripts/nasaJplHorizons/site.ts';
 import { resolvePhaseEvent } from '../../scripts/nasaJplHorizons/sky/phase-crossing.ts';
-import { postingFixtures } from '../fixtures/helpers.ts';
+import { phaseEventFixtures } from '../fixtures/index.ts';
 import { horizonsStamp, horizonsTable, replayHorizons, savedResponse } from '../support/horizons.ts';
 
 /**
@@ -38,7 +38,7 @@ describe('resolvePhaseEvent against Horizons', () => {
   // time has to carry it onto the right offset. The 2026-11-08 new moon
   // crosses the 360°→0° rollover.
   it.each(['2026-11-01', '2026-11-08'])('finds the phase that %s holds', async (date) => {
-    const fixture = postingFixtures.find(({ dateTime }) => dateTime.startsWith(date))!;
+    const fixture = phaseEventFixtures.find(({ dateTime }) => dateTime.startsWith(date))!;
     replayPhaseDay(date);
     const event = await resolvePhaseEvent(civilDay(date), MAY_HOLD_PHASE);
 

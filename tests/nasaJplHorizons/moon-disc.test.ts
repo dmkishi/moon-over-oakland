@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { fetchMoonDiscs, printMoonDiscFixture } from '../../scripts/nasaJplHorizons/disc/moon-disc.ts';
 import { civilDay } from '../../scripts/nasaJplHorizons/site.ts';
-import { moonDiscFixtures } from '../fixtures/helpers.ts';
+import { moonDiscFixtures } from '../fixtures/index.ts';
 import { replayHorizons, savedResponse } from '../support/horizons.ts';
 
 /**

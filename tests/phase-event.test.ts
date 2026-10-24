@@ -7,7 +7,7 @@
  * `./fixtures/phase-event.posting.jsonc`.
  */
 import { describe, it, expect } from 'vitest';
-import { postingFixtures, type PostingFixture } from './fixtures/helpers.ts';
+import { phaseEventFixtures, type PhaseEventFixture } from './fixtures/index.ts';
 import { PHASE_TYPES, type PhaseType } from '../src/ephemeris/phase.ts';
 import type { MoonEvent } from '../src/event-delta.ts';
 import { observer } from '../src/observer.ts';
@@ -34,7 +34,7 @@ function secondsBetween(a: Temporal.ZonedDateTime, isoDateTime: string): number 
   return Math.abs(a.epochMilliseconds - new Date(isoDateTime).getTime()) / 1_000;
 }
 
-function postDateOf(fixture: PostingFixture): Temporal.PlainDate {
+function postDateOf(fixture: PhaseEventFixture): Temporal.PlainDate {
   const eventDate = Temporal.PlainDate.from(fixture.dateTime);
   return fixture.post === 'prev' ? eventDate.subtract({ days: 1 }) : eventDate;
 }
@@ -74,7 +74,7 @@ const QUARTER_PAIRINGS: Partial<Record<PhaseType, { moonEvent: MoonEvent; noonOf
 /*******************************************************************************
  * Test posting decisions
  ******************************************************************************/
-for (const fixture of postingFixtures) {
+for (const fixture of phaseEventFixtures) {
   const eventDate = Temporal.PlainDate.from(fixture.dateTime);
   const postDate = postDateOf(fixture);
 
@@ -155,13 +155,13 @@ interface NextPhaseCase {
   expected: string;
 }
 
-function nextFixture(phaseType: PhaseType, after: number): PostingFixture | undefined {
-  return postingFixtures.find(
+function nextFixture(phaseType: PhaseType, after: number): PhaseEventFixture | undefined {
+  return phaseEventFixtures.find(
     (fixture) => fixture.phaseType === phaseType && new Date(fixture.dateTime).getTime() > after,
   );
 }
 
-const nextPhaseCases: NextPhaseCase[] = postingFixtures.flatMap((fixture) => {
+const nextPhaseCases: NextPhaseCase[] = phaseEventFixtures.flatMap((fixture) => {
   const postDate = postDateOf(fixture);
   const after = windowEnd(postDate).epochMilliseconds;
 

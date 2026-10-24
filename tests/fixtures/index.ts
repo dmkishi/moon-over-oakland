@@ -30,7 +30,7 @@ const sunEvent = event;
 /** Null when the paired event falls outside the civil day. */
 const moonEvent = event.nullable();
 
-const accuracyFixture = z.object({
+const dayEventFixture = z.object({
   description: z.string().optional(),
   day,
   events: z.object({
@@ -41,7 +41,7 @@ const accuracyFixture = z.object({
   }).strict(),
 }).strict();
 
-const postingFixture = z.object({
+const phaseEventFixture = z.object({
   dateTime,
   phaseType: z.enum(PHASE_TYPES),
   post: z.enum(['same', 'prev']),
@@ -62,8 +62,8 @@ const moonDiscFixture = z.object({
   angularDiameterArcmin: z.number(),
 }).strict();
 
-export type AccuracyFixture = z.infer<typeof accuracyFixture>;
-export type PostingFixture = z.infer<typeof postingFixture>;
+export type DayEventFixture = z.infer<typeof dayEventFixture>;
+export type PhaseEventFixture = z.infer<typeof phaseEventFixture>;
 export type MoonDiscFixture = z.infer<typeof moonDiscFixture>;
 
 function load<S extends z.ZodType>(name: string, schema: S): z.infer<S> {
@@ -71,9 +71,9 @@ function load<S extends z.ZodType>(name: string, schema: S): z.infer<S> {
   return schema.parse(JSON.parse(stripJsonComments(raw)));
 }
 
-export const accuracyFixtures = load(
+export const dayEventFixtures = load(
   './day-events.accuracy.jsonc',
-  z.array(accuracyFixture).min(1),
+  z.array(dayEventFixture).min(1),
 );
 
 /** 12 new, 12 first quarter, 13 full, 13 last quarter. */
@@ -81,9 +81,9 @@ const PHASES_IN_2026 = 50;
 
 // The posting fixture is exhaustive by definition, so a truncated paste is a
 // bug rather than a shorter run.
-export const postingFixtures = load(
+export const phaseEventFixtures = load(
   './phase-event.posting.jsonc',
-  z.array(postingFixture).length(PHASES_IN_2026),
+  z.array(phaseEventFixture).length(PHASES_IN_2026),
 );
 
 /** 50 principal phases plus 6 samples between them. */

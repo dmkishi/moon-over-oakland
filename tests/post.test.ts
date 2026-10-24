@@ -6,7 +6,7 @@
  * Posting rules at `./fixtures/phase-event.posting.jsonc`.
  */
 import { afterAll, beforeAll, describe, it, expect, vi } from 'vitest';
-import { postingFixtures } from './fixtures/helpers.ts';
+import { phaseEventFixtures } from './fixtures/index.ts';
 import { observer } from '../src/observer.ts';
 import { calculatePhaseEvent } from '../src/phase-event.ts';
 import { renderAltText, renderPost } from '../src/post.ts';
@@ -69,7 +69,7 @@ describe('renderPost', () => {
     expect(post).toContain('• Moonrise: 11:30 pm (yesterday)');
   });
 
-  it.each(postingFixtures.map((fixture) => {
+  it.each(phaseEventFixtures.map((fixture) => {
     const eventDate = Temporal.PlainDate.from(fixture.dateTime);
     const postDate = fixture.post === 'prev' ? eventDate.subtract({ days: 1 }) : eventDate;
     return { postDate: postDate.toString() };
