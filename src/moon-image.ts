@@ -246,6 +246,9 @@ export function renderMoonPixels(
   // points. Equal to `disc.phaseAngle` to well under a degree.
   const sunDotView = sun[0] * view[0] + sun[1] * view[1] + sun[2] * view[2];
   const weight = lunarLambertWeight(Math.acos(sunDotView) / DEG);
+  // The LROC map is Hapke-normalized to i = 30°, e = 0°, α = 30°, so a texel
+  // shows its mapped albedo under that lighting. There is no global phase
+  // function, so a quarter moon is as bright as a full one.
   const normalization = lunarLambert(Math.cos(30 * DEG), 1, lunarLambertWeight(30));
 
   const heightTexel = Math.PI / textures.height.height; // radians
