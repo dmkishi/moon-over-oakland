@@ -1,4 +1,4 @@
-import { coverageConfigDefaults, defineConfig } from 'vitest/config';
+import { configDefaults, coverageConfigDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
   /**
@@ -25,6 +25,20 @@ export default defineConfig({
         test: {
           name: 'utc',
           env: { TZ: 'UTC' },
+
+          /**
+           * Files that don't depend on the host's timezone run once. Opt out
+           * here rather than in, so that a new test runs under UTC too.
+           * `post.test.ts` forces its own zone, and the Horizons tests pin
+           * every instant to the site's zone or UT.
+           */
+          exclude: [
+            ...configDefaults.exclude,
+            'tests/args.test.ts',
+            'tests/env.test.ts',
+            'tests/post.test.ts',
+            'tests/nasaJplHorizons/**',
+          ],
         },
       },
     ],
@@ -34,7 +48,7 @@ export default defineConfig({
      * both honest and passing.
      */
     coverage: {
-      include: ['src/**/*.ts'],
+      include: ['src/**/*.ts', 'scripts/**/*.ts'],
       exclude: [...coverageConfigDefaults.exclude, '**/*.d.ts'],
       reporter: ['text', 'html'],
     },
