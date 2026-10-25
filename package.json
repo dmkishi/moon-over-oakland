@@ -16,7 +16,7 @@
     "lint": "oxlint",
     "test": "vitest",
     "coverage": "vitest run --coverage",
-    "moon-assets": "node scripts/build-moon-render-assets.ts",
+    "generate-moon-assets": "node scripts/generate-moon-assets.ts",
     "prepare": "husky"
   },
   "dependencies": {
