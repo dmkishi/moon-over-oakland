@@ -1,0 +1,24 @@
+#!/bin/sh
+#
+# DO NOT EDIT. Written by install-raspberry-pi.sh, which overwrites this file on
+# every run. Re-run it to change the image.
+#
+# Auto-posts at 6:00 AM (via cron.) Up to 4 attempts, 5 minutes apart. A retry
+# never double-posts: the app checks Bluesky for a post from today first.
+
+IMAGE=@IMAGE@
+
+for attempt in 1 2 3 4; do
+  echo "--- $(date -Is) attempt $attempt"
+
+  clock_synced=$(timedatectl show --property=NTPSynchronized --value)
+  if [ "$clock_synced" = yes ]; then
+    # --pull=never: pulling here would let a registry or network hiccup fail
+    # the post even though the image is on disk
+    docker run --rm --pull=never --env-file "$HOME/moon-over-oakland/env" "$IMAGE" && exit 0
+  else
+    echo 'Clock not synchronized'
+  fi
+  [ "$attempt" -lt 4 ] && sleep 300
+done
+exit 1

@@ -22,13 +22,29 @@ The posts are written for a general audience.
 
 **Table of Contents**:
 1. [Develop](#develop)
-1. [Deployment (Raspberry Pi 3+)](#deployment-raspberry-pi-3)
-1. [Deployment (Alternatives)](#deployment-alternatives)
+   1. [Requirements](#requirements)
+   1. [Setup](#setup)
+   1. [Usage](#usage)
+   1. [Docker Image](#docker-image)
+1. [Deploy](#deploy)
+   1. [Requirements](#requirements-1)
+   1. [Install](#install)
+   1. [Maintenance](#maintenance)
+   1. [Alternative Hosts](#alternative-hosts)
 1. [See Also](#see-also)
 1. [License](#license)
 
 Develop
 --------------------------------------------------------------------------------
+### Requirements
+- **Node.js**: 26 or newer (see `.nvmrc`)
+- **pnpm**: 12.3.4 (see `packageManager` in `package.json`); `brew install pnpm`
+- **Git LFS**: Installed before cloning, for the moon image textures in
+  `assets/` (`brew install git-lfs`, then `git lfs install` once per machine)
+- **Bluesky**: An account and app password, see [step 2](
+  #2-configure-social-media-credentials)
+- Optional: **Docker**, to build the image locally
+
 ### Setup
 #### 1. Install
 ```sh
@@ -126,20 +142,14 @@ every pull request. On `main`, it also pushes the image to
 
 The image holds no secrets. They're passed at runtime through `--env-file`.
 
-Deployment (Raspberry Pi 3+)
+The image job checks out with `lfs: true`, so the Dockerfile copies real
+textures, not pointers. The builds must keep `context: .`: the action's default
+Git context skips LFS.
+
+Deploy
 --------------------------------------------------------------------------------
-Once installed, everything lives in `~/moon-over-oakland/`, plus one crontab
-line:
-
-| File     | Purpose                                          |
-|----------|--------------------------------------------------|
-| `run.sh` | **Do not edit**. Written by the install script.  |
-| `env`    | Secrets.                                         |
-| `log`    | Output of each run and each deploy. No rotation. |
-
-`run.sh` pins the Docker image, checks that the clock is synchronized with NTP,
-and tries to post. It makes up to 4 attempts, 5 minutes apart. **A retry never
-double-posts**: the app checks Bluesky for a post from today first.
+The deployment steps below are for Raspberry Pi 3 or newer. See [Alternative
+Hosts](#alternative-hosts) for other options.
 
 ### Requirements
 - **Model**: Raspberry Pi 3 or newer
@@ -150,7 +160,7 @@ double-posts**: the app checks Bluesky for a post from today first.
 - **Cron**: Installed and running, the default on Raspberry Pi OS
 - **Docker**: Installed, with your user in the `docker` group so cron can run it
 
-### Steps
+### Install
 #### 1. Run the install script and fill in the secrets
 ```sh
 curl -fsSL https://raw.githubusercontent.com/dmkishi/moon-over-oakland/main/scripts/install-raspberry-pi.sh | sh
@@ -170,7 +180,7 @@ HEALTHCHECKS_URL=https://hc-ping.com/<uuid>
 #### 2. Run the install script again
 On the second run, the script checks the Raspberry Pi against the requirements,
 pulls the newest Docker image built from `main`, and dry-runs a test full moon
-post. If it passes, it writes `run.sh` with that image's tag pinned and adds a
+post. If it passes, it installs `run.sh`, `update.sh`, `dry-run.sh` and adds a
 crontab line. It prints `Live: ghcr.io/dmkishi/moon-over-oakland:sha-<short>`
 when done.
 
@@ -194,26 +204,27 @@ Set its ping URL as `HEALTHCHECKS_URL` in `~/moon-over-oakland/env`. The next
 run picks it up, so there is no need to rerun the install script.
 
 ### Maintenance
-#### Update
-Rerun the install command above. With no argument, it deploys the newest image
-built from `main`.
+Once installed, everything lives in `~/moon-over-oakland/`, plus one crontab
+line. The install script writes every file except `env` and `log`, and rewrites
+them on each deploy, so `env` is the only file to edit.
 
-#### Rollback
-To roll back to a specific build, pass its tag:
+| File         | Purpose                                           |
+|--------------|---------------------------------------------------|
+| `run.sh`     | **Do not edit**. Installed by the install script. |
+| `update.sh`  | **Do not edit**. Installed by the install script. |
+| `dry-run.sh` | **Do not edit**. Installed by the install script. |
+| `env`        | Secrets.                                          |
+| `log`        | Output of each run and each deploy. No rotation.  |
 
-```sh
-curl -fsSL https://raw.githubusercontent.com/dmkishi/moon-over-oakland/main/scripts/install-raspberry-pi.sh | sh -s -- sha-<short>
-```
+- **Run**: Cron runs `run.sh`, which runs the image tag it was installed with,
+  checks that the clock is synchronized with NTP, and tries to post. It makes up
+  to 4 attempts, 5 minutes apart. **A retry never double-posts**: the app checks
+  Bluesky for a post from today first.
+- **Update**: `~/moon-over-oakland/update.sh`
+- **Roll back**: `~/moon-over-oakland/update.sh sha-<short>`
+- **Dry run**: `~/moon-over-oakland/dry-run.sh [YYYY-MM-DD]`
 
-#### Dry Run
-Render a post without posting or pinging Healthchecks.io:
-
-```sh
-docker run --rm ghcr.io/dmkishi/moon-over-oakland:sha-<short> --dry-run 2026-01-02
-```
-
-Deployment (Alternatives)
---------------------------------------------------------------------------------
+### Alternative Hosts
 - **[Render](https://render.com)**: Native cron jobs run the image directly, but
   schedules are UTC only, so 6 AM Pacific drifts an hour with DST.
 - **[DigitalOcean](https://www.digitalocean.com)**: A $4/month Droplet is closest

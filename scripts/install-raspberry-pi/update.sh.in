@@ -1,0 +1,15 @@
+#!/bin/sh
+#
+# DO NOT EDIT. Written by install-raspberry-pi.sh, which overwrites this file on
+# every run. Re-run it to change the image.
+#
+# Usage: update.sh [sha-<short>]
+#
+# Re-runs the latest installer. Defaults to the newest image.
+
+set -eu
+
+INSTALLER_URL='@INSTALLER_URL@'
+
+script=$(curl -fsSL "$INSTALLER_URL")
+printf '%s\n' "$script" | INSTALLER_URL=$INSTALLER_URL sh -s -- "$@"

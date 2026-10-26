@@ -1,4 +1,5 @@
 #!/bin/sh
+#
 # Sets up or updates a Raspberry Pi for moon-over-oakland. Run on the Pi:
 #
 #   curl -fsSL https://raw.githubusercontent.com/dmkishi/moon-over-oakland/main/scripts/install-raspberry-pi.sh | sh -s -- [sha-<short>]
@@ -6,35 +7,87 @@
 # - Optional `sha-<short>` argument. If omitted, it deploys the newest image
 #   built from `main`.
 # - Safe to rerun. To roll back, run it with an earlier tag.
+# - Reads INSTALLER_URL from the environment, to install on a test deployment
+#   from a development branch. Defaults to the URL above.
 # - Installs one crontab line and:
 #
 #   ~/moon-over-oakland/
-#   ├── run.sh  Pinned image tag, clock check, and retry loop
-#   ├── env     Secrets, mode 0600
-#   └── log     Output of each run and each deploy
+#    ├── run.sh      Auto-posts at 6:00 AM (via cron)
+#    ├── update.sh   Updates or rolls back. Optionally target: update.sh [sha-<short>]
+#    ├── dry-run.sh  Dry-runs a post: dry-run.sh [YYYY-MM-DD]
+#    ├── env         Secrets, mode 0600
+#    └── log         Output of each run and each deploy
 
 set -eu
 
 REPO=ghcr.io/dmkishi/moon-over-oakland
+DEFAULT_INSTALLER_URL=https://raw.githubusercontent.com/dmkishi/moon-over-oakland/main/scripts/install-raspberry-pi.sh
 DIR=$HOME/moon-over-oakland
+SCRIPTS='run.sh update.sh dry-run.sh'
 FULL_MOON_DATE=2026-01-02 # For the test dry-run.
 
+# Prints an error and exits the script.
+#
+# Arguments:
+#   Error message.
+# Outputs:
+#   Writes the message, prefixed with "Error: ", to stderr.
+# Returns:
+#   Never; exits 1.
 fail() {
   echo "Error: $*" >&2
   exit 1
 }
 
-is_sha_tag() {
+# Checks that a tag has the `sha-<short>` form: `sha-` followed by 7 lowercase
+# hex digits.
+#
+# Arguments:
+#   Image tag to check.
+# Returns:
+#   0 if it matches, 1 if not.
+is_sha_tag() (
   hex='[0-9a-f]'
   case $1 in
     sha-$hex$hex$hex$hex$hex$hex$hex) ;;
     *) return 1 ;;
   esac
+)
+
+# Escapes text so sed inserts it literally as a replacement.
+#
+# Arguments:
+#   Text to escape.
+# Outputs:
+#   Writes the escaped text to stdout.
+sed_escape() {
+  printf '%s\n' "$1" | sed 's/[\\|&]/\\&/g'
 }
+
+# Fills the `@NAME@` placeholders in a script template and writes the result
+# to <name>.new.
+#
+# Arguments:
+#   Name of the script.
+#   Contents of its template.
+# Globals:
+#   DIR, IMAGE, INSTALLER_URL, FULL_MOON_DATE
+write_script() (
+  temp_path=$DIR/$1.new
+  printf '%s\n' "$2" | sed \
+    -e "s|@IMAGE@|$(sed_escape "$IMAGE")|g" \
+    -e "s|@INSTALLER_URL@|$(sed_escape "$INSTALLER_URL")|g" \
+    -e "s|@FULL_MOON_DATE@|$(sed_escape "$FULL_MOON_DATE")|g" \
+    > "$temp_path"
+  ! grep -q '@[A-Z_]*@' "$temp_path" ||
+    fail "$1.in has a placeholder this installer doesn't fill."
+  chmod 0755 "$temp_path"
+)
 
 main() {
   TAG=${1:-}
   [ -z "$TAG" ] || is_sha_tag "$TAG" || fail 'Usage: install-raspberry-pi.sh [sha-<short>]'
+  INSTALLER_URL=${INSTALLER_URL:-$DEFAULT_INSTALLER_URL}
 
   ##############################################################################
   # Check host configuration
@@ -82,7 +135,7 @@ main() {
   # Resolve which image tag to deploy.
   # - If passed a tag, use it.
   # - Without a tag, pull `latest`, read the commit it was built from, and use
-  #   that commit's `sha-<short>` tag, so `run.sh` stays pinned to a fixed tag.
+  #   that commit's `sha-<short>` tag, so the scripts pin a fixed tag.
   if [ -z "$TAG" ]; then
     docker pull "$REPO:latest"
     REVISION=$(docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$REPO:latest")
@@ -97,50 +150,35 @@ main() {
   docker pull "$IMAGE"
   docker run --rm --pull=never "$IMAGE" --dry-run "$FULL_MOON_DATE"
 
-  PREVIOUS=$(sed -n "s|^IMAGE=$REPO:||p" "$DIR/run.sh" 2>/dev/null || true)
+  # Save the live tag before run.sh is overwritten below, for the log entry,
+  # the prune, and the rollback hint. A first install has no run.sh yet.
+  PREVIOUS_TAG=$(sed -n "s|^IMAGE=$REPO:||p" "$DIR/run.sh" 2>/dev/null || true)
 
   ##############################################################################
-  # Write run.sh
+  # Write the scripts
   ##############################################################################
-  # Written beside the live script and renamed over it, so a 6:00 run never
-  # reads a half-written file
-  {
-    echo '#!/bin/sh'
-    echo ''
-    echo "IMAGE=$IMAGE"
-    cat <<'RUN_SH'
-# DO NOT EDIT. Written by install-raspberry-pi.sh, which overwrites this file on
-# every run. Re-run it to change the image.
-#
-# Up to 4 attempts, 5 minutes apart, so a Wi-Fi drop or Bluesky blip at 6:00 AM
-# doesn't cost a post. A retry after a lost response finds the post already
-# made and skips, so it never double-posts.
-for attempt in 1 2 3 4; do
-  echo "--- $(date -Is) attempt $attempt"
+  # All downloads finish before anything is replaced, so a failed one leaves
+  # the old install intact.
+  TEMPLATES_URL=${INSTALLER_URL%.sh}
+  for name in $SCRIPTS; do
+    # An assignment, so `set -e` catches a failed curl.
+    template=$(curl -fsSL "$TEMPLATES_URL/$name.in")
+    write_script "$name" "$template"
+  done
 
-  clock_synced=$(timedatectl show --property=NTPSynchronized --value)
-  if [ "$clock_synced" = yes ]; then
-    # --pull=never: pulling here would let a registry or network hiccup fail
-    # the post even though the image is on disk
-    docker run --rm --pull=never --env-file "$HOME/moon-over-oakland/env" "$IMAGE" && exit 0
-  else
-    echo 'Clock not synchronized'
-  fi
-  [ "$attempt" -lt 4 ] && sleep 300
-done
-exit 1
-RUN_SH
-  } > "$DIR/run.sh.new"
-  chmod 0755 "$DIR/run.sh.new"
-  mv -f "$DIR/run.sh.new" "$DIR/run.sh"
+  # Renamed over the live files, so a 6:00 run never reads a half-written
+  # file and a running update.sh keeps reading its own copy.
+  for name in $SCRIPTS; do
+    mv -f "$DIR/$name.new" "$DIR/$name"
+  done
 
   ##############################################################################
   # Add a log entry
   ##############################################################################
-  echo "--- $(date -Is) deployed $IMAGE (previous: ${PREVIOUS:-none})" >> "$DIR/log"
+  echo "--- $(date -Is) deployed $IMAGE (previous: ${PREVIOUS_TAG:-none})" >> "$DIR/log"
 
   ##############################################################################
-  # Crontab
+  # Add the crontab line
   ##############################################################################
   CRON_LINE=$(crontab -l 2>/dev/null | grep -F 'moon-over-oakland/run.sh' || true)
   if [ -z "$CRON_LINE" ]; then
@@ -155,14 +193,13 @@ RUN_SH
   ##############################################################################
   # Prune
   ##############################################################################
-  # Keeps the live tag and the one before it for rollback. Never `docker image
-  # prune -a`: the container only exists at 6:00, so prune would take the live
-  # image too. A rerun of the live tag skips this, since the tag before it isn't
-  # known.
-  if [ "$PREVIOUS" != "$TAG" ]; then
+  # Keeps the live tag and the one before it. Never `docker image prune -a`: the
+  # container only exists at 6:00 AM, so prune would take the live image too. A
+  #rerun of the live tag skips this, since the tag before it isn't known.
+  if [ "$PREVIOUS_TAG" != "$TAG" ]; then
     docker image ls --format '{{.Tag}}' "$REPO" | while read -r tag; do
       case $tag in
-        "$TAG" | "$PREVIOUS" | '<none>') ;;
+        "$TAG" | "$PREVIOUS_TAG" | '<none>') ;;
         *) docker image rm "$REPO:$tag" ;;
       esac
     done
@@ -170,8 +207,8 @@ RUN_SH
 
   echo
   echo "Live: $IMAGE"
-  if [ -n "$PREVIOUS" ] && [ "$PREVIOUS" != "$TAG" ]; then
-    echo "To roll back, rerun with $PREVIOUS."
+  if [ -n "$PREVIOUS_TAG" ] && [ "$PREVIOUS_TAG" != "$TAG" ]; then
+    echo "To roll back, run ~/moon-over-oakland/update.sh $PREVIOUS_TAG."
   fi
 }
 

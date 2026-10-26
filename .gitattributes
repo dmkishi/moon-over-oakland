@@ -1,1 +1,2 @@
 assets/*.png filter=lfs diff=lfs merge=lfs -text
+scripts/install-raspberry-pi/*.in linguist-language=Shell

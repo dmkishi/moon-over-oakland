@@ -1,0 +1,17 @@
+#!/bin/sh
+#
+# DO NOT EDIT. Written by install-raspberry-pi.sh, which overwrites this file on
+# every run. Re-run it to change the image.
+#
+# Usage: dry-run.sh [YYYY-MM-DD]
+#
+# Renders a post without posting or pinging Healthchecks.io. Defaults to the
+# test full moon.
+
+set -eu
+
+IMAGE=@IMAGE@
+FULL_MOON_DATE=@FULL_MOON_DATE@
+
+[ $# -gt 0 ] || set -- "$FULL_MOON_DATE"
+exec docker run --rm --pull=never "$IMAGE" --dry-run "$@"
