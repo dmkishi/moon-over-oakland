@@ -6,6 +6,7 @@
 #
 # - Optional `sha-<short>` argument. If omitted, it deploys the newest image
 #   built from `main`.
+# - The first run prompts for the secrets in `env`.
 # - Safe to rerun. To roll back, run it with an earlier tag.
 # - Reads INSTALLER_URL from the environment, to install on a test deployment
 #   from a development branch. Defaults to the URL above.
@@ -54,6 +55,42 @@ is_sha_tag() (
   esac
 )
 
+# Prompts for a value on the terminal. Reads /dev/tty, since under `curl | sh`
+# stdin is the script itself. Re-prompts on a quoted value, since Docker's
+# --env-file would keep the quotes.
+#
+# Arguments:
+#   Prompt text.
+#   `required` to re-prompt until a value is entered, or `optional`.
+#   `secret` to hide the input, or nothing.
+# Outputs:
+#   Writes the prompt to stderr and the value to stdout.
+ask() (
+  # Restores echo even when Ctrl-C interrupts a hidden read.
+  trap 'stty echo < /dev/tty' EXIT
+  trap 'exit 130' INT TERM
+  while :; do
+    printf '%s: ' "$1" >&2
+    if [ "${3:-}" = secret ]; then
+      stty -echo < /dev/tty
+      IFS= read -r value < /dev/tty
+      stty echo < /dev/tty
+      echo >&2
+    else
+      IFS= read -r value < /dev/tty
+    fi
+    case $value in
+      \"* | \'*) echo 'Enter it without quotes.' >&2 ;;
+      '')
+        [ "$2" = required ] || break
+        echo 'This is required.' >&2
+        ;;
+      *) break ;;
+    esac
+  done
+  printf '%s\n' "$value"
+)
+
 # Escapes text so sed inserts it literally as a replacement.
 #
 # Arguments:
@@ -89,6 +126,10 @@ main() {
   [ -z "$TAG" ] || is_sha_tag "$TAG" || fail 'Usage: install-raspberry-pi.sh [sha-<short>]'
   INSTALLER_URL=${INSTALLER_URL:-$DEFAULT_INSTALLER_URL}
 
+  # Reject non-interactive sessions.
+  [ -f "$DIR/env" ] || (: < /dev/tty) 2>/dev/null ||
+    fail 'No terminal to prompt for the secrets. Run it in an interactive session, e.g. `ssh -t`.'
+
   ##############################################################################
   # Check host configuration
   ##############################################################################
@@ -112,8 +153,18 @@ main() {
   ##############################################################################
   install -d -m 0700 "$DIR"
   if [ ! -f "$DIR/env" ]; then
-    (umask 077 && printf '%s\n' BLUESKY_HANDLE= BLUESKY_APP_PASSWORD= HEALTHCHECKS_URL= > "$DIR/env")
-    fail "Created $DIR/env. Fill in the values, unquoted, then rerun. HEALTHCHECKS_URL is optional."
+    echo "Creating $DIR/env."
+    handle=$(ask 'BLUESKY_HANDLE (e.g. your-handle.bsky.social)' required)
+    password=$(ask 'BLUESKY_APP_PASSWORD (hidden)' required secret)
+    healthchecks_url=$(ask 'HEALTHCHECKS_URL (optional, press Enter to skip)' optional)
+    (
+      umask 077
+      printf '%s\n' \
+        "BLUESKY_HANDLE=$handle" \
+        "BLUESKY_APP_PASSWORD=$password" \
+        "HEALTHCHECKS_URL=$healthchecks_url" \
+        > "$DIR/env"
+    )
   fi
 
   for key in BLUESKY_HANDLE BLUESKY_APP_PASSWORD; do

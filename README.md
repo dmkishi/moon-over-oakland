@@ -161,30 +161,25 @@ Hosts](#alternative-hosts) for other options.
 - **Docker**: Installed, with your user in the `docker` group so cron can run it
 
 ### Install
-#### 1. Run the install script and fill in the secrets
+#### 1. Run the install script
 ```sh
 curl -fsSL https://raw.githubusercontent.com/dmkishi/moon-over-oakland/main/scripts/install-raspberry-pi.sh | sh
 ```
 
-The first run creates `~/moon-over-oakland/env` and stops.
+The script checks the Raspberry Pi against the requirements. On the first run,
+it then prompts for the secrets and saves them to `~/moon-over-oakland/env`:
 
-Populate `~/moon-over-oakland/env` **without quotes**. `HEALTHCHECKS_URL` is
-optional, see [step 3](#3-set-up-healthchecksio-optional):
+1. `BLUESKY_HANDLE`: e.g. `your-handle.bsky.social`
+1. `BLUESKY_APP_PASSWORD`: e.g. `xxxx-xxxx-xxxx-xxxx`
+1. `HEALTHCHECKS_URL`: Optional, press Enter to skip. See [step 2](
+   #2-set-up-healthchecksio-optional).
 
-```sh
-BLUESKY_HANDLE=your-handle.bsky.social
-BLUESKY_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
-HEALTHCHECKS_URL=https://hc-ping.com/<uuid>
-```
-
-#### 2. Run the install script again
-On the second run, the script checks the Raspberry Pi against the requirements,
-pulls the newest Docker image built from `main`, and dry-runs a test full moon
+Next, it pulls the newest Docker image built from `main` and dry-runs a test
 post. If it passes, it installs `run.sh`, `update.sh`, `dry-run.sh` and adds a
 crontab line. It prints `Live: ghcr.io/dmkishi/moon-over-oakland:sha-<short>`
 when done.
 
-#### 3. Set up Healthchecks.io (optional)
+#### 2. Set up Healthchecks.io (optional)
 [Healthchecks.io](https://healthchecks.io) is optional but strongly recommended,
 since it is the only way you'll hear that a run failed or never happened.
 
