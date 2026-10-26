@@ -14,6 +14,10 @@ The posts are written for a general audience.
     See [observer distance](docs/observer-distance.md).
 - **Posts on the four principal phases**: new moon, first quarter, full moon,
   and last quarter. See [posting algorithm](docs/posting-algorithm.md).
+  - **Each post carries an image of the Moon** at the phase instant, rendered
+    locally from NASA LRO maps: true size, libration, axis tilt, and terrain
+    shadows along the terminator, celestial north up. See [rendering attributes](
+    docs/moon-attributes.md#rendering-attributes).
 - **Ships as an ARM64 Docker image** on GHCR (GitHub Container Registry) that
   runs on Apple Silicon Macs, 64-bit Raspberry Pis, etc. **Rebuilt weekly** to
   pick up base image security patches.
@@ -32,6 +36,7 @@ The posts are written for a general audience.
    1. [Maintenance](#maintenance)
    1. [Alternative Hosts](#alternative-hosts)
 1. [See Also](#see-also)
+1. [Credits](#credits)
 1. [License](#license)
 
 Develop
@@ -100,13 +105,53 @@ pnpm preview               # Preview post with calculated data (NEVER posts)
 pnpm preview 2026-01-01    # Optionally specify a date
 ```
 
-#### NASA JPL Horizons
+`--image=<path>` is for local runs. It doesn't work in Docker: the container
+runs as `node` in a directory owned by `root`, and `--rm` discards it anyway.
+
+If the image fails, the text posts alone, the run pings Healthchecks.io's
+`/fail`, and the process exits 0 so `run.sh` doesn't retry over it. Under
+`--dry-run` it exits 1 instead, which fails the Docker smoke test.
+
+#### Moon Image Textures
 ```sh
-pnpm horizons [YYYY-MM-DD] [--every=<interval>] [--show-table] [--show-csv] [--show-raw] [--no-summary] [--no-json]
+pnpm generate-moon-assets
 ```
 
+Regenerates `assets/moon-color.png` and `assets/moon-height.png` from NASA's
+[CGI Moon Kit](https://svs.gsfc.nasa.gov/4720): the 4k LROC color map and the
+16 px/deg LOLA elevation map, about 95 MB of downloads. Downloads are cached in
+the OS temp directory and checked against SHA-256 hashes pinned in
+[the script](scripts/generate-moon-assets.ts). The color map is reduced
+from 16-bit to 8-bit, and the regnerated PNGs are about 42 MB together.
+
+[`assets/manifest.json`](assets/manifest.json) records the sources, their
+hashes, the sharp and libvips versions, and a SHA-256 of each output's decoded
+pixels. A rebuild should reproduce those pixel hashes even where the PNG bytes
+differ.
+
+Every rebuild adds a full copy to Git LFS history for good, so commit new
+textures only when they change.
+
+#### NASA JPL Horizons
 Use this script to request authoritative data from [JPL Horizons](
-https://ssd.jpl.nasa.gov/horizons/) for debugging or creating test fixtures.
+https://ssd.jpl.nasa.gov/horizons/) for debugging or creating test fixtures. It
+has two subcommands, `sky` and `disc`.
+
+Both take a civil day in Oakland, midnight to midnight. The bot's posting day
+runs from 4:00 AM to 4:00 AM instead (see [posting algorithm](
+docs/posting-algorithm.md)), so the full moon at 2:02 AM on 2026-01-03 is posted
+on the 2nd but shows up under `pnpm horizons sky 2026-01-03` and `pnpm horizons
+disc 2026-01-03`. The values are the same either way; only the date differs.
+
+The location and timezone are sourced from [`src/observer.ts`](src/observer.ts).
+
+##### `sky`: Oakland's view of the Moon
+```sh
+pnpm horizons sky [YYYY-MM-DD] [--every=<interval>] [--show-table] [--show-csv] [--show-raw] [--no-summary] [--no-json]
+```
+
+Summarizes moonrise and moonset, azimuth, tilt, illumination, distance, and any
+phase event over one day.
 
 - **Positional Argument**
   - `YYYY-MM-DD` Observation date; leading zeroes optional (`2000-1-2`).
@@ -132,8 +177,24 @@ sampled row, so the step size *is* the event resolution. The phase event is
 unaffected: it is sampled on its own schedule and interpolated between samples
 rather than snapped to one.
 
-**Note**: The location and timezone are sourced from [`src/observer.ts`](
-src/observer.ts).
+##### `disc`: the Moon's face
+```sh
+pnpm horizons disc [YYYY-MM-DD | YYYY]
+```
+
+Prints rows for [`tests/fixtures/moon-disc.accuracy.jsonc`](
+tests/fixtures/moon-disc.accuracy.jsonc): the Moon's disc as seen from Earth's
+center.
+
+- **Positional Argument**
+  - `YYYY-MM-DD` One row per hour of that day, labeled `sample`, plus a row at
+    any principal phase in it. Defaults to today.
+  - `YYYY` One row per principal phase from January 1 through December 31,
+    and no hourly rows.
+
+`disc` takes no flags. The one-hour step is fixed to match [Dial-a-Moon](
+https://svs.gsfc.nasa.gov/help/#apis-dialamoon)'s hourly frames; the disc changes
+too slowly for a finer step to show anything new.
 
 ### Docker Image
 [`image.yml`](.github/workflows/image.yml) builds and smoke tests the image on
@@ -231,6 +292,12 @@ them on each deploy, so `env` is the only file to edit.
 See Also
 --------------------------------------------------------------------------------
 - [Solar San Francisco](https://bsky.app/profile/sanfran.solar.v.cx) on Bluesky.
+
+Credits
+--------------------------------------------------------------------------------
+The moon image is rendered from NASA's Scientific Visualization Studio
+[CGI Moon Kit](https://svs.gsfc.nasa.gov/4720): LRO LROC WAC color and LOLA
+elevation data. Each image's alt text carries the credit as well.
 
 License
 --------------------------------------------------------------------------------
