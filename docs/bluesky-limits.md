@@ -8,8 +8,6 @@ Sources:
 Profile
 --------------------------------------------------------------------------------
 - **Bio/description**: 256 graphemes
-  >Moon phases for Oaklanders. Also works fine across the SFBA: San Francisco, San
-Jose, even Sacramento if you can tolerate a few minutes of drift.
 - **Avatar**: 1 MB
 
 Post
