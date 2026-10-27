@@ -1,4 +1,6 @@
-import { writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
 import pc from 'picocolors';
 import { parseCliArgs } from './args.ts';
 import { createBlueskyClient, graphemeLength, MAX_GRAPHEMES, type PostImage } from './bluesky.ts';
@@ -80,7 +82,7 @@ function parseCliArgsOrExit(): ReturnType<typeof parseCliArgs> {
     return parseCliArgs();
   } catch (error) {
     console.error(pc.red(error instanceof Error ? error.message : String(error)));
-    console.error('Usage: node src/main.ts [YYYY-MM-DD] [--test] [--dry-run] [--image=<path>]');
+    console.error('Usage: node src/main.ts [YYYY-MM-DD] [--test] [--dry-run]');
     return process.exit(1);
   }
 }
@@ -113,15 +115,21 @@ async function createPostImage(
   console.log(`Image (${image.width} × ${image.height} px, ${size}/${formatKb(MAX_IMAGE_BYTES)}, ${seconds} s)`);
 
   const alt = renderAltText(phaseEvent, disc.illuminatedFraction, observer.timezone);
-  console.log(`  Alt: ${pc.blue(alt)}`);
+  console.log(`- Alt: ${pc.blue(alt)}`);
 
+  // A write or preview that fails must not mark the run degraded, which fails a
+  // dry run.
   if (imagePath !== undefined) {
-    await writeFile(imagePath, image.jpeg);
-    console.log(`  Written to ${imagePath}`);
+    try {
+      await mkdir(dirname(imagePath), { recursive: true });
+      await writeFile(imagePath, image.jpeg);
+      console.log(`- Written to ${imagePath}`);
+    } catch (error) {
+      console.error(pc.yellow('Image write failed:'), error);
+    }
   }
   console.log(); // Empty line break
 
-  // A preview that fails must not mark the run degraded, which fails a dry run.
   if (isPreviewShown) {
     try {
       process.stdout.write(`${await renderInlineImage(image.jpeg)}\n`);
@@ -137,7 +145,7 @@ async function createPostImage(
  * @returns If the run was degraded: the image failed and only the text was
  * posted.
  */
-async function main({ date, isTest, isDryRun, imagePath }: ReturnType<typeof parseCliArgs>): Promise<boolean> {
+async function main({ date, isTest, isDryRun }: ReturnType<typeof parseCliArgs>): Promise<boolean> {
   const observerDate = date ?? Temporal.Now.plainDateISO(observer.timezone);
 
   console.log(); // Empty line break
@@ -204,7 +212,8 @@ async function main({ date, isTest, isDryRun, imagePath }: ReturnType<typeof par
   let image: PostImage | undefined;
   try {
     image = await createPostImage(phaseEvent, {
-      imagePath,
+      // Under Docker, `--rm` discards the container's `/tmp` with the image.
+      imagePath: isDryRun ? join(tmpdir(), 'moon-over-oakland', 'previews', `${observerDate.toString()}.jpg`) : undefined,
       isPreviewShown: isDryRun && supportsInlineImages(process.env, process.stdout.isTTY ?? false),
     });
   } catch (error) {

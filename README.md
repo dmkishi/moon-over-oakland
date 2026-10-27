@@ -105,11 +105,13 @@ pnpm preview               # Preview post with calculated data (NEVER posts)
 pnpm preview 2026-01-01    # Optionally specify a date
 ```
 
+#### Moon Image
+`pnpm preview` saves the moon image to the OS temp directory and prints its
+path. Under Docker, `--rm` discards it with the container. A failed save only
+logs a warning.
+
 `pnpm preview` also shows the moon image inline in iTerm2, WezTerm, and VS
 Code. VS Code only draws it with `"terminal.integrated.enableImages": true`.
-
-`--image=<path>` is for local runs. It doesn't work in Docker: the container
-runs as `node` in a directory owned by `root`, and `--rm` discards it anyway.
 
 If the image fails, the text posts alone, the run pings Healthchecks.io's
 `/fail`, and the process exits 0 so `run.sh` doesn't retry over it. Under
@@ -125,7 +127,7 @@ Regenerates `assets/moon-color.png` and `assets/moon-height.png` from NASA's
 16 px/deg LOLA elevation map, about 95 MB of downloads. Downloads are cached in
 the OS temp directory and checked against SHA-256 hashes pinned in
 [the script](scripts/generate-moon-assets.ts). The color map is reduced
-from 16-bit to 8-bit, and the regnerated PNGs are about 42 MB together.
+from 16-bit to 8-bit, and the regenerated PNGs are about 42 MB together.
 
 [`assets/manifest.json`](assets/manifest.json) records the sources, their
 hashes, the sharp and libvips versions, and a SHA-256 of each output's decoded

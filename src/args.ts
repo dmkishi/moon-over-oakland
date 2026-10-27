@@ -39,11 +39,9 @@ function parseDateArg(arg: string | undefined): Temporal.PlainDate | undefined {
  * - an optional date to post for (defaulting to today, signalled by `undefined`)
  * - an optional `--test` flag, selecting the test account's credentials
  * - an optional `--dry-run` flag
- * - an optional `--image=<path>`, save moon image to `<path>`
  *
  * @example
  * parseCliArgs([]); // { date: undefined, isTest: false, isDryRun: false }
- * parseCliArgs(['--dry-run', '--image=moon.jpg']); // { date: undefined, isTest: false, isDryRun: true, imagePath: 'moon.jpg' }
  * parseCliArgs(['--dry-run']); // { date: undefined, isTest: false, isDryRun: true }
  * parseCliArgs(['--test']); // { date: undefined, isTest: true, isDryRun: false }
  * parseCliArgs(['1999-01-31']); // Throws Error: a date requires --test or --dry-run
@@ -55,14 +53,12 @@ export function parseCliArgs(args: string[] = process.argv.slice(2)): {
   date: Temporal.PlainDate | undefined;
   isTest: boolean;
   isDryRun: boolean;
-  imagePath?: string;
 } {
   const { positionals, values } = parseArgs({
     args,
     options: {
       'test': { type: 'boolean', default: false },
       'dry-run': { type: 'boolean', default: false },
-      'image': { type: 'string' },
     },
     allowPositionals: true,
     strict: true,
@@ -77,14 +73,9 @@ export function parseCliArgs(args: string[] = process.argv.slice(2)): {
     throw new Error('A date requires --test or --dry-run. A live post is for today only.');
   }
 
-  if (values.image === '') {
-    throw new Error('--image needs a path, e.g. --image=moon.jpg');
-  }
-
   return {
     date,
     isTest: values.test,
     isDryRun: values['dry-run'],
-    ...(values.image === undefined ? {} : { imagePath: values.image }),
   };
 }
