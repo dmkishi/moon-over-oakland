@@ -10,6 +10,7 @@ import { createMonitor } from './monitor.ts';
 import { observer } from './observer.ts';
 import { calculatePhaseEvent, type PhaseEvent } from './phase-event.ts';
 import { renderAltText, renderPost } from './post.ts';
+import { renderInlineImage, supportsInlineImages } from './terminal-image.ts';
 
 // Load `.env` into `process.env` without overriding variables already set, so
 // secrets injected by the host win. Unlike dotenv, a missing file throws.
@@ -86,9 +87,20 @@ function parseCliArgsOrExit(): ReturnType<typeof parseCliArgs> {
 
 /**
  * Create moon image at the phase instant as a JPEG with its alt text.
- * Optionally saves it to `imagePath`.
+ * Optionally:
+ * - saves it to `imagePath`
+ * - shows it inline in the terminal when `isPreviewShown`
  */
-async function createPostImage(phaseEvent: PhaseEvent, imagePath: string | undefined): Promise<PostImage> {
+async function createPostImage(
+  phaseEvent: PhaseEvent,
+  {
+    imagePath,
+    isPreviewShown,
+  }: {
+    imagePath: string | undefined,
+    isPreviewShown: boolean,
+  },
+): Promise<PostImage> {
   const start = performance.now();
   const disc = moonDisc(phaseEvent.time.toInstant());
   const textures = await loadMoonTextures();
@@ -108,6 +120,15 @@ async function createPostImage(phaseEvent: PhaseEvent, imagePath: string | undef
     console.log(`  Written to ${imagePath}`);
   }
   console.log(); // Empty line break
+
+  // A preview that fails must not mark the run degraded, which fails a dry run.
+  if (isPreviewShown) {
+    try {
+      process.stdout.write(`${await renderInlineImage(image.jpeg)}\n`);
+    } catch (error) {
+      console.error(pc.yellow('Preview failed:'), error);
+    }
+  }
 
   return { ...image, alt };
 }
@@ -182,7 +203,10 @@ async function main({ date, isTest, isDryRun, imagePath }: ReturnType<typeof par
   // the image.
   let image: PostImage | undefined;
   try {
-    image = await createPostImage(phaseEvent, imagePath);
+    image = await createPostImage(phaseEvent, {
+      imagePath,
+      isPreviewShown: isDryRun && supportsInlineImages(process.env, process.stdout.isTTY ?? false),
+    });
   } catch (error) {
     console.error(pc.red('Image failed. Posting the text alone:'), error);
     console.log(); // Empty line break

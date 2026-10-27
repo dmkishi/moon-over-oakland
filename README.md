@@ -105,6 +105,9 @@ pnpm preview               # Preview post with calculated data (NEVER posts)
 pnpm preview 2026-01-01    # Optionally specify a date
 ```
 
+`pnpm preview` also shows the moon image inline in iTerm2, WezTerm, and VS
+Code. VS Code only draws it with `"terminal.integrated.enableImages": true`.
+
 `--image=<path>` is for local runs. It doesn't work in Docker: the container
 runs as `node` in a directory owned by `root`, and `--rm` discards it anyway.
 
