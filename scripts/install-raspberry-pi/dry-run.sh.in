@@ -10,8 +10,15 @@
 
 set -eu
 
-IMAGE=@IMAGE@
 FULL_MOON_DATE=@FULL_MOON_DATE@
+IMAGE=@IMAGE@
 
-[ $# -gt 0 ] || set -- "$FULL_MOON_DATE"
+# If a date is passed in, use it. Otherwise, use the test full moon date.
+date_passed_in() { [ $# -gt 0 ]; }
+if date_passed_in "$@"; then
+  DATE=$1
+else
+  DATE=$FULL_MOON_DATE
+fi
+
 exec docker run --rm --pull=never "$IMAGE" --dry-run "$@"

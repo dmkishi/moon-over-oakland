@@ -11,5 +11,5 @@ set -eu
 
 INSTALLER_URL='@INSTALLER_URL@'
 
-script=$(curl -fsSL "$INSTALLER_URL")
-printf '%s\n' "$script" | INSTALLER_URL=$INSTALLER_URL sh -s -- "$@"
+installer=$(curl -fsSL "$INSTALLER_URL")
+printf '%s\n' "$installer" | INSTALLER_URL=$INSTALLER_URL sh -s -- "$@"

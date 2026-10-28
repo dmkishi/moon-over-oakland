@@ -19,6 +19,7 @@ for attempt in 1 2 3 4; do
   else
     echo 'Clock not synchronized'
   fi
+
   [ "$attempt" -lt 4 ] && sleep 300
 done
 exit 1
