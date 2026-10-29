@@ -6,12 +6,12 @@ const PREFIX = '\u001B]1337;File=inline=1;';
 const BEL = '\u0007';
 
 describe('supportsInlineImages', () => {
-  it.each(['iTerm.app', 'vscode', 'WezTerm'])('is true for TERM_PROGRAM=%s', (program) => {
+  it.each(['iTerm.app', 'vscode'])('is true for TERM_PROGRAM=%s', (program) => {
     expect(supportsInlineImages({ TERM_PROGRAM: program }, true)).toBe(true);
   });
 
-  it('is true for LC_TERMINAL=iTerm2 alone, as over SSH', () => {
-    expect(supportsInlineImages({ LC_TERMINAL: 'iTerm2' }, true)).toBe(true);
+  it.each(['iTerm2', 'vscode'])('is true for LC_TERMINAL=%s alone, as over SSH', (terminal) => {
+    expect(supportsInlineImages({ LC_TERMINAL: terminal }, true)).toBe(true);
   });
 
   it('is false when not a TTY', () => {

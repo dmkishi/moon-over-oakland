@@ -110,8 +110,11 @@ pnpm preview 2026-01-01    # Optionally specify a date
 path. Under Docker, `--rm` discards it with the container. A failed save only
 logs a warning.
 
-`pnpm preview` also shows the moon image inline in iTerm2, WezTerm, and VS
-Code. VS Code only draws it with `"terminal.integrated.enableImages": true`.
+`pnpm preview` also shows the moon image inline in:
+
+- iTerm2
+- VS Code, with `"terminal.integrated.enableImages": true`, also over SSH with a
+  `terminal.integrated.env.*` workspace setting set to `"LC_TERMINAL": "vscode"`
 
 If the image fails, the text posts alone, the run pings Healthchecks.io's
 `/fail`, and the process exits 0 so `run.sh` doesn't retry over it. Under

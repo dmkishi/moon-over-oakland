@@ -1,6 +1,6 @@
 /**
  * Shows an image inline in the terminal with iTerm2's inline images protocol
- * (OSC 1337), which iTerm2, WezTerm, and VS Code speak.
+ * (OSC 1337) supported by iTerm2 and VS Code.
  */
 import sharp from 'sharp';
 
@@ -13,17 +13,27 @@ const PREVIEW_WIDTH_CELLS = 40;
 const OSC = '\u001B]';
 const BEL = '\u0007';
 
-const SUPPORTED_TERM_PROGRAMS = new Set(['iTerm.app', 'vscode', 'WezTerm']);
+const SUPPORTED_TERM_PROGRAMS = new Set(['iTerm.app', 'vscode']);
 
 /**
- * Whether the terminal draws OSC 1337 images. `LC_TERMINAL` is set by iTerm2
- * and survives SSH, unlike `TERM_PROGRAM`. tmux swallows the sequence without
- * a passthrough wrapper, so it's skipped.
+ * - `iTerm2`: set by iTerm2.
+ * - `vscode`: set only when VS Code opens this repo's workspace
+ *   (`terminal.integrated.env.*`), since VS Code itself sets none.
+ */
+const SUPPORTED_LC_TERMINALS = new Set(['iTerm2', 'vscode']);
+
+/**
+ * Whether the terminal draws OSC 1337 images. `LC_TERMINAL` survives SSH,
+ * which forwards `LC_*` with the locale, unlike `TERM_PROGRAM`. tmux swallows
+ * the sequence without a passthrough wrapper, so it's skipped.
  * @pure
  */
 export function supportsInlineImages(env: NodeJS.ProcessEnv, isTTY: boolean): boolean {
   if (!isTTY || env.TMUX !== undefined) return false;
-  return SUPPORTED_TERM_PROGRAMS.has(env.TERM_PROGRAM ?? '') || env.LC_TERMINAL === 'iTerm2';
+  return (
+    SUPPORTED_TERM_PROGRAMS.has(env.TERM_PROGRAM ?? '') ||
+    SUPPORTED_LC_TERMINALS.has(env.LC_TERMINAL ?? '')
+  );
 }
 
 /**

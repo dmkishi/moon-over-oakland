@@ -21,4 +21,24 @@ else
   DATE=$FULL_MOON_DATE
 fi
 
-exec docker run --rm --pull=never "$IMAGE" --dry-run "$@"
+# When run from a terminal, give the container a TTY that Docker relays to ours,
+# so the app can draw the moon image inline. The app only draws the moon when
+# stdout is a TTY and the env names a terminal that supports inline images:
+# - `-it` gives the container a TTY.
+# - `--init` runs node under an init process. Without it, node runs as PID 1,
+#   which ignores Ctrl-C.
+# - `-e TERM_PROGRAM` passes in the name of a local terminal, such as iTerm2 or
+#   VS Code.
+# - `-e LC_TERMINAL` passes in the name of the terminal over SSH, which forwards
+#   `LC_*` vars with the locale but drops `TERM_PROGRAM`.
+# - `-e TMUX` passes in tmux's env var, since tmux swallows the image.
+#
+# When not run from a terminal, as when piped or run with `ssh rpi <command>`,
+# no flags are added.
+in_terminal() { [ -t 0 ] && [ -t 1 ]; }
+if in_terminal; then
+  TTY='-it --init -e TERM_PROGRAM -e LC_TERMINAL -e TMUX'
+else
+  TTY=
+fi
+exec docker run --rm --pull=never $TTY "$IMAGE" --dry-run "$DATE"
