@@ -17,7 +17,7 @@
 #    ├── update.sh   Updates or rolls back. Optionally target: update.sh [sha-<short>]
 #    ├── dry-run.sh  Dry-runs a post: dry-run.sh [YYYY-MM-DD]
 #    ├── env         Secrets, mode 0600
-#    └── log         Output of each run and each deploy
+#    └── log         One line per run and deploy, plus errors
 
 set -eu
 
@@ -226,7 +226,7 @@ main() {
   ##############################################################################
   # Add a log entry
   ##############################################################################
-  echo "--- $(date -Is) deployed $IMAGE (previous: ${PREVIOUS_TAG:-none})" >> "$DIR/log"
+  echo "$(date -Is) deployed $TAG (previous: ${PREVIOUS_TAG:-none})" >> "$DIR/log"
 
   ##############################################################################
   # Add the crontab line

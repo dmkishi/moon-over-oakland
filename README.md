@@ -272,13 +272,13 @@ Once installed, everything lives in `~/moon-over-oakland/`, plus one crontab
 line. The install script writes every file except `env` and `log`, and rewrites
 them on each deploy, so `env` is the only file to edit.
 
-| File         | Purpose                                           |
-|--------------|---------------------------------------------------|
-| `run.sh`     | **Do not edit**. Installed by the install script. |
-| `update.sh`  | **Do not edit**. Installed by the install script. |
-| `dry-run.sh` | **Do not edit**. Installed by the install script. |
-| `env`        | Secrets.                                          |
-| `log`        | Output of each run and each deploy. No rotation.  |
+| File         | Purpose                                                |
+|--------------|--------------------------------------------------------|
+| `run.sh`     | **Do not edit**. Installed by the install script.      |
+| `update.sh`  | **Do not edit**. Installed by the install script.      |
+| `dry-run.sh` | **Do not edit**. Installed by the install script.      |
+| `env`        | Secrets.                                               |
+| `log`        | One line per run and deploy, plus errors. No rotation. |
 
 - **Run**: Cron runs `run.sh`, which runs the image tag it was installed with,
   checks that the clock is synchronized with NTP, and tries to post. It makes up

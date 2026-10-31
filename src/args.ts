@@ -39,13 +39,16 @@ function parseDateArg(arg: string | undefined): Temporal.PlainDate | undefined {
  * - an optional date to post for (defaulting to today, signalled by `undefined`)
  * - an optional `--test` flag, selecting the test account's credentials
  * - an optional `--dry-run` flag
+ * - an optional `--summary` flag, printing one result line instead of the full
+ *   report
  *
  * @example
- * parseCliArgs([]); // { date: undefined, isTest: false, isDryRun: false }
- * parseCliArgs(['--dry-run']); // { date: undefined, isTest: false, isDryRun: true }
- * parseCliArgs(['--test']); // { date: undefined, isTest: true, isDryRun: false }
+ * parseCliArgs([]); // { date: undefined, isTest: false, isDryRun: false, isSummary: false }
+ * parseCliArgs(['--dry-run']); // { date: undefined, isTest: false, isDryRun: true, isSummary: false }
+ * parseCliArgs(['--test']); // { date: undefined, isTest: true, isDryRun: false, isSummary: false }
+ * parseCliArgs(['--summary']); // { date: undefined, isTest: false, isDryRun: false, isSummary: true }
  * parseCliArgs(['1999-01-31']); // Throws Error: a date requires --test or --dry-run
- * parseCliArgs(['1999-01-31', '--dry-run']); // { date: PlainDate 1999-01-31, isTest: false, isDryRun: true }
+ * parseCliArgs(['1999-01-31', '--dry-run']); // { date: PlainDate 1999-01-31, isTest: false, isDryRun: true, isSummary: false }
  * parseCliArgs(['1999-01-31', '1999-02-01']); // Throws Error: too many arguments
  * parseCliArgs(['--nope']); // Throws Error: unknown option
  */
@@ -53,12 +56,14 @@ export function parseCliArgs(args: string[] = process.argv.slice(2)): {
   date: Temporal.PlainDate | undefined;
   isTest: boolean;
   isDryRun: boolean;
+  isSummary: boolean;
 } {
   const { positionals, values } = parseArgs({
     args,
     options: {
       'test': { type: 'boolean', default: false },
       'dry-run': { type: 'boolean', default: false },
+      'summary': { type: 'boolean', default: false },
     },
     allowPositionals: true,
     strict: true,
@@ -77,5 +82,6 @@ export function parseCliArgs(args: string[] = process.argv.slice(2)): {
     date,
     isTest: values.test,
     isDryRun: values['dry-run'],
+    isSummary: values.summary,
   };
 }

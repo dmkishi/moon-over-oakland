@@ -10,7 +10,7 @@ function dateOf(args: string[]): string | undefined {
 
 describe('parseCliArgs', () => {
   it('defaults to no date and a live run', () => {
-    expect(parseCliArgs([])).toEqual({ date: undefined, isDryRun: false, isTest: false });
+    expect(parseCliArgs([])).toEqual({ date: undefined, isDryRun: false, isTest: false, isSummary: false });
   });
 
   it('reads the dry-run flag', () => {
@@ -21,11 +21,25 @@ describe('parseCliArgs', () => {
     expect(parseCliArgs(['--test']).isTest).toBe(true);
   });
 
+  it('reads the summary flag', () => {
+    expect(parseCliArgs(['--summary']).isSummary).toBe(true);
+  });
+
+  it('takes --summary alongside a date and a dry run', () => {
+    expect(parseCliArgs(['2000-01-31', '--dry-run', '--summary'])).toEqual({
+      date: Temporal.PlainDate.from('2000-01-31'),
+      isDryRun: true,
+      isTest: false,
+      isSummary: true,
+    });
+  });
+
   it('takes --test alongside a date and a dry run, in any order', () => {
     expect(parseCliArgs(['--test', '2000-01-31', '--dry-run'])).toEqual({
       date: Temporal.PlainDate.from('2000-01-31'),
       isDryRun: true,
       isTest: true,
+      isSummary: false,
     });
   });
 
@@ -42,6 +56,11 @@ describe('parseCliArgs', () => {
 
   it('rejects an unknown option', () => {
     expect(() => parseCliArgs(['--nope'])).toThrow(/ERR_PARSE_ARGS_UNKNOWN_OPTION|--nope/u);
+  });
+
+  // A typo must fail the run, not fall back to the full report.
+  it('rejects a misspelled --summary', () => {
+    expect(() => parseCliArgs(['--sumary'])).toThrow(/ERR_PARSE_ARGS_UNKNOWN_OPTION|--sumary/u);
   });
 });
 
@@ -104,6 +123,6 @@ describe('parseCliArgs date rule', () => {
 
   // An empty positional means "no date given", so there is nothing to refuse.
   it('allows an empty positional with no flag', () => {
-    expect(parseCliArgs([''])).toEqual({ date: undefined, isDryRun: false, isTest: false });
+    expect(parseCliArgs([''])).toEqual({ date: undefined, isDryRun: false, isTest: false, isSummary: false });
   });
 });

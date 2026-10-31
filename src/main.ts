@@ -25,6 +25,11 @@ try {
 const GRAPHEME_COUNT_MARGIN = 15;
 const IMAGE_BYTES_MARGIN = .1;
 
+type Log = typeof console.log;
+type TimedPostImage = PostImage & { seconds: number };
+
+const noop: Log = () => {};
+
 /**
  * E.g. "1,234 KB".
  * @pure
@@ -82,14 +87,14 @@ function parseCliArgsOrExit(): ReturnType<typeof parseCliArgs> {
     return parseCliArgs();
   } catch (error) {
     console.error(pc.red(error instanceof Error ? error.message : String(error)));
-    console.error('Usage: node src/main.ts [YYYY-MM-DD] [--test] [--dry-run]');
+    console.error('Usage: node src/main.ts [YYYY-MM-DD] [--test] [--dry-run] [--summary]');
     return process.exit(1);
   }
 }
 
 /**
- * Create moon image at the phase instant as a JPEG with its alt text.
- * Optionally:
+ * Create moon image at the phase instant as a JPEG with its alt text, and the
+ * seconds it took. Optionally:
  * - saves it to `imagePath`
  * - shows it inline in the terminal when `isPreviewShown`
  */
@@ -98,24 +103,26 @@ async function createPostImage(
   {
     imagePath,
     isPreviewShown,
+    report,
   }: {
     imagePath: string | undefined,
     isPreviewShown: boolean,
+    report: Log,
   },
-): Promise<PostImage> {
+): Promise<TimedPostImage> {
   const start = performance.now();
   const disc = moonDisc(phaseEvent.time.toInstant());
   const textures = await loadMoonTextures();
   const image = await renderMoonImage(disc, textures, { earthshine: phaseEvent.type === 'new' });
-  const seconds = ((performance.now() - start) / 1_000).toFixed(1);
+  const seconds = (performance.now() - start) / 1_000;
 
   const size = MAX_IMAGE_BYTES - image.jpeg.byteLength < MAX_IMAGE_BYTES * IMAGE_BYTES_MARGIN
     ? pc.yellow(formatKb(image.jpeg.byteLength))
     : formatKb(image.jpeg.byteLength);
-  console.log(`Image (${image.width} × ${image.height} px, ${size}/${formatKb(MAX_IMAGE_BYTES)}, ${seconds} s)`);
+  report(`Image (${image.width} × ${image.height} px, ${size}/${formatKb(MAX_IMAGE_BYTES)}, ${seconds.toFixed(1)} s)`);
 
   const alt = renderAltText(phaseEvent, disc.illuminatedFraction, observer.timezone);
-  console.log(`- Alt: ${pc.blue(alt)}`);
+  report(`- Alt: ${pc.blue(alt)}`);
 
   // A write or preview that fails must not mark the run degraded, which fails a
   // dry run.
@@ -123,12 +130,12 @@ async function createPostImage(
     try {
       await mkdir(dirname(imagePath), { recursive: true });
       await writeFile(imagePath, image.jpeg);
-      console.log(`- Written to ${imagePath}`);
+      report(`- Written to ${imagePath}`);
     } catch (error) {
       console.error(pc.yellow('Image write failed:'), error);
     }
   }
-  console.log(); // Empty line break
+  report(); // Empty line break
 
   if (isPreviewShown) {
     try {
@@ -138,22 +145,39 @@ async function createPostImage(
     }
   }
 
-  return { ...image, alt };
+  return { ...image, alt, seconds };
+}
+
+/**
+ * Summarize a post for the log.
+ * @pure
+ */
+function summarizePost(
+  type: PhaseEvent['type'],
+  graphemes: number,
+  image: TimedPostImage | undefined,
+): string {
+  if (image === undefined) return `${type} without the image, ${graphemes} graphemes`;
+  return `${type}, ${graphemes} graphemes, image ${formatKb(image.jpeg.byteLength)} in ${image.seconds.toFixed(1)} s`;
 }
 
 /**
  * @returns If the run was degraded: the image failed and only the text was
  * posted.
  */
-async function main({ date, isTest, isDryRun }: ReturnType<typeof parseCliArgs>): Promise<boolean> {
+async function main({ date, isTest, isDryRun, isSummary }: ReturnType<typeof parseCliArgs>): Promise<boolean> {
   const observerDate = date ?? Temporal.Now.plainDateISO(observer.timezone);
 
-  console.log(); // Empty line break
-  console.log('Moon Over Oakland');
-  console.log('================================================================================');
-  console.log(`Date:    ${formatLocalDate(observerDate)} (${observer.timezone})`);
-  console.log(`Account: ${isTest ? pc.yellow('test') : 'production'}`);
-  console.log(`Dry run: ${isDryRun ? pc.yellow('true') : 'false'}`);
+  // `--summary` swaps the report for a single-line log entry.
+  const report: Log = isSummary ? noop : console.log;
+  const summary: Log = isSummary ? console.log : noop;
+
+  report(); // Empty line break
+  report('Moon Over Oakland');
+  report('================================================================================');
+  report(`Date:    ${formatLocalDate(observerDate)} (${observer.timezone})`);
+  report(`Account: ${isTest ? pc.yellow('test') : 'production'}`);
+  report(`Dry run: ${isDryRun ? pc.yellow('true') : 'false'}`);
 
   const phaseEvent = calculatePhaseEvent(
     observerDate,
@@ -163,32 +187,33 @@ async function main({ date, isTest, isDryRun }: ReturnType<typeof parseCliArgs>)
   );
 
   if (phaseEvent === null) {
-    console.log(); // Empty line break
-    console.log(pc.red('No principal phase event. Nothing to post.'));
+    report(); // Empty line break
+    report(pc.red('No principal phase event. Nothing to post.'));
+    summary('no phase event');
     return false;
   }
 
-  console.log('Data:');
-  console.log(`  Phase Type:      ${phaseEvent.type}`);
-  console.log(`  Phase Instant:   ${formatLocal(phaseEvent.time, observerDate)} (${phaseEvent.day})`);
-  console.log('  Events:');
-  console.log('    Moon:');
-  console.log(`      Rise:        ${formatLocal(phaseEvent.dayEvents.moonrise, observerDate)}`);
-  console.log(`      Set:         ${formatLocal(phaseEvent.dayEvents.moonset, observerDate)}`);
-  console.log('    Sun:');
-  console.log(`      Rise:        ${formatLocal(phaseEvent.dayEvents.sunrise, observerDate)}`);
-  console.log(`      Set:         ${formatLocal(phaseEvent.dayEvents.sunset, observerDate)}`);
-  console.log('    Deltas (minutes):');
+  report('Data:');
+  report(`  Phase Type:      ${phaseEvent.type}`);
+  report(`  Phase Instant:   ${formatLocal(phaseEvent.time, observerDate)} (${phaseEvent.day})`);
+  report('  Events:');
+  report('    Moon:');
+  report(`      Rise:        ${formatLocal(phaseEvent.dayEvents.moonrise, observerDate)}`);
+  report(`      Set:         ${formatLocal(phaseEvent.dayEvents.moonset, observerDate)}`);
+  report('    Sun:');
+  report(`      Rise:        ${formatLocal(phaseEvent.dayEvents.sunrise, observerDate)}`);
+  report(`      Set:         ${formatLocal(phaseEvent.dayEvents.sunset, observerDate)}`);
+  report('    Deltas (minutes):');
   // Two lines below start one column left of all other values so the sign hangs
   // and the digits remain aligned.
-  console.log(`      Moonrise ∆: ${formatSigned(phaseEvent.eventDeltas.moonrise.minutes)} (${formatRelation(phaseEvent.eventDeltas.moonrise)})`);
-  console.log(`      Moonset ∆:  ${formatSigned(phaseEvent.eventDeltas.moonset.minutes)} (${formatRelation(phaseEvent.eventDeltas.moonset)})`);
-  console.log('  Next Phases:');
-  console.log(`    New:           ${formatLocalDate(phaseEvent.nextPhases['new'])}`);
-  console.log(`    First Quarter: ${formatLocalDate(phaseEvent.nextPhases['first-quarter'])}`);
-  console.log(`    Full:          ${formatLocalDate(phaseEvent.nextPhases['full'])}`);
-  console.log(`    Last Quarter:  ${formatLocalDate(phaseEvent.nextPhases['last-quarter'])}`);
-  console.log(); // Empty line break
+  report(`      Moonrise ∆: ${formatSigned(phaseEvent.eventDeltas.moonrise.minutes)} (${formatRelation(phaseEvent.eventDeltas.moonrise)})`);
+  report(`      Moonset ∆:  ${formatSigned(phaseEvent.eventDeltas.moonset.minutes)} (${formatRelation(phaseEvent.eventDeltas.moonset)})`);
+  report('  Next Phases:');
+  report(`    New:           ${formatLocalDate(phaseEvent.nextPhases['new'])}`);
+  report(`    First Quarter: ${formatLocalDate(phaseEvent.nextPhases['first-quarter'])}`);
+  report(`    Full:          ${formatLocalDate(phaseEvent.nextPhases['full'])}`);
+  report(`    Last Quarter:  ${formatLocalDate(phaseEvent.nextPhases['last-quarter'])}`);
+  report(); // Empty line break
 
   const content = renderPost(phaseEvent, observer.timezone);
   const graphemes = graphemeLength(content);
@@ -196,11 +221,11 @@ async function main({ date, isTest, isDryRun }: ReturnType<typeof parseCliArgs>)
     ? pc.yellow(String(graphemes))
     : String(graphemes);
 
-  console.log(`Post (${graphemeCount}/${MAX_GRAPHEMES} graphemes):`);
-  console.log('--------------------------------------------------------------------------------');
-  console.log(pc.blue(content));
-  console.log('--------------------------------------------------------------------------------');
-  console.log(); // Empty line break
+  report(`Post (${graphemeCount}/${MAX_GRAPHEMES} graphemes):`);
+  report('--------------------------------------------------------------------------------');
+  report(pc.blue(content));
+  report('--------------------------------------------------------------------------------');
+  report(); // Empty line break
 
   if (graphemes > MAX_GRAPHEMES) {
     throw new Error(`Post is ${graphemes} graphemes, over Bluesky's limit of ${MAX_GRAPHEMES}.`);
@@ -209,21 +234,24 @@ async function main({ date, isTest, isDryRun }: ReturnType<typeof parseCliArgs>)
   // A post without its image beats no post, so a failed image is logged and
   // only the text is posted. Dry runs render too, so the smoke test exercises
   // the image.
-  let image: PostImage | undefined;
+  let image: TimedPostImage | undefined;
   try {
     image = await createPostImage(phaseEvent, {
       // Under Docker, `--rm` discards the container's `/tmp` with the image.
-      imagePath: isDryRun ? join(tmpdir(), 'moon-over-oakland', 'previews', `${observerDate.toString()}.jpg`) : undefined,
-      isPreviewShown: isDryRun && supportsInlineImages(process.env, process.stdout.isTTY ?? false),
+      imagePath: isDryRun && !isSummary ? join(tmpdir(), 'moon-over-oakland', 'previews', `${observerDate.toString()}.jpg`) : undefined,
+      isPreviewShown: isDryRun && !isSummary && supportsInlineImages(process.env, process.stdout.isTTY ?? false),
+      report,
     });
   } catch (error) {
     console.error(pc.red('Image failed. Posting the text alone:'), error);
-    console.log(); // Empty line break
+    report(); // Empty line break
   }
   const isDegraded = image === undefined;
+  const postSummary = summarizePost(phaseEvent.type, graphemes, image);
 
   if (isDryRun) {
-    console.log(pc.yellow('Dry run: skipping actual post.'));
+    report(pc.yellow('Dry run: skipping actual post.'));
+    summary(`dry run: ${postSummary}`);
     return isDegraded;
   }
 
@@ -236,12 +264,14 @@ async function main({ date, isTest, isDryRun }: ReturnType<typeof parseCliArgs>)
   );
   const result = await client.post(content, image);
   if (result.status === 'skipped') {
-    console.log(pc.yellow('Already posted today: skipping.'));
+    report(pc.yellow('Already posted today: skipping.'));
+    summary('already posted today');
     return isDegraded;
   }
-  console.log(isDegraded ? pc.yellow('Posted without the image.') : pc.green('Posted successfully!'));
-  console.log(`Account: @${env.bluesky.handle}`);
-  console.log(`URI: ${result.uri}`);
+  report(isDegraded ? pc.yellow('Posted without the image.') : pc.green('Posted successfully!'));
+  report(`Account: @${env.bluesky.handle}`);
+  report(`URI: ${result.uri}`);
+  summary(`posted ${postSummary} → ${result.uri}`);
   return isDegraded;
 }
 
