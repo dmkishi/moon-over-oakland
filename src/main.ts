@@ -231,17 +231,18 @@ async function main({ date, isTest, isDryRun, isSummary }: ReturnType<typeof par
     throw new Error(`Post is ${graphemes} graphemes, over Bluesky's limit of ${MAX_GRAPHEMES}.`);
   }
 
-  // A post without its image beats no post, so a failed image is logged and
-  // only the text is posted. Dry runs render too, so the smoke test exercises
-  // the image.
+  const isImageSaved = isDryRun && !isSummary;
+  const imagePath = isImageSaved
+    ? join(tmpdir(), 'moon-over-oakland', 'previews', `${observerDate.toString()}.jpg`)
+    : undefined;
+  const isPreviewShown = isImageSaved && supportsInlineImages(process.env, process.stdout.isTTY ?? false);
+
+  // A post without its image is preferable over a no-post, so a failed image is
+  // logged and only the text is posted. Dry runs render too, so the smoke test
+  // exercises the image.
   let image: TimedPostImage | undefined;
   try {
-    image = await createPostImage(phaseEvent, {
-      // Under Docker, `--rm` discards the container's `/tmp` with the image.
-      imagePath: isDryRun && !isSummary ? join(tmpdir(), 'moon-over-oakland', 'previews', `${observerDate.toString()}.jpg`) : undefined,
-      isPreviewShown: isDryRun && !isSummary && supportsInlineImages(process.env, process.stdout.isTTY ?? false),
-      report,
-    });
+    image = await createPostImage(phaseEvent, { imagePath, isPreviewShown, report });
   } catch (error) {
     console.error(pc.red('Image failed. Posting the text alone:'), error);
     report(); // Empty line break
