@@ -5,6 +5,8 @@
 import type { PhaseEvent } from './phase-event.ts';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const LONG_WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const LONG_MONTHS = ['Jan.', 'Feb.', 'March', 'April', 'May', 'June', 'July', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
 
 /**
  * E.g. "9/18 (Thu)".
@@ -12,6 +14,14 @@ const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
  */
 function formatDate(zoned: Temporal.ZonedDateTime): string {
   return `${zoned.month}/${zoned.day} (${WEEKDAYS[zoned.dayOfWeek - 1]})`;
+}
+
+/**
+ * E.g. "Nov. 1, 2026 (Sunday)".
+ * @pure
+ */
+function formatLongDate(zoned: Temporal.ZonedDateTime): string {
+  return `${LONG_MONTHS[zoned.month - 1]} ${zoned.day}, ${zoned.year} (${LONG_WEEKDAYS[zoned.dayOfWeek - 1]})`;
 }
 
 /**
@@ -46,8 +56,8 @@ export function renderAltText(
   const zoned = phaseEvent.time.withTimeZone(timezone);
   const percent = (illuminatedFraction * 100).toFixed(1);
   const sentences = [
-    `${PHASE_NAMES[phaseEvent.type]}, ${percent}% illuminated, as seen from Earth at ${formatTime(zoned)} on ${formatDate(zoned)}, celestial north up.`,
-    'Rendered from NASA LRO data (NASA SVS CGI Moon Kit).',
+    `${PHASE_NAMES[phaseEvent.type]} (${percent}% illuminated) at ${formatTime(zoned)} on ${formatLongDate(zoned)}, celestial north up.`,
+    'Rendered from NASA SVS CGI Moon Kit.',
   ];
   // At conjunction the Moon is lost in the Sun's glare, and real earthshine
   // is far too faint to show at this exposure.

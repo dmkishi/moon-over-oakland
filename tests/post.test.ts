@@ -81,7 +81,7 @@ describe('renderAltText', () => {
   it('describes the phase, illumination, and local time of the image', () => {
     const { phaseEvent } = render(Temporal.PlainDate.from('2026-10-25'));
     expect(renderAltText(phaseEvent, 0.9984, timezone)).toBe(
-      'Full moon, 99.8% illuminated, as seen from Earth at 9:11 pm on 10/25 (Sun), celestial north up. '
+      'Full moon, 99.8% illuminated, as seen from Earth at 9:11 pm on Oct. 25, 2026 (Sunday), celestial north up. '
       + 'Rendered from NASA LRO data (NASA SVS CGI Moon Kit).',
     );
   });
