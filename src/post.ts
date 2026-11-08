@@ -92,9 +92,9 @@ function text(phaseEvent: PhaseEvent, timezone: string): string {
         • Moonset: ${time(dayEvents.moonset)}
 
         Next phases:
-        • Half Moon: ${date(nextPhases['first-quarter'])}
-        • Full Moon: ${date(nextPhases['full'])}
-        • New Moon: ${date(nextPhases['new'])}
+        • Half moon: ${date(nextPhases['first-quarter'])}
+        • Full moon: ${date(nextPhases['full'])}
+        • New moon: ${date(nextPhases['new'])}
       `;
 
     case 'first-quarter': {
@@ -111,9 +111,9 @@ function text(phaseEvent: PhaseEvent, timezone: string): string {
         • Moonset: ${time(dayEvents.moonset)} ${moonsetNote}
 
         Next phases:
-        • Full Moon: ${date(nextPhases['full'])}
-        • Half Moon: ${date(nextPhases['last-quarter'])}
-        • New Moon: ${date(nextPhases['new'])}
+        • Full moon: ${date(nextPhases['full'])}
+        • Half moon: ${date(nextPhases['last-quarter'])}
+        • New moon: ${date(nextPhases['new'])}
       `;
     }
 
@@ -130,9 +130,9 @@ function text(phaseEvent: PhaseEvent, timezone: string): string {
         • Moonset: ${time(dayEvents.moonset)} (tomorrow morning)
 
         Next phases:
-        • Half Moon: ${date(nextPhases['last-quarter'])}
-        • New Moon: ${date(nextPhases['new'])}
-        • Full Moon: ${date(nextPhases['full'])}
+        • Half moon: ${date(nextPhases['last-quarter'])}
+        • New moon: ${date(nextPhases['new'])}
+        • Full moon: ${date(nextPhases['full'])}
       `;
 
     case 'last-quarter': {
@@ -149,9 +149,9 @@ function text(phaseEvent: PhaseEvent, timezone: string): string {
         • Moonset: ${time(dayEvents.moonset)}
 
         Next phases:
-        • New Moon: ${date(nextPhases['new'])}
-        • Half Moon: ${date(nextPhases['first-quarter'])}
-        • Full Moon: ${date(nextPhases['full'])}
+        • New moon: ${date(nextPhases['new'])}
+        • Half moon: ${date(nextPhases['first-quarter'])}
+        • Full moon: ${date(nextPhases['full'])}
       `;
     }
 
