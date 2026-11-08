@@ -7,6 +7,12 @@ import type { PhaseEvent } from './phase-event.ts';
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const LONG_WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const LONG_MONTHS = ['Jan.', 'Feb.', 'March', 'April', 'May', 'June', 'July', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
+const PHASE_NAMES: Record<PhaseEvent['type'], string> = {
+  'new': 'New moon',
+  'first-quarter': 'First quarter moon',
+  'full': 'Full moon',
+  'last-quarter': 'Last quarter moon',
+};
 
 /**
  * E.g. "9/18 (Thu)".
@@ -36,12 +42,6 @@ function formatTime(zoned: Temporal.ZonedDateTime): string {
   return `${hour}:${minute} ${zoned.hour < 12 ? 'am' : 'pm'}`;
 }
 
-const PHASE_NAMES: Record<PhaseEvent['type'], string> = {
-  'new': 'New moon',
-  'first-quarter': 'First quarter moon',
-  'full': 'Full moon',
-  'last-quarter': 'Last quarter moon',
-};
 
 /**
  * Bluesky requires one, and it also carries the image's credit, which costs
