@@ -14,6 +14,10 @@ const PHASE_NAMES: Record<PhaseEvent['type'], string> = {
   'last-quarter': 'Last quarter moon',
 };
 
+interface Range { min: number; max?: number }
+const NEAR = { min: 15, max: 45 } satisfies Range;
+const FAR: Range = { min: NEAR.max };
+
 /**
  * E.g. "9/18 (Thu)".
  * @pure
@@ -41,10 +45,6 @@ function formatTime(zoned: Temporal.ZonedDateTime): string {
   const minute = String(zoned.minute).padStart(2, '0');
   return `${hour}:${minute} ${zoned.hour < 12 ? 'am' : 'pm'}`;
 }
-
-interface Range { min: number; max?: number }
-const NEAR = { min: 15, max: 45 } satisfies Range;
-const FAR: Range = { min: NEAR.max };
 
 /**
  * @pure

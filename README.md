@@ -103,6 +103,8 @@ pnpm post                  # Posts online (but only on permitted moon phases)
 pnpm post:test 2026-01-02  # Same, to the test account
 pnpm preview               # Preview post with calculated data (NEVER posts)
 pnpm preview 2026-01-01    # Optionally specify a date
+pnpm posts-pdf 2027        # Print a year's posts to PDF
+pnpm horizons              # Query NASA JPL Horizons (see below for more info)
 ```
 
 #### Moon Image
@@ -139,6 +141,14 @@ differ.
 
 Every rebuild adds a full copy to Git LFS history for good, so commit new
 textures only when they change.
+
+#### Posts PDF
+`pnpm posts-pdf` writes `moon-over-oakland-<year>.pdf` to the current directory:
+a summary table, then every post of the year with its phase instant, rise and
+set times, illumination, alt text, and length. The year defaults to the current
+one. `--out <path>` picks another file, and `--html` keeps the HTML it prints
+from. It finds Chrome or Chromium in the usual places; set `CHROME_PATH` to use
+another binary.
 
 #### NASA JPL Horizons
 Use this script to request authoritative data from [JPL Horizons](
