@@ -83,36 +83,14 @@ function text(phaseEvent: PhaseEvent, timezone: string): string {
   const { type, dayEvents, eventDeltas, nextPhases } = phaseEvent;
 
   switch (type) {
-    case 'new': {
+    case 'new':
       /* -----------------------------------------------------------------------
        * NEW
        * - MOONRISE around sunrise.
        * - MOONSET around sunset.
        */
-      let moonrisePhrase = 'around sunrise';
-      if (isMinutesAway(eventDeltas.moonrise.minutes, NEAR)) {
-        moonrisePhrase = eventDeltas.moonrise.minutes < 0
-          ? 'shortly before sunrise'
-          : 'shortly after sunrise';
-      } else if (isMinutesAway(eventDeltas.moonrise.minutes, FAR)) {
-        moonrisePhrase = eventDeltas.moonrise.minutes < 0
-          ? 'well before sunrise'
-          : 'well after sunrise';
-      }
-
-      let moonsetPhrase = 'around sunset';
-      if (isMinutesAway(eventDeltas.moonset.minutes, NEAR)) {
-        moonsetPhrase = eventDeltas.moonset.minutes < 0
-          ? 'shortly before sunset'
-          : 'shortly after sunset';
-      } else if (isMinutesAway(eventDeltas.moonset.minutes, FAR)) {
-        moonsetPhrase = eventDeltas.moonset.minutes < 0
-          ? 'well before sunset'
-          : 'well after sunset';
-      }
-
       return `
-        NEW MOON today. The moon rises ${moonrisePhrase} and sets ${moonsetPhrase}. It’ll be in the sky all day but you probably won’t be able to see it.
+        NEW MOON today. A new moon rises and sets with the sun, it will be in the sky all day but you won’t be able to see it.
 
         • Moonrise: ${time(dayEvents.moonrise)}
         • Moonset: ${time(dayEvents.moonset)}
@@ -122,7 +100,6 @@ function text(phaseEvent: PhaseEvent, timezone: string): string {
         • Full moon: ${date(nextPhases['full'])}
         • New moon: ${date(nextPhases['new'])}
       `;
-    }
 
     case 'first-quarter': {
       /* -----------------------------------------------------------------------
@@ -130,32 +107,10 @@ function text(phaseEvent: PhaseEvent, timezone: string): string {
        * - MOONRISE around noon.
        * - MOONSET around midnight at end of day (notate if after midnight.)
        */
-      let moonrisePhrase = 'around 12-noon';
-      if (isMinutesAway(eventDeltas.moonrise.minutes, NEAR)) {
-        moonrisePhrase = eventDeltas.moonrise.minutes < 0
-          ? 'shortly before 12-noon'
-          : 'shortly after 12-noon';
-      } else if (isMinutesAway(eventDeltas.moonrise.minutes, FAR)) {
-        moonrisePhrase = eventDeltas.moonrise.minutes < 0
-          ? 'late in the morning'
-          : 'early in the afternoon';
-      }
-
-      let moonsetPhrase = 'around midnight';
-      if (isMinutesAway(eventDeltas.moonset.minutes, NEAR)) {
-        moonsetPhrase = eventDeltas.moonset.minutes < 0
-          ? 'shortly before midnight'
-          : 'shortly after midnight';
-      } else if (isMinutesAway(eventDeltas.moonset.minutes, FAR)) {
-        moonsetPhrase = eventDeltas.moonset.minutes < 0
-          ? 'late tonight'
-          : 'very early tomorrow morning';
-      }
-
       const moonsetNote = eventDeltas.moonset.minutes > 0 ? '(after midnight)' : '';
 
       return `
-        HALF MOON (first quarter) today. The moon will rise ${moonrisePhrase} and set ${moonsetPhrase}.
+        HALF MOON (FIRST QUARTER) today. A first quarter moon rises around noon and sets around midnight. It is highest in the sky around sunset.
 
         • Moonrise: ${time(dayEvents.moonrise)}
         • Moonset: ${time(dayEvents.moonset)} ${moonsetNote}
@@ -167,36 +122,14 @@ function text(phaseEvent: PhaseEvent, timezone: string): string {
       `;
     }
 
-    case 'full': {
+    case 'full':
       /* -----------------------------------------------------------------------
        * FULL
        * - MOONRISE around sunset.
        * - MOONSET around sunrise (always the next morning.)
        */
-      let moonrisePhrase = 'around sunset';
-      if (isMinutesAway(eventDeltas.moonrise.minutes, NEAR)) {
-        moonrisePhrase = eventDeltas.moonrise.minutes < 0
-          ? 'shortly before sunset'
-          : 'shortly after sunset';
-      } else if (isMinutesAway(eventDeltas.moonrise.minutes, FAR)) {
-        moonrisePhrase = eventDeltas.moonrise.minutes < 0
-          ? 'well before sunset'
-          : 'well after sunset';
-      }
-
-      let moonsetPhrase = 'around sunrise';
-      if (isMinutesAway(eventDeltas.moonset.minutes, NEAR)) {
-        moonsetPhrase = eventDeltas.moonset.minutes < 0
-          ? 'shortly before sunrise'
-          : 'shortly after sunrise';
-      } else if (isMinutesAway(eventDeltas.moonset.minutes, FAR)) {
-        moonsetPhrase = eventDeltas.moonset.minutes < 0
-          ? 'well before sunrise'
-          : 'well after sunrise';
-      }
-
       return `
-        FULL MOON today. The moon will rise ${moonrisePhrase} and set ${moonsetPhrase} tomorrow. It’ll be visible all night, given a clear sky.
+        FULL MOON today. A full moon rises around sunset and sets around sunrise. It will be visible all night, given a clear sky.
 
         • Moonrise: ${time(dayEvents.moonrise)}
         • Moonset: ${time(dayEvents.moonset)} (tomorrow morning)
@@ -206,7 +139,6 @@ function text(phaseEvent: PhaseEvent, timezone: string): string {
         • New moon: ${date(nextPhases['new'])}
         • Full moon: ${date(nextPhases['full'])}
       `;
-    }
 
     case 'last-quarter': {
       /* -----------------------------------------------------------------------
@@ -214,32 +146,9 @@ function text(phaseEvent: PhaseEvent, timezone: string): string {
        * - MOONRISE around midnight at start of day (notate if before midnight.)
        * - MOONSET around noon.
        */
-      let moonrisePhrase = 'around midnight';
-      if (isMinutesAway(eventDeltas.moonrise.minutes, NEAR)) {
-        moonrisePhrase = eventDeltas.moonrise.minutes < 0
-          ? 'shortly before midnight'
-          : 'shortly after midnight';
-      } else if (isMinutesAway(eventDeltas.moonrise.minutes, FAR)) {
-        moonrisePhrase = eventDeltas.moonrise.minutes < 0
-          ? 'late last night'
-          : 'very early in the morning';
-      }
-
-      let moonsetPhrase = 'around 12-noon';
-      if (isMinutesAway(eventDeltas.moonset.minutes, NEAR)) {
-        moonsetPhrase = eventDeltas.moonset.minutes < 0
-          ? 'shortly before 12-noon'
-          : 'shortly after 12-noon';
-      } else if (isMinutesAway(eventDeltas.moonset.minutes, FAR)) {
-        moonsetPhrase = eventDeltas.moonset.minutes < 0
-          ? 'late in the morning'
-          : 'early in the afternoon';
-      }
-
       const moonriseNote = eventDeltas.moonrise.minutes < 0 ? '(yesterday)' : '';
-
       return `
-        HALF MOON (last quarter) today. The moon rose ${moonrisePhrase} and will set ${moonsetPhrase} today.
+        HALF MOON (LAST QUARTER) today. A last quarter moon rises around midnight and sets around noon. It is highest in the sky around sunrise.
 
         • Moonrise: ${time(dayEvents.moonrise)} ${moonriseNote}
         • Moonset: ${time(dayEvents.moonset)}
