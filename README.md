@@ -127,10 +127,13 @@ If the image fails, the text posts alone, the run pings Healthchecks.io's
 pnpm generate-moon-assets
 ```
 
-Regenerates `assets/moon-color.png` and `assets/moon-height.png` from NASA's
-[CGI Moon Kit](https://svs.gsfc.nasa.gov/4720): the 4k LROC color map and the
-16 px/deg LOLA elevation map, about 95 MB of downloads. Downloads are cached in
-the OS temp directory and checked against SHA-256 hashes pinned in
+Regenerates the textures that the moon image in each post is rendered from:
+`assets/moon-color.png` for the surface, and `assets/moon-height.png` for relief
+and the shadows along the terminator. Both are built from NASA's
+[CGI Moon Kit](https://svs.gsfc.nasa.gov/4720): the 4k LROC (Lunar
+Reconnaissance Orbiter Camera) color map and the 16 px/deg LOLA (Lunar Orbiter
+Laser Altimeter) elevation map, about 95 MB of downloads. Downloads are cached
+in the OS temp directory and checked against SHA-256 hashes pinned in
 [the script](scripts/generate-moon-assets.ts). The color map is reduced
 from 16-bit to 8-bit, and the regenerated PNGs are about 42 MB together.
 

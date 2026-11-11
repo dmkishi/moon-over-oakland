@@ -2,8 +2,8 @@
  * Renders the Moon as seen from Earth's center: celestial north up, celestial
  * west (the sunset side) on the right, lit by the Sun, sized to scale.
  *
- * Textures are NASA's CGI Moon Kit (`pnpm generate-moon-assets`): LROC color for albedo
- * and LOLA elevation for relief and cast shadows.
+ * Textures are NASA's CGI Moon Kit (`pnpm generate-moon-assets`): LROC color
+ * for albedo and LOLA elevation for relief and cast shadows.
  *
  * See `docs/moon-attributes.md` and `docs/moon-render-elevation.md`.
  */

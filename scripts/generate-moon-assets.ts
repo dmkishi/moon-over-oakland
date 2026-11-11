@@ -1,11 +1,11 @@
 /**
- * Builds the moon image's textures in `assets/` from NASA's CGI Moon Kit
- * <https://svs.gsfc.nasa.gov/4720>, and records their provenance in
+ * Builds the textures that `src/moon-image.ts` uses to render the Moon image in
+ * each post: a color map for the surface and an elevation map for relief and
+ * the shadows along the terminator. The sources are NASA's CGI Moon Kit
+ * <https://svs.gsfc.nasa.gov/4720>, and their provenance is recorded in
  * `assets/manifest.json`.
  *
- * - Downloads are cached in the OS temp directory and checked against pinned
- *   SHA-256 hashes, so a cleared cache just downloads again.
- * - The color map is reduced from 16-bit to 8-bit.
+ * See "Moon Image Textures" in `README.md` for when to run it and what it costs.
  *
  * @usage pnpm generate-moon-assets
  */
@@ -83,7 +83,7 @@ async function download(source: Source): Promise<string> {
 }
 
 /**
- * 8-bit sRGB: the output is an 8-bit JPEG, and bilinear sampling in linear
+ * 8-bit sRGB: the rendered moon image is an 8-bit JPEG, and bilinear sampling in linear
  * light smooths any banding a 16-bit source would have avoided.
  */
 async function buildColor(path: string) {
