@@ -85,15 +85,4 @@ describe('renderAltText', () => {
       + 'Rendered from NASA LRO data (NASA SVS CGI Moon Kit).',
     );
   });
-
-  it('says the new moon’s earthshine is exaggerated', () => {
-    const { phaseEvent } = render(Temporal.PlainDate.from('2026-10-10'));
-    expect(phaseEvent.type).toBe('new');
-    expect(renderAltText(phaseEvent, 0.001, timezone)).toMatch(/^New moon, 0\.1% illuminated, .* Earthshine exaggerated\.$/u);
-  });
-
-  it.each(['2026-10-18', '2026-11-01'])('says nothing of earthshine otherwise (%s)', (date) => {
-    const { phaseEvent } = render(Temporal.PlainDate.from(date));
-    expect(renderAltText(phaseEvent, 0.5, timezone)).not.toContain('Earthshine');
-  });
 });

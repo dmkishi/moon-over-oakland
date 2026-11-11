@@ -64,8 +64,17 @@ function discAt(instant: string): MoonDisc {
   return moonDisc(Temporal.Instant.from(instant));
 }
 
-function render(disc: MoonDisc, textures: MoonTextures, earthshine = false): Uint8Array {
-  return renderMoonPixels(disc, textures, { size: SIZE, earthshine });
+/**
+ * Earthshine bright enough to light the whole disc well clear of a black
+ * marker, far above the production gain.
+ */
+const FLOODLIGHT = 0.12;
+
+/**
+ * Renders lit by the Sun alone, or with the whole disc lit too (`floodlit`).
+ */
+function render(disc: MoonDisc, textures: MoonTextures, floodlit = false): Uint8Array {
+  return renderMoonPixels(disc, textures, { size: SIZE, earthshine: floodlit ? FLOODLIGHT : 0 });
 }
 
 /**

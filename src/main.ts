@@ -113,7 +113,7 @@ async function createPostImage(
   const start = performance.now();
   const disc = moonDisc(phaseEvent.time.toInstant());
   const textures = await loadMoonTextures();
-  const image = await renderMoonImage(disc, textures, { earthshine: phaseEvent.type === 'new' });
+  const image = await renderMoonImage(disc, textures);
   const seconds = (performance.now() - start) / 1_000;
 
   const size = MAX_IMAGE_BYTES - image.jpeg.byteLength < MAX_IMAGE_BYTES * IMAGE_BYTES_MARGIN

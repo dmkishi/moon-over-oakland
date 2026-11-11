@@ -51,11 +51,12 @@ const SUN_RADIUS_DEG = 0.267;
 const SHADOW_STEP_TEXELS = 0.75;
 
 /**
- * Earthshine at new moon, as a fraction of full sunlight. The real ratio is
- * ~1/10,000, too dark to show, so this is a stylization, and the alt text says
- * so.
+ * Earthshine, as a fraction of full sunlight, the same at every phase. Real
+ * earthshine peaks near ~1/10,000 at new moon and fades to nothing at full, too
+ * dark to show, so this is a stylization: just enough to hint at the night
+ * side. At full moon it brightens the sunlit disc by an unseen 1%.
  */
-const EARTHSHINE_GAIN = 0.12;
+const EARTHSHINE_GAIN = 0.01;
 
 /** Least cosine of emission a facet is shaded at; see `shade`. */
 const MIN_COS_E = 0.2;
@@ -94,8 +95,8 @@ interface LightSource {
 export interface RenderOptions {
   /** Width and height of the square frame in px */
   size?: number;
-  /** Light the disc from Earth too (new moon only) */
-  earthshine?: boolean;
+  /** Earthshine as a fraction of full sunlight; 0 for none */
+  earthshine?: number;
 }
 
 const SRGB_TO_LINEAR = Float32Array.from({ length: 256 }, (_, i) => {
@@ -219,7 +220,7 @@ function maxElevation({ height }: MoonTextures): number {
 export function renderMoonPixels(
   disc: MoonDisc,
   textures: MoonTextures,
-  { size = DEFAULT_SIZE, earthshine = false }: RenderOptions = {},
+  { size = DEFAULT_SIZE, earthshine = EARTHSHINE_GAIN }: RenderOptions = {},
 ): Uint8Array {
   const sampler = createSampler(textures);
   const pixels = new Uint8Array(size * size * 3);
@@ -391,10 +392,9 @@ export function renderMoonPixels(
       const shadow = (1 - sunlight([px, py, pz], h0, sinSun, z)) * foreshortening;
       light = (1 - shadow) * lunarLambert(cosI, cosE, weight) / normalization;
     }
-    if (earthshine) {
-      // Lit from the viewer: zero phase, so Lommel–Seeliger, a flat disc.
-      light += EARTHSHINE_GAIN;
-    }
+    // Earthshine comes from the viewer: zero phase, so Lommel–Seeliger, a flat
+    // disc.
+    light += earthshine;
 
     for (let c = 0; c < 3; c++) sample[c] = albedo[c]! * light;
   };

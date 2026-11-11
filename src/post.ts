@@ -66,14 +66,7 @@ export function renderAltText(
 ): string {
   const zoned = phaseEvent.time.withTimeZone(timezone);
   const percent = (illuminatedFraction * 100).toFixed(1);
-  const sentences = [
-    `${PHASE_NAMES[phaseEvent.type]} (${percent}% illuminated) at ${formatTime(zoned)} on ${formatLongDate(zoned)}, celestial north up.`,
-    'Rendered from NASA SVS CGI Moon Kit.',
-  ];
-  // At conjunction the Moon is lost in the Sun's glare, and real earthshine
-  // is far too faint to show at this exposure.
-  if (phaseEvent.type === 'new') sentences.push('Earthshine exaggerated.');
-  return sentences.join(' ');
+  return `${PHASE_NAMES[phaseEvent.type]} (${percent}% illuminated) at ${formatTime(zoned)} on ${formatLongDate(zoned)}, celestial north up. Rendered from NASA SVS CGI Moon Kit.`;
 }
 
 export function renderPost(phaseEvent: PhaseEvent, timezone: string): string {
