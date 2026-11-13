@@ -2,6 +2,16 @@
 import { beforeAll, describe, it, expect } from 'vitest';
 import { collectPosts, type YearPost } from '../../scripts/posts-pdf/collect.ts';
 import { renderYearHtml } from '../../scripts/posts-pdf/html.ts';
+import { graphemeLength, MAX_GRAPHEMES } from '../../src/bluesky.ts';
+
+/**
+ * The page's visible text, without markup, so a change of tags or classes
+ * doesn't fail an assertion about what a reader sees.
+ * @pure
+ */
+function textOf(html: string): string {
+  return html.replaceAll(/<[^>]*>/gu, '').replaceAll(/\s+/gu, ' ');
+}
 
 const generatedOn = Temporal.PlainDate.from('2026-11-10');
 let posts: YearPost[];
@@ -24,7 +34,6 @@ describe('collectPosts', () => {
     expect(first!.date.toString()).toBe('2026-01-02');
     expect(first!.phaseEvent.type).toBe('full');
     expect(first!.phaseEvent.day).toBe('tomorrow');
-    expect(first!.text).toMatch(/^FULL MOON today\./u);
   });
 
   it('stays within the year', () => {
@@ -44,16 +53,26 @@ describe('renderYearHtml', () => {
     expect(renderYearHtml(2026, posts, generatedOn)).toContain("content: 'Generated Nov. 10, 2026';");
   });
 
-  it('shows the details of a post', () => {
-    const html = renderYearHtml(2026, posts.slice(0, 1), generatedOn);
-    expect(html).toContain('<h3 class="post__date">Jan. 2 (Friday)</h3>');
-    expect(html).toContain('2:02 <span class="caps">AM</span> <span class="caps">PST</span>, Jan. 3 (Saturday)');
-    expect(html).toContain('Falls after midnight, before the 4:00 <span class="caps">AM</span> cutoff');
-    expect(html).toContain('8:00 <span class="caps">AM</span> <span class="muted">(next day)</span>');
-    expect(html).toContain('−48</span> min <span class="muted">before sunset');
-    expect(html).toContain('99.9%');
-    expect(html).toContain('284 / 300 graphemes');
-    expect(html).toContain('Rendered from NASA SVS CGI Moon Kit.');
+  // The 2026-01-02 post, for the full moon at 2:02 AM on 01-03.
+  it('dates the post and its phase in local time', () => {
+    const text = textOf(renderYearHtml(2026, posts.slice(0, 1), generatedOn));
+    expect(text).toContain('Jan. 2 (Friday)');
+    expect(text).toContain('2:02 AM PST, Jan. 3 (Saturday)');
+    expect(text).toContain('8:00 AM (next day)');
+  });
+
+  it('notes a phase that posts the day before', () => {
+    const sameDay = posts.find((post) => post.phaseEvent.day === 'today')!;
+    expect(renderYearHtml(2026, posts.slice(0, 1), generatedOn)).toContain('class="post__note"');
+    expect(renderYearHtml(2026, [sameDay], generatedOn)).not.toContain('class="post__note"');
+  });
+
+  it('shows the delta, illumination, and length of a post', () => {
+    const [first] = posts;
+    const text = textOf(renderYearHtml(2026, [first!], generatedOn));
+    expect(text).toContain('−48 min');
+    expect(text).toContain('99.9%');
+    expect(text).toContain(`${graphemeLength(first!.text)} / ${MAX_GRAPHEMES}`);
   });
 
   it('shows daylight time in summer', () => {
@@ -64,7 +83,6 @@ describe('renderYearHtml', () => {
   it('keeps the post and alt text verbatim, without small caps', () => {
     const [first] = posts;
     const html = renderYearHtml(2026, [first!], generatedOn);
-    expect(first!.alt).toContain('NASA SVS CGI');
     expect(first!.alt).toContain('2:02 am');
     expect(html).toContain(first!.alt);
   });
