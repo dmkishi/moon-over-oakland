@@ -9,6 +9,7 @@
  * from the one list of column names a query passes, so they cannot drift apart,
  * and each query sees only typed rows.
  */
+import { createResponseCache, type ResponseCache } from './cache.ts';
 import type { Site } from './site.ts';
 
 const HORIZONS_API_URL = 'https://ssd.jpl.nasa.gov/api/horizons.api';
@@ -310,6 +311,24 @@ async function requestObserverTable({
 
   const query = Object.entries(params).map(([k, v]) => `${k}=${v}`).join('&');
   const url = `${HORIZONS_API_URL}?${query}`;
+  const label = { body, date: firstUtcDate(times) };
+
+  // A hit sends no request, so it skips the queue.
+  const cached = await responseCache?.read(url, label);
+  if (cached !== undefined) {
+    console.error(`Cached <${url}>`);
+    onRawResponse?.(cached.raw);
+    try {
+      return parseCsvBlock(cached.raw);
+    } catch (error) {
+      throw new Error(
+        `Cached Horizons response does not parse: ${cached.path}\n` +
+        'Delete it, or pass --no-cache to fetch it again.',
+        { cause: error },
+      );
+    }
+  }
+
   const raw = await inHorizonsQueue(async () => {
     console.error(`Calling <${url}>`);
     const res = await fetch(url);
@@ -320,7 +339,47 @@ async function requestObserverTable({
   });
 
   onRawResponse?.(raw);
-  return parseCsvBlock(raw);
+  const table = parseCsvBlock(raw);
+  // Only once it parses: Horizons answers some errors with a 200 and no table.
+  await responseCache?.write(url, label, raw);
+  return table;
+}
+
+/**
+ * The UT date of the first time a request asks for, to label its cache entry.
+ */
+function firstUtcDate(times: TimeWindow | TimeList): string {
+  const first = 'instants' in times ? times.instants[0] : times.start.toInstant();
+  if (first === undefined) {
+    throw new Error('A Horizons TLIST needs at least one instant');
+  }
+  return first.toZonedDateTimeISO('UTC').toPlainDate().toString();
+}
+
+/**
+ * Where responses are read from and written to, if anywhere. Commands switch
+ * it on with `cacheResponses`. It stays off in tests unless a test switches it
+ * on, so tests that stub `fetch` see every request.
+ */
+let responseCache: ResponseCache | undefined;
+
+/**
+ * From now on, answer requests from `.cache/horizons/` where possible, and
+ * store each good reply there.
+ *
+ * @param options.dir - Where entries live, in place of `.cache/horizons/`
+ * @param options.refresh - Skip every read, so each request is sent again and
+ *   its entry overwritten
+ */
+export function cacheResponses(options?: { dir?: string | URL; refresh?: boolean }): void {
+  responseCache = createResponseCache(options);
+}
+
+/**
+ * Send every request from now on, and store nothing.
+ */
+export function stopCachingResponses(): void {
+  responseCache = undefined;
 }
 
 /**

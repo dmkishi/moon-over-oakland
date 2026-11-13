@@ -2,6 +2,7 @@
  * @see ../main.ts for usage and subcommand descriptions.
  */
 import { parseArgs } from 'node:util';
+import { cacheResponses } from '../api.ts';
 import { parseDateArg, UsageError } from '../args.ts';
 import { civilDay, SITE } from '../site.ts';
 import { fetchMoonEphemeris, thinEphemeris } from './ephemeris.ts';
@@ -41,6 +42,7 @@ export async function runSky(argv: string[]): Promise<void> {
     args: argv,
     options: {
       'every':      { type: 'string' },
+      'no-cache':   { type: 'boolean', default: false },
       'no-json':    { type: 'boolean', default: false },
       'no-summary': { type: 'boolean', default: false },
       'show-csv':   { type: 'boolean', default: false },
@@ -83,6 +85,11 @@ export async function runSky(argv: string[]): Promise<void> {
 
   const day = civilDay(date);
 
+  // Every Horizons request below, in `fetchMoonEphemeris` and
+  // `resolvePhaseEvent`, now checks `.cache/horizons/` first and stores its
+  // reply there. With `--no-cache`, it skips the check but still stores the
+  // reply. See `requestObserverTable` in `api.ts`.
+  cacheResponses({ refresh: argValues['no-cache'] });
   const moonEphemeris = await fetchMoonEphemeris(
     SITE,
     day,

@@ -3,8 +3,16 @@
  * list of columns, and how it decodes the reply, replayed from saved Horizons
  * responses (see `../support/horizons.ts`).
  */
-import { describe, it, expect } from 'vitest';
-import { fetchColumns } from '../../scripts/nasaJplHorizons/api.ts';
+import { createHash } from 'node:crypto';
+import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, it, expect } from 'vitest';
+import {
+  cacheResponses,
+  fetchColumns,
+  stopCachingResponses,
+} from '../../scripts/nasaJplHorizons/api.ts';
 import { SITE } from '../../scripts/nasaJplHorizons/site.ts';
 import {
   DISC_INSTANTS,
@@ -181,6 +189,85 @@ describe('fetchColumns', () => {
       ]);
       expect(moon.status).toBe('rejected');
       expect(sun.status).toBe('fulfilled');
+    });
+  });
+
+  describe('cache', () => {
+    let dir: string;
+
+    beforeEach(async () => {
+      dir = await mkdtemp(join(tmpdir(), 'horizons-cache-'));
+      cacheResponses({ dir });
+    });
+
+    afterEach(async () => {
+      stopCachingResponses();
+      await rm(dir, { recursive: true, force: true });
+    });
+
+    it('answers a repeat query without a request', async () => {
+      const requests = replayHorizons({ moon: savedResponse('sky-2026-02-24-moon') });
+      const first = await fetchColumns(SKY_QUERY, ['altitudeDeg']);
+      const second = await fetchColumns(SKY_QUERY, ['altitudeDeg']);
+      expect(requests).toHaveLength(1);
+      expect(second).toEqual(first);
+    });
+
+    it('sends a different query', async () => {
+      const requests = replayHorizons({ moon: savedResponse('sky-2026-02-24-moon') });
+      await fetchColumns(SKY_QUERY, ['altitudeDeg']);
+      await fetchColumns({ ...SKY_QUERY, site: 'geocentric' }, ['altitudeDeg']);
+      expect(requests).toHaveLength(2);
+    });
+
+    it('sends the request again when refreshing, and overwrites the entry', async () => {
+      const raw = savedResponse('sky-2026-02-24-moon');
+      replayHorizons({ moon: raw });
+      await fetchColumns(SKY_QUERY, ['altitudeDeg']);
+
+      const fresh = `${raw}refreshed\n`;
+      const requests = replayHorizons({ moon: fresh });
+      cacheResponses({ dir, refresh: true });
+      await fetchColumns(SKY_QUERY, ['altitudeDeg']);
+      expect(requests).toHaveLength(1);
+
+      const entry = (await readdir(dir)).find((name) => name.endsWith('.txt'));
+      expect(await readFile(join(dir, entry!), 'utf8')).toBe(fresh);
+    });
+
+    it('stores the untouched body, named by body, UT date, and URL hash', async () => {
+      const raw = savedResponse('sky-2026-02-24-moon');
+      const requests = replayHorizons({ moon: raw });
+      await fetchColumns(SKY_QUERY, ['altitudeDeg']);
+
+      const [name, sidecar] = (await readdir(dir)).toSorted();
+      expect(sidecar).toBe(`${name}.url`);
+      const url = await readFile(join(dir, sidecar!), 'utf8');
+      expect(Object.fromEntries(new URL(url).searchParams)).toEqual(Object.fromEntries(requests[0]!));
+      expect(name).toBe(`moon-2026-02-25-${createHash('sha256').update(url).digest('hex').slice(0, 12)}.txt`);
+      expect(await readFile(join(dir, name!), 'utf8')).toBe(raw);
+    });
+
+    it('stores nothing from an HTTP error', async () => {
+      replayHorizons({ moon: () => new Response('', { status: 503 }) });
+      await expect(fetchColumns(SKY_QUERY, ['altitudeDeg'])).rejects.toThrow('Horizons API error');
+      expect(await readdir(dir)).toEqual([]);
+    });
+
+    it('stores nothing from a reply with no table', async () => {
+      replayHorizons({ moon: savedResponse('sky-2026-02-24-moon').replace('$$SOE', '') });
+      await expect(fetchColumns(SKY_QUERY, ['altitudeDeg'])).rejects.toThrow('$$SOE/$$EOE');
+      expect(await readdir(dir)).toEqual([]);
+    });
+
+    it('hands over the cached response on a hit', async () => {
+      const raw = savedResponse('sky-2026-02-24-moon');
+      replayHorizons({ moon: raw });
+      await fetchColumns(SKY_QUERY, ['altitudeDeg']);
+
+      let received: string | undefined;
+      await fetchColumns({ ...SKY_QUERY, onRawResponse: (text) => { received = text; } }, ['altitudeDeg']);
+      expect(received).toBe(raw);
     });
   });
 });

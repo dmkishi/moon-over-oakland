@@ -166,9 +166,16 @@ disc 2026-01-03`. The values are the same either way; only the date differs.
 
 The location and timezone are sourced from [`src/observer.ts`](src/observer.ts).
 
+Responses are cached in `.cache/horizons/` at the repo root (gitignored), keyed
+on the full request URL, so a repeat run sends no requests. Each entry is the
+untouched response body, ready to copy into [`tests/fixtures/horizons/`](
+tests/fixtures/horizons/), with a `.url` file beside it holding the request.
+Entries never expire. Pass `--no-cache` to either subcommand to fetch fresh and
+overwrite the entries, or delete the directory to clear it.
+
 ##### `sky`: Oakland's view of the Moon
 ```sh
-pnpm horizons sky [YYYY-MM-DD] [--every=<interval>] [--show-table] [--show-csv] [--show-raw] [--no-summary] [--no-json]
+pnpm horizons sky [YYYY-MM-DD] [--every=<interval>] [--show-table] [--show-csv] [--show-raw] [--no-summary] [--no-json] [--no-cache]
 ```
 
 Summarizes moonrise and moonset, azimuth, tilt, illumination, distance, and any
@@ -191,6 +198,8 @@ phase event over one day.
     `false`.
   - `--every=<interval>` Thins `--show-table` and `--show-csv` to one row per
     interval, given as `1h`, `30m`, or a bare count of minutes (`30`).
+  - `--no-cache` Fetches fresh rather than reading the response cache, and
+    overwrites its entries. Default `false`.
 
 The ephemeris is sampled at a fixed one-minute step, which is not configurable.
 Horizons does not interpolate rise, set and transit; it flags the nearest
@@ -200,7 +209,7 @@ rather than snapped to one.
 
 ##### `disc`: the Moon's face
 ```sh
-pnpm horizons disc [YYYY-MM-DD | YYYY]
+pnpm horizons disc [YYYY-MM-DD | YYYY] [--no-cache]
 ```
 
 Prints rows for [`tests/fixtures/moon-disc.accuracy.jsonc`](
@@ -212,8 +221,11 @@ center.
     any principal phase in it. Defaults to today.
   - `YYYY` One row per principal phase from January 1 through December 31,
     and no hourly rows.
+- **Named Options**
+  - `--no-cache` Fetches fresh rather than reading the response cache, and
+    overwrites its entries. Default `false`.
 
-`disc` takes no flags. The one-hour step is fixed to match [Dial-a-Moon](
+The one-hour step is fixed to match [Dial-a-Moon](
 https://svs.gsfc.nasa.gov/help/#apis-dialamoon)'s hourly frames; the disc changes
 too slowly for a finer step to show anything new.
 

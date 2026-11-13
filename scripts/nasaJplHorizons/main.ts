@@ -6,12 +6,12 @@
  * moonrise/moonset with azimuth and tilt, transit, sunrise/sunset, any
  * principal phase, and noon illumination and distance, plus a fixture row.
  * @usage pnpm horizons sky [YYYY-MM-DD] [--every=<interval>] [--show-table]
- *        [--show-csv] [--show-raw] [--no-summary] [--no-json]
+ *        [--show-csv] [--show-raw] [--no-summary] [--no-json] [--no-cache]
  *
  * `disc` prints the geocentric view of the Moon's face, as rows for
  * `tests/fixtures/moon-disc.accuracy.jsonc`. A day gets hourly `sample` rows
  * plus any phase instant in it; a year gets only its phase instants.
- * @usage pnpm horizons disc [YYYY-MM-DD | YYYY]
+ * @usage pnpm horizons disc [YYYY-MM-DD | YYYY] [--no-cache]
  */
 import pc from 'picocolors';
 import { UsageError } from './args.ts';

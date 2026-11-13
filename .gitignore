@@ -26,6 +26,9 @@ npm-debug.log*
 # Test coverage
 coverage/
 
+# `pnpm horizons` response cache
+.cache/
+
 # `pnpm posts-pdf` output
 moon-over-oakland-*.pdf
 moon-over-oakland-*.html

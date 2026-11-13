@@ -7,7 +7,8 @@
  * lookup, flag columns, and UT row stamps.
  *
  * The saved responses in `../fixtures/horizons/` are the untouched bodies the
- * fetchers received, captured by wrapping `fetch` around one call of each:
+ * fetchers received, each copied out of the `.cache/horizons/` entry that a
+ * `pnpm horizons` run left behind (its `.url` sidecar names the request):
  *
  * - `sky-2026-02-24-*`: `fetchMoonEphemeris` from 17:30 to 19:00 PST, which
  *   holds sunset, and the Moon's transit at ~80°, near enough the zenith to

@@ -3,6 +3,7 @@
  */
 import { parseArgs } from 'node:util';
 import { findNextPhases, PHASE_TYPES, type PhaseType } from '../../../src/ephemeris/phase.ts';
+import { cacheResponses } from '../api.ts';
 import { parseDayOrYearArg, UsageError } from '../args.ts';
 import { civilDay, type ObservingDay } from '../site.ts';
 import { fetchMoonDiscs, printMoonDiscFixture } from './moon-disc.ts';
@@ -28,11 +29,20 @@ function phasesBetween(
 }
 
 export async function runDisc(argv: string[]): Promise<void> {
-  const { positionals } = parseArgs({ args: argv, allowPositionals: true });
-  if (positionals.length > 1) {
-    throw new UsageError(`Expected at most one date or year, got: ${positionals.join(' ')}`);
+  const {
+    values: argValues,
+    positionals: argPositionals,
+  } = parseArgs({
+    args: argv,
+    options: {
+      'no-cache': { type: 'boolean', default: false },
+    },
+    allowPositionals: true,
+  });
+  if (argPositionals.length > 1) {
+    throw new UsageError(`Expected at most one date or year, got: ${argPositionals.join(' ')}`);
   }
-  const arg = parseDayOrYearArg(positionals[0]);
+  const arg = parseDayOrYearArg(argPositionals[0]);
 
   const day: ObservingDay = arg.kind === 'day'
     ? civilDay(arg.date)
@@ -41,6 +51,11 @@ export async function runDisc(argv: string[]): Promise<void> {
       end: civilDay(new Temporal.PlainDate(arg.year, 12, 31)).end,
     };
 
+  // Every Horizons request below, in `fetchMoonDiscs`, now checks
+  // `.cache/horizons/` first and stores its reply there. With `--no-cache`, it
+  // skips the check but still stores the reply. See `requestObserverTable` in
+  // `api.ts`.
+  cacheResponses({ refresh: argValues['no-cache'] });
   const samples = arg.kind === 'day' ? await fetchMoonDiscs(day) : [];
 
   const phases = phasesBetween(day.start, day.end);
