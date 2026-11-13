@@ -2,6 +2,7 @@
   "permissions": {
     "allow": [
       "Bash(pnpm horizons *)",
+      "Bash(pnpm -s horizons *)",
       "Bash(git mv *)"
     ]
   }
