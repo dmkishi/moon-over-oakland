@@ -153,14 +153,13 @@ function renderPhaseGlyph(type: PhaseType): string {
 /**
  * @pure
  */
-function renderSummaryRow(post: YearPost, index: number): string {
+function renderSummaryRow(post: YearPost): string {
   const { date, phaseEvent } = post;
   const { type, time, dayEvents } = phaseEvent;
   return `
     <tr>
-      <td class="num muted">${index + 1}</td>
-      <td><a href="#post-${date.toString()}">${SHORT_MONTHS[date.month - 1]}. ${date.day}</a></td>
       <td>${renderPhaseGlyph(type)}${PHASE_NAMES[type]}</td>
+      <td class="num"><a href="#post-${date.toString()}">${date.month}-${date.day}</a></td>
       <td class="num">${formatTime(time, date, { isZoneShown: true })}</td>
       <td class="num">${formatTime(dayEvents.moonrise, date)}</td>
       <td class="num">${formatTime(dayEvents.moonset, date)}</td>
@@ -464,9 +463,8 @@ export function renderYearHtml(
       <table class="summary">
         <thead>
           <tr>
-            <th>#</th>
-            <th>Post date</th>
             <th>Phase</th>
+            <th>Post date</th>
             <th>Phase instant</th>
             <th>Moonrise</th>
             <th>Moonset</th>
@@ -474,7 +472,7 @@ export function renderYearHtml(
           </tr>
         </thead>
         <tbody>
-          ${posts.map((post, index) => renderSummaryRow(post, index)).join('')}
+          ${posts.map((post) => renderSummaryRow(post)).join('')}
         </tbody>
       </table>
     </section>
