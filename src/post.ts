@@ -4,9 +4,9 @@
  */
 import type { PhaseEvent } from './phase-event.ts';
 
-const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const LONG_WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const LONG_MONTHS = ['Jan.', 'Feb.', 'March', 'April', 'May', 'June', 'July', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
+const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const SHORT_WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const SHORT_MONTHS = ['Jan.', 'Feb.', 'March', 'April', 'May', 'June', 'July', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
 const PHASE_NAMES: Record<PhaseEvent['type'], string> = {
   'new': 'New moon',
   'first-quarter': 'First quarter moon',
@@ -23,7 +23,7 @@ const FAR: Range = { min: NEAR.max };
  * @pure
  */
 function formatDate(zoned: Temporal.ZonedDateTime): string {
-  return `${zoned.month}/${zoned.day} (${WEEKDAYS[zoned.dayOfWeek - 1]})`;
+  return `${zoned.month}/${zoned.day} (${SHORT_WEEKDAYS[zoned.dayOfWeek - 1]})`;
 }
 
 /**
@@ -31,7 +31,7 @@ function formatDate(zoned: Temporal.ZonedDateTime): string {
  * @pure
  */
 function formatLongDate(zoned: Temporal.ZonedDateTime): string {
-  return `${LONG_MONTHS[zoned.month - 1]} ${zoned.day}, ${zoned.year} (${LONG_WEEKDAYS[zoned.dayOfWeek - 1]})`;
+  return `${SHORT_MONTHS[zoned.month - 1]} ${zoned.day}, ${zoned.year} (${WEEKDAYS[zoned.dayOfWeek - 1]})`;
 }
 
 /**
