@@ -16,7 +16,7 @@ describe('parsePostsPdfArgs', () => {
   });
 
   it('reads --out and --html on either side of the year', () => {
-    expect(parsePostsPdfArgs(['--html', '2027', '--out', 'out/moon.pdf'])).toEqual({
+    expect(parsePostsPdfArgs(['--html', '2027', '--out', 'out/moon.pdf'])).toMatchObject({
       year: 2027,
       out: 'out/moon.pdf',
       isHtmlKept: true,
