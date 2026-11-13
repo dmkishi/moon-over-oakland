@@ -77,12 +77,17 @@ describe('renderPost', () => {
   });
 });
 
+// Asserts only the computed parts, so the copy can change without editing this.
 describe('renderAltText', () => {
-  it('describes the phase, illumination, and local time of the image', () => {
+  it('prints the illumination to one decimal place', () => {
     const { phaseEvent } = render(Temporal.PlainDate.from('2026-10-25'));
-    expect(renderAltText(phaseEvent, 0.9984, timezone)).toBe(
-      'Full moon, 99.8% illuminated, as seen from Earth at 9:11 pm on Oct. 25, 2026 (Sunday), celestial north up. '
-      + 'Rendered from NASA LRO data (NASA SVS CGI Moon Kit).',
-    );
+    expect(renderAltText(phaseEvent, 0.9984, timezone)).toContain('99.8%');
+  });
+
+  it.each(phaseEventFixtures.map((fixture) => ({ postDate: postDateOf(fixture).toString() })))('prints the phase and local time for $postDate', ({ postDate }) => {
+    const { phaseEvent } = render(Temporal.PlainDate.from(postDate));
+    const alt = renderAltText(phaseEvent, 0.5, timezone);
+    expect(alt).toMatch(new RegExp(`${phaseEvent.type.replace('-', ' ')} moon`, 'iu'));
+    expect(alt).toContain(formatTime(phaseEvent.time.withTimeZone(timezone)));
   });
 });
