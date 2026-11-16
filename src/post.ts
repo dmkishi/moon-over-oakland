@@ -90,7 +90,7 @@ function text(phaseEvent: PhaseEvent, timezone: string): string {
        * - MOONSET around sunset.
        */
       return `
-        NEW MOON today. A new moon rises and sets with the sun, it will be in the sky all day but you won’t be able to see it.
+        NEW MOON today. A new moon rises and sets with the sun. It will be in the sky all day but you won’t be able to see it.
 
         • Moonrise: ${time(dayEvents.moonrise)}
         • Moonset: ${time(dayEvents.moonset)}
@@ -110,7 +110,7 @@ function text(phaseEvent: PhaseEvent, timezone: string): string {
       const moonsetNote = eventDeltas.moonset.minutes > 0 ? '(after midnight)' : '';
 
       return `
-        HALF MOON (FIRST QUARTER) today. A first quarter moon rises around noon and sets around midnight. It is highest in the sky around sunset.
+        HALF MOON (FIRST QUARTER) today. A first quarter moon rises around noon and sets around midnight. Look for it high in the sky around sunset.
 
         • Moonrise: ${time(dayEvents.moonrise)}
         • Moonset: ${time(dayEvents.moonset)} ${moonsetNote}
@@ -148,7 +148,7 @@ function text(phaseEvent: PhaseEvent, timezone: string): string {
        */
       const moonriseNote = eventDeltas.moonrise.minutes < 0 ? '(yesterday)' : '';
       return `
-        HALF MOON (LAST QUARTER) today. A last quarter moon rises around midnight and sets around noon. It is highest in the sky around sunrise.
+        HALF MOON (LAST QUARTER) today. A last quarter moon rises around midnight and sets around noon. Look for it high in the sky around sunrise.
 
         • Moonrise: ${time(dayEvents.moonrise)} ${moonriseNote}
         • Moonset: ${time(dayEvents.moonset)}
