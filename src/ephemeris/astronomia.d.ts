@@ -1,7 +1,9 @@
 /**
- * astronomia ships no types and its `exports` map has no `types` condition, so
- * subpath imports are `any` under `noImplicitAny`. Declare only what is used;
- * all named exports below are present in the installed 4.2.0 source.
+ * astronomia ships its own types since 4.3.0, but they don't typecheck here:
+ * the VSOP87 data's `type` is `string` rather than `'B' | 'D'`, and
+ * `nutation()` returns possibly-undefined values. These ambient declarations
+ * take precedence over the package's own. Declare only what is used; all named
+ * exports below are present in the installed 4.3.0 source.
  */
 declare module 'astronomia/moonphase' {
   /** JDE of the phase of this kind nearest `year`, within ~14.8 days. */
