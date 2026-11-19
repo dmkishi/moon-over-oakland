@@ -324,7 +324,26 @@ them on each deploy, so `env` is the only file to edit.
 
 See Also
 --------------------------------------------------------------------------------
-- [Solar San Francisco](https://bsky.app/profile/sanfran.solar.v.cx) on Bluesky.
+- **Additional Documentation**:
+  - [Posting Algorithm](docs/posting-algorithm.md)
+  - [Moon Attributes](docs/moon-attributes.md) — Phase attributes that drive
+    the posting schedule, and rendering attributes that shape the moon image.
+  - [Moon Renders with Elevation Map](docs/moon-render-elevation.md) — Tests
+    whether the moon image needs NASA's LOLA elevation map.
+  - [Observer Distance](docs/observer-distance.md) — How far from Oakland the
+    posts stay accurate.
+  - [Bluesky Limits](docs/bluesky-limits.md)
+- **Similar Accounts**:
+  - [Solar San Francisco](https://bsky.app/profile/sanfran.solar.v.cx) on Bluesky
+    — Posts sunrise and sunset times for San Francisco every day.
+- **See Also**:
+  - [Moon](https://ciechanow.ski/moon/) by Bartosz Ciechanowski. A rich and in
+    depth interactive explainer of the Moon's orbit, phases, libration, and
+    surface.
+  - [mooncalc.org](https://www.mooncalc.org/#/37.8075,-122.2623,12) by Torsten
+    Hoffmann, author of [suncalc.org](https://www.torsten-hoffmann.de/web.html).
+    A map that draws the Moon's rise, set, and current directions over any spot
+    at any date and time, alongside its phase, altitude, and distance.
 
 Credits
 --------------------------------------------------------------------------------
