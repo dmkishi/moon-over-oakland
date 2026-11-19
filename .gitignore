@@ -32,3 +32,9 @@ coverage/
 # `pnpm posts-pdf` output
 moon-over-oakland-*.pdf
 moon-over-oakland-*.html
+
+# Logo drafts (e.g. `... v1-a1a.ai`); only the final `... v1.ai` is tracked
+/design/logo/*-a[0-9]*.ai
+
+# Third-party logos used as design references
+/design/logo/references/
