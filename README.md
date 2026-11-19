@@ -36,6 +36,7 @@ The posts are written for a general audience.
    1. [Maintenance](#maintenance)
    1. [Alternative Hosts](#alternative-hosts)
 1. [See Also](#see-also)
+1. [Changelog](#changelog)
 1. [Credits](#credits)
 1. [License](#license)
 
@@ -344,6 +345,11 @@ See Also
     Hoffmann, author of [suncalc.org](https://www.torsten-hoffmann.de/web.html).
     A map that draws the Moon's rise, set, and current directions over any spot
     at any date and time, alongside its phase, altitude, and distance.
+
+Changelog
+--------------------------------------------------------------------------------
+### v0.0.0 (2026-10-18)
+Initial release.
 
 Credits
 --------------------------------------------------------------------------------
